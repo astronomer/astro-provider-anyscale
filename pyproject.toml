@@ -13,7 +13,7 @@ authors = [
 
 ]
 license = { text = "Apache License 2.0" }
-description = "A sample Apache Airflow provider package built by Astronomer."
+description = "An Apache Airflow provider package built by Astronomer to integrate with Anyscale."
 classifiers = [
     "Framework :: Apache Airflow",
     "Framework :: Apache Airflow :: Provider",
