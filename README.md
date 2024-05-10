@@ -4,7 +4,7 @@ This repository provides a set of tools for integrating Anyscale with Apache Air
 
 ### Components
 
-#### Anyscale Hook
+#### Hook
 - **AnyscaleHook**: Facilitates communication between Airflow and Anyscale. It uses the Anyscale API to interact with the Anyscale platform, providing methods to submit jobs, query their status, and manage services.
 
 #### Operators
@@ -41,13 +41,56 @@ dag = DAG(
 submit_anyscale_job = SubmitAnyscaleJob(
     task_id='submit_anyscale_job',
     conn_id='anyscale_conn_id',  # Airflow connection ID for Anyscale
-    name='AstroJob',
+    name='AirflowJob',
     config={
         "entrypoint": 'python script.py',
         "build_id": 'anyscaleray2100-py39',
-        "compute_config_id": 'cpt_8kfdcvmckjnjqd1xwnctmpldl4',
+        "compute_config_id": '<my-compute-config-id>',
         "runtime_env": {},  # Dynamic runtime environment configurations
         "max_retries": 2
     },
     dag=dag,
 )
+```
+The `deploy_anyscale_service.py` script uses the `RolloutAnyscaleService` operator to deploy a service on Anyscale:
+
+```python
+from airflow.models import DAG
+from datetime import datetime
+from custom_anyscale_operators import RolloutAnyscaleService
+
+# Define the default DAG arguments.
+default_args = {
+    'owner': 'airflow',
+    'start_date': datetime(2024, 5, 1),
+}
+
+# Define the DAG
+dag = DAG(
+    'anyscale_service_deployment',
+    default_args=default_args,
+    schedule_interval='@daily'
+)
+
+# Deploy a service to Anyscale
+deploy_anyscale_service = RolloutAnyscaleService(
+    task_id="rollout_anyscale_service",
+    conn_id='anyscale_conn_id',  # Airflow connection ID for Anyscale
+    name="AirflowService",
+    build_id="<my-build-id>",
+    compute_config_id="<my-compute-config-id>",
+    ray_serve_config={ 
+        "applications": [
+            {
+                "name": "sentiment_analysis",
+                "runtime_env": {
+                    "working_dir": "https://github.com/anyscale/docs_examples/archive/refs/heads/main.zip"
+                },
+                "import_path": "sentiment_analysis.app:model",
+            }
+        ]
+    },
+    version = 11,
+    dag=dag
+)
+```
