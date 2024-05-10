@@ -1,0 +1,15 @@
+package-name: airflow-provider-anyscale
+display-name: Anyscale
+
+docs-url: https://github.com/astronomer/airflow-provider-anyscale/blob/main/README.md
+
+hooks:
+  - module: anyscale_provider.hooks.anyscale.AnyscaleHook
+
+operators:
+  - module: anyscale_provider.operators.anyscale.SubmitAnyscaleJob
+  - module: anyscale_provider.operators.anyscale.RolloutAnyscaleService
+
+triggers:
+  - module: anyscale_provider.triggers.anyscale.AnyscaleJobTrigger
+  - module: anyscale_provider.triggers.anyscale.AnyscaleServiceTrigger
