@@ -15,6 +15,19 @@ This repository provides a set of tools for integrating Anyscale with Apache Air
 - **AnyscaleJobTrigger**: Monitors the status of asynchronous jobs submitted via the `SubmitAnyscaleJob` operator. It ensures that the Airflow task waits until the job is completed before moving forward in the DAG.
 - **AnyscaleServiceTrigger**: Works in a similar fashion to the `AnyscaleJobTrigger` but is focused on service rollout processes. It checks the status of the service being deployed or updated and returns control to Airflow upon completion.
 
+### Configuration Details for Anyscale Integration
+
+To integrate Airflow with Anyscale, you will need to provide several configuration details:
+
+- **Anyscale API Token**: Obtain your API token by logging in to the [Anyscale website](https://anyscale.com/).
+
+- **Compute Config ID**: This ID specifies the machines that will execute your Ray script. You can either:
+  - Dynamically provide this via the `compute_config` input parameter, or
+  - Create a compute configuration in Anyscale and use the resulting ID in the `compute_config_id` parameter.
+
+- **Build ID**: Retrieve the Build ID by logging into the [Anyscale platform](https://anyscale.com/).
+
+
 ### Example Usage
 
 The provided `submit_anyscale_job.py` script is an example of how to configure and use the `SubmitAnyscaleJob` operator within an Airflow DAG:
