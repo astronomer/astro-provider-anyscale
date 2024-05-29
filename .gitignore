@@ -1,2 +1,4 @@
 .DS_Store
 anyscale_provider/.DS_Store
+anyscale_provider/example_dags/.DS_Store
+anyscale_provider/example_dags/ray_scripts/.DS_Store
