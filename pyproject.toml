@@ -48,3 +48,30 @@ exclude = [
     "*tests.*",
     "*tests"
 ]
+
+######################################
+# THIRD PARTY TOOLS
+######################################
+[tool.black]
+line-length = 120
+target-version = ['py37', 'py38', 'py39', 'py310']
+
+[tool.isort]
+profile = "black"
+known_third_party = ["airflow", "jinja2"]
+
+[tool.mypy]
+strict = true
+ignore_missing_imports = true
+no_warn_unused_ignores = true
+
+[tool.ruff]
+line-length = 120
+[tool.ruff.lint]
+select = ["C901", "I", "F"]
+ignore = ["F541"]
+[tool.ruff.lint.mccabe]
+max-complexity = 10
+
+[tool.distutils.bdist_wheel]
+universal = true
