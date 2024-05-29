@@ -35,7 +35,7 @@ CHANGELOG
    * - ``AnyscaleDeployService``
      - .. code-block:: python
 
-        from anyscale_provider.operators.anyscale import AnyscaleDeployService
+        from anyscale_provider.operators.anyscale import RolloutAnyscaleService
      - Example DAG
 
 .. list-table::
