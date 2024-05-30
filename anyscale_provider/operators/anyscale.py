@@ -278,7 +278,7 @@ class RolloutAnyscaleService(BaseOperator):
                                               max_surge_percent = self.max_surge_percent)
 
         self.defer(trigger=AnyscaleServiceTrigger(conn_id = self.conn_id,
-                                        service_id = self.service_params['name'],
+                                        service_name = self.service_params['name'],
                                         expected_state = ServiceState.RUNNING,
                                         poll_interval= 60,
                                         timeout= 600),
