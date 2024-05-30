@@ -76,7 +76,7 @@ class AnyscaleJobTrigger(BaseTrigger):
 
                 await asyncio.sleep(self.poll_interval)
             # Once out of the loop, the job has reached a terminal status
-            job_status = self.get_current_status(self.job_id).state
+            job_status = self.get_current_status(self.job_id)
             self.log.info(f"Current status of the job is {job_status}")
             
             yield TriggerEvent({
@@ -93,12 +93,12 @@ class AnyscaleJobTrigger(BaseTrigger):
             })
 
     def get_current_status(self, job_id):
-        return self.hook.get_job_status(job_id=job_id)
+        return self.hook.get_job_status(job_id=job_id).state
 
     def is_terminal_status(self, job_id):
         job_status = self.get_current_status(job_id)
-        self.log.info(f"Current job status for {job_id} is: {job_status.state}")
-        return job_status.state not in (JobState.STARTING, JobState.RUNNING)
+        self.log.info(f"Current job status for {job_id} is: {job_status}")
+        return job_status not in (JobState.STARTING, JobState.RUNNING)
 
 
 
@@ -172,7 +172,7 @@ class AnyscaleServiceTrigger(BaseTrigger):
                 
                 await asyncio.sleep(self.poll_interval)
 
-            current_state = self.get_current_status(self.service_name).state
+            current_state = self.get_current_status(self.service_name)
 
             if current_state == ServiceState.RUNNING:
                 yield TriggerEvent({"status": ServiceState.RUNNING,
@@ -192,9 +192,9 @@ class AnyscaleServiceTrigger(BaseTrigger):
             yield TriggerEvent({"status": ServiceState.SYSTEM_FAILURE, "message": str(e),"service_name": self.service_name})
     
     def get_current_status(self, service_name: str):
-        return self.hook.get_service_status(service_name)
+        return self.hook.get_service_status(service_name).state
         
     def check_current_status(self, service_name: str) -> bool:
         job_status = self.get_current_status(service_name)
-        self.log.info(f"Current job status for {service_name} is: {job_status.state}")
-        return job_status.state in (ServiceState.STARTING,ServiceState.UPDATING,ServiceState.ROLLING_OUT, ServiceState.UNHEALTHY)
+        self.log.info(f"Current job status for {service_name} is: {job_status}")
+        return job_status in (ServiceState.STARTING,ServiceState.UPDATING,ServiceState.ROLLING_OUT, ServiceState.UNHEALTHY)
