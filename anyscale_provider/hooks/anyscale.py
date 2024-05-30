@@ -141,7 +141,6 @@ class AnyscaleHook(BaseHook):
                        max_surge_percent: int = None) -> str:
         logger.info("Deploying a service with configuration: {}".format(config))
         service_config = ServiceConfig(**config)
-        logger.info("Deploying a service with config object: {}".format(service_config))
         service_id = self.sdk.service.deploy(config = service_config,
                                              in_place = in_place,
                                              canary_percent = canary_percent,

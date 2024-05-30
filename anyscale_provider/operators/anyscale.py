@@ -272,10 +272,10 @@ class RolloutAnyscaleService(BaseOperator):
         self.log.info("Service with config object: {}".format(svc_config))
         
         # Call the SDK method with the dynamically created service model
-        service_id = self.hook.deploy_service(self.service_params,
-                                              self.in_place,
-                                              self.canary_percent,
-                                              self.max_surge_percent)
+        service_id = self.hook.deploy_service(config = self.service_params,
+                                              in_place = self.in_place,
+                                              canary_percent = self.canary_percent,
+                                              max_surge_percent = self.max_surge_percent)
 
         self.defer(trigger=AnyscaleServiceTrigger(conn_id = self.conn_id,
                                         service_id = self.service_params['name'],
