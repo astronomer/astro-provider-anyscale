@@ -11,6 +11,7 @@ from anyscale.job.models import JobState
 from anyscale.compute_config.models import (
     ComputeConfig, HeadNodeConfig, MarketType, WorkerNodeGroupConfig
 )
+from anyscale.job.models import JobConfig
 from anyscale.service.models import ServiceConfig, RayGCSExternalStorageConfig, ServiceState
 
 # Airflow imports
@@ -122,7 +123,8 @@ class SubmitAnyscaleJob(BaseOperator):
             self.log.info(f"Using Anyscale version {anyscale.__version__}")
 
         # Submit the job to Anyscale
-        self.job_id = self.hook.submit_job(self.fields)
+        job_config = JobConfig(**self.fields)
+        self.job_id = self.hook.submit_job(job_config)
         self.created_at = time.time()
         self.log.info(f"Submitted Anyscale job with ID: {self.job_id}")
 

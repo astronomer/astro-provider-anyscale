@@ -127,10 +127,9 @@ class AnyscaleHook(BaseHook):
         }
 
     # Example job interaction methods using environment authentication
-    def submit_job(self, config: dict) -> str:
+    def submit_job(self, config: JobConfig) -> str:
         self.log.info("Creating a job with configuration: {}".format(config))
-        job_config = JobConfig(**config)
-        job_id = self.sdk.job.submit(job_config)
+        job_id = self.sdk.job.submit(config = config)
         return job_id
     
     def deploy_service(self,config: ServiceConfig,
