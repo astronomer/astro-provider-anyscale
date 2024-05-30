@@ -129,9 +129,9 @@ class SubmitAnyscaleJob(BaseOperator):
         self.log.info(f"Submitted Anyscale job with ID: {self.job_id}")
 
         current_status = self.get_current_status(self.job_id)
-        self.log.info(f"Current status for {self.job_id} is: {current_status.state}")
+        self.log.info(f"Current status for {self.job_id} is: {current_status}")
 
-        self.process_job_status(self.job_id, current_status.state)
+        self.process_job_status(self.job_id, current_status)
         
         return self.job_id
     
@@ -154,7 +154,7 @@ class SubmitAnyscaleJob(BaseOperator):
                    method_name="execute_complete")
 
     def get_current_status(self, job_id):
-        return self.hook.get_job_status(job_id=job_id)
+        return self.hook.get_job_status(job_id=job_id).state
 
     def execute_complete(self, context: Context, event: TriggerEvent) -> None:
 
