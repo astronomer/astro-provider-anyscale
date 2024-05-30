@@ -177,7 +177,7 @@ class AnyscaleServiceTrigger(BaseTrigger):
                 
                 await asyncio.sleep(self.poll_interval)
 
-            current_state = self.get_current_status(self.service_name)
+            current_state = self.get_current_status(self.service_name).state
 
             if current_state == ServiceState.RUNNING:
                 yield TriggerEvent({"status": ServiceState.RUNNING,
@@ -201,5 +201,5 @@ class AnyscaleServiceTrigger(BaseTrigger):
         
     def check_current_status(self, service_name: str) -> bool:
         job_status = self.get_current_status(service_name)
-        self.logger.info(f"Current job status for {service_name} is: {job_status}")
-        return job_status in (ServiceState.STARTING,ServiceState.UPDATING,ServiceState.ROLLING_OUT)
+        self.logger.info(f"Current job status for {service_name} is: {job_status.state}")
+        return job_status in (ServiceState.STARTING,ServiceState.UPDATING,ServiceState.ROLLING_OUT, ServiceState.UNHEALTHY)
