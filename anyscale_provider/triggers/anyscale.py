@@ -51,7 +51,7 @@ class AnyscaleJobTrigger(BaseTrigger):
         return AnyscaleHook(conn_id=self.conn_id)
 
     def serialize(self):
-        return ("include.triggers.anyscale.AnyscaleJobTrigger", {
+        return ("anyscale_provider.triggers.anyscale.AnyscaleJobTrigger", {
             "conn_id": self.conn_id,
             "job_id": self.job_id,
             "job_start_time": self.job_start_time,
@@ -149,7 +149,7 @@ class AnyscaleServiceTrigger(BaseTrigger):
         return AnyscaleHook(conn_id=self.conn_id)
 
     def serialize(self):
-        return ("include.triggers.anyscale.AnyscaleServiceTrigger", {
+        return ("anyscale_provider.triggers.anyscale.AnyscaleServiceTrigger", {
             "conn_id": self.conn_id,
             "service_name": self.service_name,
             "expected_state": self.expected_state,
