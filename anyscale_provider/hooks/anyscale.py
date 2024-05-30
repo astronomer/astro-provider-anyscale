@@ -133,13 +133,12 @@ class AnyscaleHook(BaseHook):
         job_id = self.sdk.job.submit(job_config)
         return job_id
     
-    def deploy_service(self,config: dict,
+    def deploy_service(self,config: ServiceConfig,
                        in_place: str = False,
                        canary_percent: int = None,
                        max_surge_percent: int = None) -> str:
         self.log.info("Deploying a service with configuration: {}".format(config))
-        service_config = ServiceConfig(**config)
-        service_id = self.sdk.service.deploy(config = service_config,
+        service_id = self.sdk.service.deploy(config = config,
                                              in_place = in_place,
                                              canary_percent = canary_percent,
                                              max_surge_percent = max_surge_percent)
