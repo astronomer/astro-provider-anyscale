@@ -290,7 +290,7 @@ class RolloutAnyscaleService(BaseOperator):
     def execute_complete(self, context: Context, event: TriggerEvent) -> None:
         
         self.log.info(f"Execution completed...")
-        service_id = event["service_id"]
+        service_id = event["service_name"]
         
         if event["status"] in (ServiceState.SYSTEM_FAILURE):
             self.log.info(f"Anyscale service deployment {service_id} ended with status : {event['status']}")
