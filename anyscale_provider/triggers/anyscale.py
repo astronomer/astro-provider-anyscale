@@ -71,8 +71,8 @@ class AnyscaleJobTrigger(BaseTrigger):
                     })
                     return
                 
-                for log in self.hook.fetch_logs(job_id = self.job_id):
-                    self.log.info(log)
+                #for log in self.hook.fetch_logs(job_id = self.job_id):
+                #    self.log.info(log)
 
                 await asyncio.sleep(self.poll_interval)
             # Once out of the loop, the job has reached a terminal status
@@ -197,4 +197,4 @@ class AnyscaleServiceTrigger(BaseTrigger):
     def check_current_status(self, service_name: str) -> bool:
         job_status = self.get_current_status(service_name)
         self.log.info(f"Current job status for {service_name} is: {job_status.state}")
-        return job_status in (ServiceState.STARTING,ServiceState.UPDATING,ServiceState.ROLLING_OUT, ServiceState.UNHEALTHY)
+        return job_status.state in (ServiceState.STARTING,ServiceState.UPDATING,ServiceState.ROLLING_OUT, ServiceState.UNHEALTHY)
