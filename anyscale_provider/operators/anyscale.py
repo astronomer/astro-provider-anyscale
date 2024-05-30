@@ -268,6 +268,9 @@ class RolloutAnyscaleService(BaseOperator):
             self.log.info(f"SDK is not available...")
             raise AirflowException("SDK is not available")
         
+        svc_config = ServiceConfig(**self.service_params)
+        self.log.info("Service with config object: {}".format(svc_config))
+        
         # Call the SDK method with the dynamically created service model
         service_id = self.hook.deploy_service(self.service_params,
                                               self.in_place,
