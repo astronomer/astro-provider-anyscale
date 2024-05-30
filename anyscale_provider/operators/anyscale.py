@@ -224,7 +224,7 @@ class RolloutAnyscaleService(BaseOperator):
              canary_percent: Union[int, None] = None,
              max_surge_percent: Union[int, None] = None,
              **kwargs):
-        super(RolloutAnyscaleService, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.conn_id = conn_id
 
         # Set up explicit parameters
