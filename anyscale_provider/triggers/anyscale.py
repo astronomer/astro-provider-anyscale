@@ -42,8 +42,6 @@ class AnyscaleJobTrigger(BaseTrigger):
         self.poll_interval = poll_interval
         self.timeout = timeout
         self.end_time = time.time() + self.timeout
-        self.logger = logging.getLogger(self.__class__.__name__)
-        self.logger.setLevel(logging.INFO)
     
     @cached_property
     def hook(self) -> AnyscaleHook:
@@ -138,9 +136,6 @@ class AnyscaleServiceTrigger(BaseTrigger):
         self.expected_state = expected_state
         self.poll_interval = poll_interval
         self.timeout = timeout
-
-        self.logger = logging.getLogger(self.__class__.__name__)
-        self.logger.setLevel(logging.INFO)
         self.end_time = time.time() + timeout
 
     @cached_property
@@ -160,11 +155,11 @@ class AnyscaleServiceTrigger(BaseTrigger):
     async def run(self):
         
         if not self.service_name:
-            self.logger.info("No service_name provided")
+            self.log.info("No service_name provided")
             yield TriggerEvent({"status": ServiceState.SYSTEM_FAILURE, "message": "No service_name provided to async trigger", "service_name": self.service_name})
 
         try:
-            self.logger.info(f"Monitoring service {self.service_name} every {self.poll_interval} seconds to reach {self.expected_state}")
+            self.log.info(f"Monitoring service {self.service_name} every {self.poll_interval} seconds to reach {self.expected_state}")
 
             while self.check_current_status(self.service_name):
                 if time.time() > self.end_time:
@@ -193,7 +188,7 @@ class AnyscaleServiceTrigger(BaseTrigger):
                 return
 
         except Exception as e:
-            self.logger.error("An error occurred during monitoring:", exc_info=True)
+            self.log.error("An error occurred during monitoring:", exc_info=True)
             yield TriggerEvent({"status": ServiceState.SYSTEM_FAILURE, "message": str(e),"service_name": self.service_name})
     
     def get_current_status(self, service_name: str):
@@ -201,5 +196,5 @@ class AnyscaleServiceTrigger(BaseTrigger):
         
     def check_current_status(self, service_name: str) -> bool:
         job_status = self.get_current_status(service_name)
-        self.logger.info(f"Current job status for {service_name} is: {job_status.state}")
+        self.log.info(f"Current job status for {service_name} is: {job_status.state}")
         return job_status in (ServiceState.STARTING,ServiceState.UPDATING,ServiceState.ROLLING_OUT, ServiceState.UNHEALTHY)
