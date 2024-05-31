@@ -1,24 +1,27 @@
 import unittest
 from unittest.mock import patch, MagicMock
 from datetime import datetime
+
+from anyscale.job.models import JobState
+
 from anyscale_provider.triggers.anyscale import AnyscaleJobTrigger,AnyscaleServiceTrigger
 
 class TestAnyscaleJobTrigger(unittest.TestCase):
     def setUp(self):
         self.trigger = AnyscaleJobTrigger(conn_id='default_conn', job_id='123', job_start_time=datetime.now())
 
-    @patch('include.triggers.anyscale.AnyscaleJobTrigger.get_current_status')
+    @patch('anyscale_provider.triggers.anyscale.AnyscaleJobTrigger.get_current_status')
     def test_is_terminal_status(self, mock_get_status):
         mock_get_status.return_value = 'COMPLETED'
         self.assertTrue(self.trigger.is_terminal_status('123'))
 
-    @patch('include.triggers.anyscale.AnyscaleJobTrigger.get_current_status')
+    @patch('anyscale_provider.triggers.anyscale.AnyscaleJobTrigger.is_terminal_status')
     def test_is_not_terminal_status(self, mock_get_status):
-        mock_get_status.return_value = 'RUNNING'
+        mock_get_status.return_value = False
         self.assertFalse(self.trigger.is_terminal_status('123'))
 
     @patch('asyncio.sleep', return_value=None)
-    @patch('include.triggers.anyscale.AnyscaleJobTrigger.get_current_status', side_effect=['RUNNING', 'RUNNING', 'COMPLETED'])
+    @patch('anyscale_provider.triggers.anyscale.AnyscaleJobTrigger.get_current_status', side_effect=['RUNNING', 'RUNNING', 'COMPLETED'])
     async def test_run_successful_completion(self, mock_get_status, mock_sleep):
         async for event in self.trigger.run():
             self.assertIn('status', event)
@@ -32,15 +35,15 @@ class TestAnyscaleJobTrigger(unittest.TestCase):
 
 class TestAnyscaleServiceTrigger(unittest.TestCase):
     def setUp(self):
-        self.trigger = AnyscaleServiceTrigger(conn_id='default_conn', service_id='service123', expected_state='RUNNING')
+        self.trigger = AnyscaleServiceTrigger(conn_id='default_conn', service_name='service123', expected_state='RUNNING')
 
-    @patch('include.triggers.anyscale.AnyscaleServiceTrigger.get_current_status')
+    @patch('anyscale_provider.triggers.anyscale.AnyscaleServiceTrigger.get_current_status')
     def test_check_current_status(self, mock_get_status):
-        mock_get_status.return_value = 'STARTING'
+        mock_get_status.return_value = "STARTING"
         self.assertTrue(self.trigger.check_current_status('service123'))
 
     @patch('asyncio.sleep', return_value=None)
-    @patch('include.triggers.anyscale.AnyscaleServiceTrigger.get_current_status', side_effect=['STARTING', 'UPDATING', 'RUNNING'])
+    @patch('anyscale_provider.triggers.anyscale.AnyscaleServiceTrigger.get_current_status', side_effect=['STARTING', 'UPDATING', 'RUNNING'])
     async def test_run_successful(self, mock_get_status, mock_sleep):
         async for event in self.trigger.run():
             self.assertEqual(event['status'], 'success')

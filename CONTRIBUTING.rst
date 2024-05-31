@@ -24,7 +24,7 @@ Prepare PR
 
 1. Update the local sources to address the issue you are working on.
 
-   * Make sure your fork's main is synced with Astronomer Provider's main before you create a branch. See
+   * Make sure your fork's main is synced with airflow-provider-anyscale's main before you create a branch. See
      `How to sync your fork <#how-to-sync-your-fork>`_ for details.
 
    * Create a local branch for your development. Make sure to use latest
