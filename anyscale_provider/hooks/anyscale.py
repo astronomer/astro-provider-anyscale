@@ -170,7 +170,7 @@ class AnyscaleHook(BaseHook):
             AirflowException(f"Service termination failed with error: {e}")
         return True
     
-    def fetch_logs(self, job_id: str):
-        return self.sdk.job.logs(job_id=job_id)
+    def get_logs(self, job_id: str):
+        return self.sdk.job.get_logs(job_id=job_id)
 
     

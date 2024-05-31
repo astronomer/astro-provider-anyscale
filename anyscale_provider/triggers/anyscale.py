@@ -70,11 +70,12 @@ class AnyscaleJobTrigger(BaseTrigger):
                         "job_id": self.job_id
                     })
                     return
-                
-                #for log in self.hook.fetch_logs(job_id = self.job_id):
-                #    self.log.info(log)
-
                 await asyncio.sleep(self.poll_interval)
+            
+            # Printing logs
+            for log in self.hook.get_logs(job_id = self.job_id).split("\n"):
+                    self.log.info(log)
+
             # Once out of the loop, the job has reached a terminal status
             job_status = self.get_current_status(self.job_id)
             self.log.info(f"Current status of the job is {job_status}")

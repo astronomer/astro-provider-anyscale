@@ -25,7 +25,7 @@ requires-python = "~=3.8"
 dependencies = [
     "apache-airflow>=2.9",
     "pyyaml",
-    "anyscale>=0.24.35"
+    "anyscale>=0.24.37"
 ]
 
 [project.urls]
