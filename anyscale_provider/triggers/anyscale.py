@@ -73,8 +73,9 @@ class AnyscaleJobTrigger(BaseTrigger):
                 await asyncio.sleep(self.poll_interval)
             
             # Printing logs
-            for log in self.hook.get_logs(job_id = self.job_id).split("\n"):
-                    self.log.info(log)
+            logs = await self.hook.get_logs(job_id=self.job_id)
+            for log in logs.split("\n"):
+                self.log.info(log)
 
             # Once out of the loop, the job has reached a terminal status
             job_status = self.get_current_status(self.job_id)
