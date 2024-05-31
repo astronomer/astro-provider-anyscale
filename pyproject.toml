@@ -8,7 +8,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "airflow-provider-anyscale"
 authors = [
-    { name = "Venkata Jagannath", email = "venkat@astronomer.io" },
+    { name = "Venkata Jagannath", email = "venkatajagannath.yellapragada@astronomer.io" },
     { name = "Astronomer", email = "humans@astronomer.io" },
 
 ]
