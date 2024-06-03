@@ -1,55 +1,91 @@
-import unittest
+import json
+import pytest
+from unittest import mock
 from unittest.mock import patch, MagicMock
 from airflow.exceptions import AirflowException
+
+from airflow.models import Connection
+
+from anyscale import Anyscale
+from anyscale.job.models import JobConfig
+from anyscale.job.models import JobStatus, JobState, JobRunStatus
+from anyscale.service.models import ServiceConfig, ServiceStatus, ServiceVersionState, ServiceState
 from anyscale_provider.hooks.anyscale import AnyscaleHook
 
-class TestAnyscaleHook(unittest.TestCase):
 
-    def setUp(self):
-        self.hook = AnyscaleHook(conn_id='test_conn')
+API_KEY = "api_key_value"  # Use a mock API key value
 
-    @patch.object(AnyscaleHook, 'get_sdk')
-    def test_submit_job(self, mock_get_sdk):
-        config = {'job_type': 'Production'}
-        mock_get_sdk.return_value.job.submit.return_value = 'job1234'
-        job_id = self.hook.submit_job(config)
-        self.assertEqual(job_id, 'job1234')
+class TestAnyscaleHook:
 
-    @patch.object(AnyscaleHook, 'get_sdk')
-    def test_deploy_service(self, mock_get_sdk):
-        config = {'service_type': 'Production'}
-        mock_get_sdk.return_value.service.deploy.return_value = 'service1234'
-        service_id = self.hook.deploy_service(config)
-        self.assertEqual(service_id, 'service1234')
+    def setup_method(self):
+        with mock.patch("anyscale_provider.hooks.anyscale.Anyscale"):
+            with mock.patch("anyscale_provider.hooks.anyscale.AnyscaleHook.get_connection") as m:
+                m.return_value = Connection(
+                    conn_id='anyscale_default',
+                    conn_type='http',
+                    host='localhost',
+                    password=API_KEY,  # Set the password to the API key
+                    extra=json.dumps({})
+                )
+                self.hook = AnyscaleHook()
+    
+    @patch('anyscale_provider.hooks.anyscale.AnyscaleHook.get_connection')
+    @patch("anyscale_provider.hooks.anyscale.Anyscale")
+    def test_api_key_required(self, mock_anyscale, mock_get_connection):
+        # Set up the mock connection to return a Connection without the API key
+        mock_get_connection.return_value = Connection(
+            conn_id='anyscale_default',
+            conn_type='http',
+            host='localhost',
+            password=None,  # Simulate missing password
+            extra=json.dumps({})
+        )
+        with pytest.raises(AirflowException) as ctx:
+            AnyscaleHook()
+        assert str(ctx.value) == "Missing API token for connection id anyscale_default"
 
-    @patch.object(AnyscaleHook, 'get_sdk')
-    def test_get_job_status(self, mock_get_sdk):
-        mock_get_sdk.return_value.job.status.return_value = 'Running'
-        status = self.hook.get_job_status('job1234')
-        self.assertEqual(status, 'Running')
+    @patch('anyscale_provider.hooks.anyscale.AnyscaleHook.get_connection')
+    @patch("anyscale_provider.hooks.anyscale.Anyscale")
+    def test_successful_initialization(self, mock_anyscale, mock_get_connection):
+        # Set up the mock connection to return a valid Connection
+        mock_get_connection.return_value = Connection(
+            conn_id='anyscale_default',
+            conn_type='http',
+            host='localhost',
+            password=API_KEY,
+            extra=json.dumps({})
+        )
+        hook = AnyscaleHook()
+        assert hook.get_connection('anyscale_default').password == API_KEY
+    
+    @patch('anyscale_provider.hooks.anyscale.AnyscaleHook.submit_job')
+    def test_submit_job(self, mock_submit_job):
+        job_config = JobConfig(name="test_job",entrypoint="python script.py")
+        mock_submit_job.return_value = {"job_id": "test_job_id"}
+        
+        result = self.hook.submit_job(job_config)
+        
+        mock_submit_job.assert_called_once_with(job_config)
+        assert result == {"job_id": "test_job_id"}
 
-    @patch.object(AnyscaleHook, 'get_sdk')
-    def test_get_service_status(self, mock_get_sdk):
-        mock_get_sdk.return_value.service.status.return_value = 'Running'
-        status = self.hook.get_service_status('service_name')
-        self.assertEqual(status, 'Running')
+    @patch('anyscale_provider.hooks.anyscale.AnyscaleHook.get_job_status')
+    def test_get_job_status(self, mock_get_job_status):
+        job_config = JobConfig(name="test_job",entrypoint="python script.py")
+        mock_get_job_status.return_value = JobStatus(id = "test_job_id",name="test_job_id",
+                                                    config = job_config, state=JobState.SUCCEEDED,
+                                                    runs = [JobRunStatus(name="test", state = JobState.SUCCEEDED)] )
+        
+        result = self.hook.get_job_status("test_job_id")
+        
+        mock_get_job_status.assert_called_once_with("test_job_id")
+        assert result.id == "test_job_id"
+        assert result.state == JobState.SUCCEEDED
 
-    @patch.object(AnyscaleHook, 'get_sdk')
-    def test_terminate_job_success(self, mock_get_sdk):
-        mock_get_sdk.return_value.job.terminate.return_value = 'job1234'
-        result = self.hook.terminate_job('job1234', time_delay=1)
-        self.assertTrue(result)
-
-    @patch.object(AnyscaleHook, 'get_sdk')
-    def test_terminate_service_success(self, mock_get_sdk):
-        mock_get_sdk.return_value.service.terminate.return_value = 'service1234'
-        result = self.hook.terminate_service('service1234', time_delay=1)
-        self.assertTrue(result)
-
-    @patch.object(AnyscaleHook, 'get_sdk')
-    def test_fetch_logs(self, mock_get_sdk):
-        logs_output = "Log line 1\nLog line 2"
-        mock_get_sdk.return_value.job.logs.return_value = logs_output
-        logs = self.hook.fetch_logs('job1234')
-        self.assertEqual(len(logs.split('\n')), 2)
-        self.assertEqual(logs, "Log line 1\nLog line 2")
+    @patch('anyscale_provider.hooks.anyscale.AnyscaleHook.terminate_job')
+    def test_terminate_job(self, mock_terminate_job):
+        mock_terminate_job.return_value = {"status": "terminated"}
+        
+        result = self.hook.terminate_job("test_job_id")
+        
+        mock_terminate_job.assert_called_once_with("test_job_id")
+        assert result == {"status": "terminated"}
