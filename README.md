@@ -35,7 +35,7 @@ The provided `submit_anyscale_job.py` script is an example of how to configure a
 ```python
 from airflow.models import DAG
 from datetime import datetime
-from custom_anyscale_operators import SubmitAnyscaleJob
+from anyscale_provider.operators.anyscale import SubmitAnyscaleJob
 
 # Define the default DAG arguments.
 default_args = {
@@ -70,7 +70,7 @@ The `deploy_anyscale_service.py` script uses the `RolloutAnyscaleService` operat
 ```python
 from airflow.models import DAG
 from datetime import datetime
-from custom_anyscale_operators import RolloutAnyscaleService
+from anyscale_provider.operators.anyscale import RolloutAnyscaleService
 
 # Define the default DAG arguments.
 default_args = {
@@ -108,17 +108,17 @@ deploy_anyscale_service = RolloutAnyscaleService(
 )
 ```
 
-Changelog
+### Changelog
 _________
 
-We follow `Semantic Versioning <https://semver.org/>`_ for releases.
-Check `CHANGELOG.rst <https://github.com/astronomer/airflow-provider-anyscale/blob/main/CHANGELOG.rst>`_
+We follow [Semantic Versioning](https://semver.org/) for releases.
+Check [CHANGELOG.rst](https://github.com/astronomer/airflow-provider-anyscale/blob/main/CHANGELOG.rst)
 for the latest changes.
 
 
-Contributing Guide
+### Contributing Guide
 __________________
 
 All contributions, bug reports, bug fixes, documentation improvements, enhancements are welcome.
 
-A detailed overview an how to contribute can be found in the `Contributing Guide <https://github.com/astronomer/airflow-provider-anyscale/blob/main/CONTRIBUTING.rst>`_.
+A detailed overview an how to contribute can be found in the [Contributing Guide](https://github.com/astronomer/airflow-provider-anyscale/blob/main/CONTRIBUTING.rst)
