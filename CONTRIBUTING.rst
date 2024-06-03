@@ -163,4 +163,4 @@ All tests are inside ``./tests`` directory.
 - Just run ``pytest filepath+filename`` to run the tests.
 
 
-For more information, please see the contributing guide available `here <https://github.com/astronomer/airflow-provider-anyscale/blob/main/CONTRIBUTING.rst>`
+For more information, please see the contributing guide available `here <https://github.com/astronomer/airflow-provider-anyscale/blob/main/CONTRIBUTING.rst>`_
