@@ -107,3 +107,18 @@ deploy_anyscale_service = RolloutAnyscaleService(
     dag=dag
 )
 ```
+
+Changelog
+_________
+
+We follow `Semantic Versioning <https://semver.org/>`_ for releases.
+Check `CHANGELOG.rst <https://github.com/astronomer/airflow-provider-anyscale/blob/main/CHANGELOG.rst>`_
+for the latest changes.
+
+
+Contributing Guide
+__________________
+
+All contributions, bug reports, bug fixes, documentation improvements, enhancements are welcome.
+
+A detailed overview an how to contribute can be found in the `Contributing Guide <https://github.com/astronomer/airflow-provider-anyscale/blob/main/CONTRIBUTING.rst>`_.

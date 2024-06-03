@@ -2,3 +2,12 @@
 anyscale_provider/.DS_Store
 anyscale_provider/example_dags/.DS_Store
 anyscale_provider/example_dags/ray_scripts/.DS_Store
+anyscale_provider/__pycache__
+anyscale_provider/hooks/__pycache__
+anyscale_provider/operators/__pycache__
+anyscale_provider/triggers/__pycache__
+tests/__pycache__
+tests/dags/__pycache__
+tests/hooks/__pycache__
+tests/operators/__pycache__
+tests/triggers/__pycache__

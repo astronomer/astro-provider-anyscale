@@ -14,8 +14,6 @@ from airflow.exceptions import AirflowException
 from airflow.compat.functools import cached_property
 from anyscale.sdk.anyscale_client.models import *
 
-logger = logging.getLogger(__name__)
-
 class AnyscaleHook(BaseHook):
 
     """
@@ -111,7 +109,7 @@ class AnyscaleHook(BaseHook):
     def __init__(self, conn_id: str = default_conn_name, **kwargs: Any) -> None:
         super().__init__()
         self.conn_id = conn_id
-        logger.info(f"Initializing AnyscaleHook with connection_id: {self.conn_id}")
+        self.log.info(f"Initializing AnyscaleHook with connection_id: {self.conn_id}")
 
         conn = self.get_connection(self.conn_id)
         token = conn.password
@@ -129,34 +127,31 @@ class AnyscaleHook(BaseHook):
         }
 
     # Example job interaction methods using environment authentication
-    def submit_job(self, config: dict) -> str:
-        logger.info("Creating a job with configuration: {}".format(config))
-        job_config = JobConfig(**config)
-        job_id = self.sdk.job.submit(job_config)
+    def submit_job(self, config: JobConfig) -> str:
+        self.log.info("Creating a job with configuration: {}".format(config))
+        job_id = self.sdk.job.submit(config = config)
         return job_id
     
-    def deploy_service(self,config: dict,
+    def deploy_service(self,config: ServiceConfig,
                        in_place: str = False,
                        canary_percent: int = None,
                        max_surge_percent: int = None) -> str:
-        logger.info("Deploying a service with configuration: {}".format(config))
-        service_config = ServiceConfig(**config)
-        logger.info("Deploying a service with config object: {}".format(service_config))
-        service_id = self.sdk.service.deploy(config = service_config,
+        self.log.info("Deploying a service with configuration: {}".format(config))
+        service_id = self.sdk.service.deploy(config = config,
                                              in_place = in_place,
                                              canary_percent = canary_percent,
                                              max_surge_percent = max_surge_percent)
         return service_id
 
     def get_job_status(self, job_id: str) -> str:
-        logger.info("Fetching job status for Job name: {}".format(job_id))
+        self.log.info("Fetching job status for Job name: {}".format(job_id))
         return self.sdk.job.status(job_id=job_id)
     
     def get_service_status(self,service_name: str) -> str:
         return self.sdk.service.status(name=service_name)
     
     def terminate_job(self, job_id: str, time_delay: int):
-        logger.info(f"Terminating Job ID: {job_id}")
+        self.log.info(f"Terminating Job ID: {job_id}")
         try:
             job_id = self.sdk.job.terminate(name=job_id)
             # Simulated delay
@@ -166,7 +161,7 @@ class AnyscaleHook(BaseHook):
         return True
     
     def terminate_service(self, service_id: str, time_delay: int):
-        logger.info(f"Terminating Service ID: {service_id}")
+        self.log.info(f"Terminating Service ID: {service_id}")
         try:
             service_id = self.sdk.service.terminate(name=service_id)
             # Simulated delay
@@ -175,7 +170,7 @@ class AnyscaleHook(BaseHook):
             AirflowException(f"Service termination failed with error: {e}")
         return True
     
-    def fetch_logs(self, job_id: str):
-        return self.sdk.job.logs(job_id=job_id)
+    def get_logs(self, job_id: str):
+        return self.sdk.job.get_logs(job_id=job_id)
 
     

@@ -11,6 +11,7 @@ from anyscale.job.models import JobState
 from anyscale.compute_config.models import (
     ComputeConfig, HeadNodeConfig, MarketType, WorkerNodeGroupConfig
 )
+from anyscale.job.models import JobConfig
 from anyscale.service.models import ServiceConfig, RayGCSExternalStorageConfig, ServiceState
 
 # Airflow imports
@@ -122,14 +123,15 @@ class SubmitAnyscaleJob(BaseOperator):
             self.log.info(f"Using Anyscale version {anyscale.__version__}")
 
         # Submit the job to Anyscale
-        self.job_id = self.hook.submit_job(self.fields)
+        job_config = JobConfig(**self.fields)
+        self.job_id = self.hook.submit_job(job_config)
         self.created_at = time.time()
         self.log.info(f"Submitted Anyscale job with ID: {self.job_id}")
 
         current_status = self.get_current_status(self.job_id)
-        self.log.info(f"Current status for {self.job_id} is: {current_status.state}")
+        self.log.info(f"Current status for {self.job_id} is: {current_status}")
 
-        self.process_job_status(self.job_id, current_status.state)
+        self.process_job_status(self.job_id, current_status)
         
         return self.job_id
     
@@ -152,7 +154,7 @@ class SubmitAnyscaleJob(BaseOperator):
                    method_name="execute_complete")
 
     def get_current_status(self, job_id):
-        return self.hook.get_job_status(job_id=job_id)
+        return self.hook.get_job_status(job_id=job_id).state
 
     def execute_complete(self, context: Context, event: TriggerEvent) -> None:
 
@@ -224,7 +226,7 @@ class RolloutAnyscaleService(BaseOperator):
              canary_percent: Union[int, None] = None,
              max_surge_percent: Union[int, None] = None,
              **kwargs):
-        super(RolloutAnyscaleService, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.conn_id = conn_id
 
         # Set up explicit parameters
@@ -268,14 +270,17 @@ class RolloutAnyscaleService(BaseOperator):
             self.log.info(f"SDK is not available...")
             raise AirflowException("SDK is not available")
         
+        svc_config = ServiceConfig(**self.service_params)
+        self.log.info("Service with config object: {}".format(svc_config))
+        
         # Call the SDK method with the dynamically created service model
-        service_id = self.hook.deploy_service(self.service_params,
-                                              self.in_place,
-                                              self.canary_percent,
-                                              self.max_surge_percent)
+        service_id = self.hook.deploy_service(config = svc_config,
+                                              in_place = self.in_place,
+                                              canary_percent = self.canary_percent,
+                                              max_surge_percent = self.max_surge_percent)
 
         self.defer(trigger=AnyscaleServiceTrigger(conn_id = self.conn_id,
-                                        service_id = self.service_params['name'],
+                                        service_name = self.service_params['name'],
                                         expected_state = ServiceState.RUNNING,
                                         poll_interval= 60,
                                         timeout= 600),
@@ -287,7 +292,7 @@ class RolloutAnyscaleService(BaseOperator):
     def execute_complete(self, context: Context, event: TriggerEvent) -> None:
         
         self.log.info(f"Execution completed...")
-        service_id = event["service_id"]
+        service_id = event["service_name"]
         
         if event["status"] in (ServiceState.SYSTEM_FAILURE):
             self.log.info(f"Anyscale service deployment {service_id} ended with status : {event['status']}")

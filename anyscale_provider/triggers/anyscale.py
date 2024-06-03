@@ -2,6 +2,7 @@
 import time
 import logging
 import asyncio
+from functools import partial
 from datetime import datetime, timedelta
 
 from anyscale.job.models import JobState
@@ -42,8 +43,6 @@ class AnyscaleJobTrigger(BaseTrigger):
         self.poll_interval = poll_interval
         self.timeout = timeout
         self.end_time = time.time() + self.timeout
-        self.logger = logging.getLogger(self.__class__.__name__)
-        self.logger.setLevel(logging.INFO)
     
     @cached_property
     def hook(self) -> AnyscaleHook:
@@ -72,13 +71,19 @@ class AnyscaleJobTrigger(BaseTrigger):
                         "job_id": self.job_id
                     })
                     return
-                
-                for log in self.hook.fetch_logs(job_id = self.job_id):
-                    self.log.info(log)
-
                 await asyncio.sleep(self.poll_interval)
+            
+            # Fetch and print logs
+            loop = asyncio.get_running_loop()
+            logs = await loop.run_in_executor(
+                None,
+                partial(self.hook.get_logs, job_id=self.job_id)
+            )
+            for log in logs.split("\n"):
+                self.log.info(log)
+
             # Once out of the loop, the job has reached a terminal status
-            job_status = self.get_current_status(self.job_id).state
+            job_status = self.get_current_status(self.job_id)
             self.log.info(f"Current status of the job is {job_status}")
             
             yield TriggerEvent({
@@ -95,12 +100,12 @@ class AnyscaleJobTrigger(BaseTrigger):
             })
 
     def get_current_status(self, job_id):
-        return self.hook.get_job_status(job_id=job_id)
+        return self.hook.get_job_status(job_id=job_id).state
 
     def is_terminal_status(self, job_id):
         job_status = self.get_current_status(job_id)
-        self.log.info(f"Current job status for {job_id} is: {job_status.state}")
-        return job_status.state not in (JobState.STARTING, JobState.RUNNING)
+        self.log.info(f"Current job status for {job_id} is: {job_status}")
+        return job_status not in (JobState.STARTING, JobState.RUNNING)
 
 
 
@@ -138,9 +143,6 @@ class AnyscaleServiceTrigger(BaseTrigger):
         self.expected_state = expected_state
         self.poll_interval = poll_interval
         self.timeout = timeout
-
-        self.logger = logging.getLogger(self.__class__.__name__)
-        self.logger.setLevel(logging.INFO)
         self.end_time = time.time() + timeout
 
     @cached_property
@@ -160,11 +162,11 @@ class AnyscaleServiceTrigger(BaseTrigger):
     async def run(self):
         
         if not self.service_name:
-            self.logger.info("No service_name provided")
+            self.log.info("No service_name provided")
             yield TriggerEvent({"status": ServiceState.SYSTEM_FAILURE, "message": "No service_name provided to async trigger", "service_name": self.service_name})
 
         try:
-            self.logger.info(f"Monitoring service {self.service_name} every {self.poll_interval} seconds to reach {self.expected_state}")
+            self.log.info(f"Monitoring service {self.service_name} every {self.poll_interval} seconds to reach {self.expected_state}")
 
             while self.check_current_status(self.service_name):
                 if time.time() > self.end_time:
@@ -193,13 +195,13 @@ class AnyscaleServiceTrigger(BaseTrigger):
                 return
 
         except Exception as e:
-            self.logger.error("An error occurred during monitoring:", exc_info=True)
+            self.log.error("An error occurred during monitoring:", exc_info=True)
             yield TriggerEvent({"status": ServiceState.SYSTEM_FAILURE, "message": str(e),"service_name": self.service_name})
     
     def get_current_status(self, service_name: str):
-        return self.hook.get_service_status(service_name)
+        return self.hook.get_service_status(service_name).state
         
     def check_current_status(self, service_name: str) -> bool:
         job_status = self.get_current_status(service_name)
-        self.logger.info(f"Current job status for {service_name} is: {job_status}")
-        return job_status in (ServiceState.STARTING,ServiceState.UPDATING,ServiceState.ROLLING_OUT)
+        self.log.info(f"Current job status for {service_name} is: {job_status}")
+        return job_status in (ServiceState.STARTING,ServiceState.UPDATING,ServiceState.ROLLING_OUT, ServiceState.UNHEALTHY)
