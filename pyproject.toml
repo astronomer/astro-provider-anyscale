@@ -1,36 +1,32 @@
 [build-system]
-requires = [
-    "setuptools",
-    "wheel"
-]
-build-backend = "setuptools.build_meta"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 [project]
-name = "airflow-provider-anyscale"
-authors = [
-    { name = "Venkata Jagannath", email = "venkatajagannath.yellapragada@astronomer.io" },
-    { name = "Astronomer", email = "humans@astronomer.io" },
-
-]
+name = "astro-provider-anyscale"
+authors = [{ name = "Astronomer", email = "humans@astronomer.io" }]
 license = { text = "Apache License 2.0" }
 description = "An Apache Airflow provider package built by Astronomer to integrate with Anyscale."
 classifiers = [
     "Framework :: Apache Airflow",
     "Framework :: Apache Airflow :: Provider",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3"
 ]
-dynamic = [
-    "version"
-]
+dynamic = ["version"]
 requires-python = "~=3.8"
 dependencies = [
     "apache-airflow>=2.9",
     "pyyaml",
-    "anyscale>=0.24.37"
+    "anyscale~=0.24.37"
 ]
 
 [project.urls]
 Homepage = "https://astronomer.io"
-Source = "https://github.com/astronomer/airflow-provider-anyscale/"
+Source = "https://github.com/astronomer/astro-provider-anyscale/"
 
 [project.readme]
 file = "README.md"
@@ -39,17 +35,45 @@ content-type = "text/markdown"
 [project.entry-points.apache_airflow_provider]
 provider_info = "anyscale_provider.__init__:get_provider_info"
 
-[tool.setuptools]
-include-package-data = false
+[tool.hatch.version]
+path = "anyscale_provider/__init__.py"
 
-[tool.setuptools.dynamic]
-version = { attr = "anyscale_provider.__version__" }
+[tool.hatch.build.targets.sdist]
+include = ["/anyscale_provider"]
 
-[tool.setuptools.packages.find]
-exclude = [
-    "*tests.*",
-    "*tests"
+[tool.hatch.build.targets.wheel]
+packages = ["/anyscale_provider"]
+
+######################################
+# TESTING
+######################################
+
+[tool.hatch.envs.tests]
+dependencies = [
+    "astro-provider-anyscale[tests]",
+    "types-PyYAML",
+    "types-attrs",
+    "types-requests",
+    "types-python-dateutil",
+    "apache-airflow=={matrix:airflow}.0",
 ]
+pre-install-commands = ["sh scripts/test/pre-install-airflow.sh {matrix:airflow} {matrix:python}"]
+
+[[tool.hatch.envs.tests.matrix]]
+python = ["3.8", "3.9", "3.10", "3.11"]
+airflow = ["2.7", "2.8", "2.9"]
+
+[tool.hatch.envs.tests.overrides]
+matrix.airflow.dependencies = [
+    { value = "typing_extensions<4.6", if = ["2.6"] }
+]
+
+[tool.hatch.envs.tests.scripts]
+freeze = "pip freeze"
+test = 'sh scripts/test/unit_test.sh'
+test-cov = 'sh scripts/test/unit-cov.sh'
+test-integration = 'sh scripts/test/integration_test.sh'
+type-check = " pre-commit run mypy --files anyscale_provider/**/*"
 
 ######################################
 # THIRD PARTY TOOLS
