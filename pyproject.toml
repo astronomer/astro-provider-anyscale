@@ -56,6 +56,8 @@ dependencies = [
     "types-requests",
     "types-python-dateutil",
     "apache-airflow=={matrix:airflow}.0",
+    "pytest>=6.0",
+    "pytest-cov",
 ]
 pre-install-commands = ["sh scripts/test/pre-install-airflow.sh {matrix:airflow} {matrix:python}"]
 
