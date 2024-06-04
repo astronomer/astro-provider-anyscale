@@ -71,7 +71,7 @@ matrix.airflow.dependencies = [
 [tool.hatch.envs.tests.scripts]
 freeze = "pip freeze"
 test = 'sh scripts/test/unit_test.sh'
-test-cov = 'sh scripts/test/unit-cov.sh'
+test-cov = 'sh scripts/test/unit_cov.sh'
 test-integration = 'sh scripts/test/integration_test.sh'
 type-check = " pre-commit run mypy --files anyscale_provider/**/*"
 
