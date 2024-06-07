@@ -1,5 +1,5 @@
 pytest -vv \
-    --cov=cosmos \
+    --cov=anyscale_provider \
     --cov-report=term-missing \
     --cov-report=xml \
     --durations=0 \

@@ -101,11 +101,11 @@ class SubmitAnyscaleJob(BaseOperator):
         if not self.entrypoint:
             raise AirflowException("Entrypoint must be specified.")
     
-    def on_kill(self) -> Optional[str]:
+    def on_kill(self) -> None:
         if self.job_id is not None:
             self.hook.terminate_job(self.job_id, 5)
             self.log.info("Termination request received. Submitted request to terminate the anyscale job.")
-        return self.job_id
+        return
     
     @cached_property
     def hook(self) -> AnyscaleHook:
@@ -218,7 +218,7 @@ class RolloutAnyscaleService(BaseOperator):
              logging_config: Optional[Dict[str, Any]] = None,
              ray_gcs_external_storage_config: Optional[Union[RayGCSExternalStorageConfig, dict]] = None,
              in_place: bool = False,
-             canary_percent: Optional[int] = None,
+             canary_percent: Optional[float] = None,
              max_surge_percent: Optional[int] = None,
              **kwargs: Any) -> None:
         super().__init__(**kwargs)

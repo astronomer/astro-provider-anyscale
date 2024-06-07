@@ -123,6 +123,7 @@ class AnyscaleHook(BaseHook):
 
         self.sdk = Anyscale(auth_token=token)
 
+
     @classmethod
     def get_ui_field_behaviour(cls) -> Dict[str, Any]:
         """Return custom field behaviour for the connection form in the UI."""
@@ -148,11 +149,11 @@ class AnyscaleHook(BaseHook):
                                              max_surge_percent=max_surge_percent)
         return service_id
 
-    def get_job_status(self, job_id: str) -> str:
+    def get_job_status(self, job_id: str) -> JobStatus:
         self.log.info("Fetching job status for Job name: {}".format(job_id))
         return self.sdk.job.status(job_id=job_id)
 
-    def get_service_status(self, service_name: str) -> str:
+    def get_service_status(self, service_name: str) -> ServiceStatus:
         return self.sdk.service.status(name=service_name)
 
     def terminate_job(self, job_id: str, time_delay: int) -> bool:

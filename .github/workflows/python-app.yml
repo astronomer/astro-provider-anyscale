@@ -79,22 +79,34 @@ jobs:
           path: .coverage
 
   Run-Integration-Tests:
+    needs: Authorize
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.9"]
-        airflow-version: ["2.8"]
+        python-version: ["3.8", "3.9", "3.10", "3.11"]
+        airflow-version: ["2.7", "2.8", "2.9"]
+    services:
+      postgres:
+        image: postgres
+        env:
+          POSTGRES_PASSWORD: postgres
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
     steps:
       - uses: actions/checkout@v3
         with:
           ref: ${{ github.event.pull_request.head.sha || github.ref }}
-
       - uses: actions/cache@v3
         with:
           path: |
             ~/.cache/pip
             .nox
-          key: integration-${{ runner.os }}-${{ matrix.python-version }}-${{ matrix.airflow-version }}-${{ hashFiles('pyproject.toml') }}-${{ hashFiles('cosmos/__init__.py') }}
+          key: integration-${{ runner.os }}-${{ matrix.python-version }}-${{ matrix.airflow-version }}-${{ hashFiles('pyproject.toml') }}-${{ hashFiles('anyscale_provider/__init__.py') }}
 
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v4
@@ -103,15 +115,28 @@ jobs:
 
       - name: Install packages and dependencies
         run: |
-          python -m pip install hatch pytest
+          python -m pip install hatch
           hatch -e tests.py${{ matrix.python-version }}-${{ matrix.airflow-version }} run pip freeze
 
-      - name: Run Integration Tests against Airflow ${{ matrix.airflow-version }} and Python ${{ matrix.python-version }}
+      - name: Test Cosmos against Airflow ${{ matrix.airflow-version }} and Python ${{ matrix.python-version }}
         run: |
-          pytest path/to/your/integration/tests
+          hatch run tests.py${{ matrix.python-version }}-${{ matrix.airflow-version }}:integration_test
+        env:
+          AIRFLOW_HOME: /home/runner/work/astro-provider-anyscale/anyscale_provider/
+          AIRFLOW_CONN_AIRFLOW_DB: postgres://postgres:postgres@0.0.0.0:5432/postgres
+          AIRFLOW__CORE__DAGBAG_IMPORT_TIMEOUT: 90.0
+          PYTHONPATH: /home/runner/work/astro-provider-anyscale/anyscale_provider/:$PYTHONPATH
+          ANYSCALE_CLI_TOKEN: ${{ secrets.ANYSCALE_CLI_TOKEN }}
+          POSTGRES_HOST: localhost
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+          POSTGRES_SCHEMA: public
+          POSTGRES_PORT: 5432
 
       - name: Upload coverage to Github
         uses: actions/upload-artifact@v2
         with:
           name: coverage-integration-test-${{ matrix.python-version }}-${{ matrix.airflow-version }}
           path: .coverage
+        
