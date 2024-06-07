@@ -5,9 +5,8 @@ from typing import Any, Dict, Optional
 
 import anyscale
 from anyscale import Anyscale
-from anyscale.job.models import JobConfig
-from anyscale.job.models import JobStatus, JobState
-from anyscale.service.models import ServiceConfig, ServiceStatus, ServiceVersionState, ServiceState
+from anyscale.job.models import JobConfig, JobStatus
+from anyscale.service.models import ServiceConfig, ServiceStatus, ServiceState
 
 from airflow.hooks.base import BaseHook  # Adjusted import based on Airflow's newer version
 from airflow.exceptions import AirflowException
@@ -135,7 +134,7 @@ class AnyscaleHook(BaseHook):
 
     def submit_job(self, config: JobConfig) -> str:
         self.log.info("Creating a job with configuration: {}".format(config))
-        job_id = self.sdk.job.submit(config=config)
+        job_id: str = self.sdk.job.submit(config=config)
         return job_id
 
     def deploy_service(self, config: ServiceConfig,
@@ -143,10 +142,10 @@ class AnyscaleHook(BaseHook):
                        canary_percent: Optional[int] = None,
                        max_surge_percent: Optional[int] = None) -> str:
         self.log.info("Deploying a service with configuration: {}".format(config))
-        service_id = self.sdk.service.deploy(config=config,
-                                             in_place=in_place,
-                                             canary_percent=canary_percent,
-                                             max_surge_percent=max_surge_percent)
+        service_id: str = self.sdk.service.deploy(config=config,
+                                                  in_place=in_place,
+                                                  canary_percent=canary_percent,
+                                                  max_surge_percent=max_surge_percent)
         return service_id
 
     def get_job_status(self, job_id: str) -> JobStatus:
@@ -177,4 +176,5 @@ class AnyscaleHook(BaseHook):
         return True
 
     def get_logs(self, job_id: str) -> str:
-        return self.sdk.job.get_logs(job_id=job_id)
+        logs: str = self.sdk.job.get_logs(job_id=job_id)
+        return logs

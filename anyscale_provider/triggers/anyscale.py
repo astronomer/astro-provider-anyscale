@@ -3,7 +3,7 @@ import logging
 import asyncio
 from functools import partial
 from datetime import datetime, timedelta
-from typing import Any, Dict, AsyncIterator, Tuple
+from typing import Any, Dict, AsyncIterator, Tuple, Optional
 
 from anyscale.job.models import JobState
 from anyscale.service.models import ServiceState
@@ -133,7 +133,7 @@ class AnyscaleServiceTrigger(BaseTrigger):
                  conn_id: str,
                  service_name: str,
                  expected_state: str,
-                 canary_percent: float,
+                 canary_percent: Optional[float],
                  poll_interval: int = 60,
                  timeout: int = 600):
         super().__init__()
