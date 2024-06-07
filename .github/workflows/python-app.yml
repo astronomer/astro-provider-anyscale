@@ -56,7 +56,7 @@ jobs:
           path: |
             ~/.cache/pip
             .nox
-          key: unit-${{ runner.os }}-${{ matrix.python-version }}-${{ matrix.airflow-version }}-${{ hashFiles('pyproject.toml') }}-${{ hashFiles('cosmos/__init__.py') }}
+          key: unit-${{ runner.os }}-${{ matrix.python-version }}-${{ matrix.airflow-version }}-${{ hashFiles('pyproject.toml') }}-${{ hashFiles('anyscale_provider/__init__.py') }}
 
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v4
@@ -120,7 +120,7 @@ jobs:
 
       - name: Test Cosmos against Airflow ${{ matrix.airflow-version }} and Python ${{ matrix.python-version }}
         run: |
-          hatch run tests.py${{ matrix.python-version }}-${{ matrix.airflow-version }}:integration_test
+          hatch run tests.py${{ matrix.python-version }}-${{ matrix.airflow-version }}:test-integration
         env:
           AIRFLOW_HOME: /home/runner/work/astro-provider-anyscale/anyscale_provider/
           AIRFLOW_CONN_AIRFLOW_DB: postgres://postgres:postgres@0.0.0.0:5432/postgres

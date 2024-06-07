@@ -3,7 +3,7 @@ import logging
 import asyncio
 from functools import partial
 from datetime import datetime, timedelta
-from typing import Any, Dict, AsyncIterator, Literal
+from typing import Any, Dict, AsyncIterator, Tuple
 
 from anyscale.job.models import JobState
 from anyscale.service.models import ServiceState
@@ -34,7 +34,7 @@ class AnyscaleJobTrigger(BaseTrigger):
     :raises AirflowException: If no job_id is provided or an error occurs during polling.
     """
 
-    def __init__(self, conn_id: str, job_id: str, job_start_time: float, poll_interval: int = 60, timeout: int = 3600) -> None:
+    def __init__(self, conn_id: str, job_id: str, job_start_time: float, poll_interval: int = 60, timeout: int = 3600):
         super().__init__()
         self.conn_id = conn_id
         self.job_id = job_id
@@ -48,7 +48,7 @@ class AnyscaleJobTrigger(BaseTrigger):
         """Return an instance of the AnyscaleHook."""
         return AnyscaleHook(conn_id=self.conn_id)
 
-    def serialize(self) -> tuple[str, dict[str, Any]]:
+    def serialize(self) -> Tuple[str, Dict[str, Any]]:
         return ("anyscale_provider.triggers.anyscale.AnyscaleJobTrigger", {
             "conn_id": self.conn_id,
             "job_id": self.job_id,
@@ -99,7 +99,8 @@ class AnyscaleJobTrigger(BaseTrigger):
             })
 
     def get_current_status(self, job_id: str) -> str:
-        return self.hook.get_job_status(job_id=job_id).state
+        job_status = self.hook.get_job_status(job_id=job_id).state
+        return str(job_status)
 
     def is_terminal_status(self, job_id: str) -> bool:
         job_status = self.get_current_status(job_id)
@@ -134,7 +135,7 @@ class AnyscaleServiceTrigger(BaseTrigger):
                  expected_state: str,
                  canary_percent: float,
                  poll_interval: int = 60,
-                 timeout: int = 600) -> None:
+                 timeout: int = 600):
         super().__init__()
         self.conn_id = conn_id
         self.service_name = service_name
@@ -149,7 +150,7 @@ class AnyscaleServiceTrigger(BaseTrigger):
         """Return an instance of the AnyscaleHook."""
         return AnyscaleHook(conn_id=self.conn_id)
 
-    def serialize(self) -> tuple[str, dict[str, Any]]:
+    def serialize(self) -> Tuple[str, Dict[str, Any]]:
         return ("anyscale_provider.triggers.anyscale.AnyscaleServiceTrigger", {
             "conn_id": self.conn_id,
             "service_name": self.service_name,
@@ -201,9 +202,9 @@ class AnyscaleServiceTrigger(BaseTrigger):
         service_status = self.hook.get_service_status(service_name)
         
         if self.canary_percent is None or 0.0 < self.canary_percent < 100.0:
-            return service_status.canary_version.state
+            return str(service_status.canary_version.state)
         else:
-            return service_status.state
+            return str(service_status.state)
         
     def check_current_status(self, service_name: str) -> bool:
         job_status = self.get_current_status(service_name)
