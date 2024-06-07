@@ -2,7 +2,7 @@ __version__ = "1.0.0"
 
 def get_provider_info():
     return {
-        "package-name": "airflow-provider-anyscale",  # Required
+        "package-name": "astro-provider-anyscale",  # Required
         "name": "Anyscale",  # Required
         "description": "A anyscale template for Apache Airflow providers.",  # Required
         "connection-types": [

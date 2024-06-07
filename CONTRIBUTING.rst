@@ -16,7 +16,7 @@ report a bug, open an issue! We'd love all and any contributions. If you have qu
 We'd also love PRs. If you're thinking of a large PR, we advise opening up an issue first to talk about it,
 though! Look at the links below if you're not sure how to open a PR.
 
-If you have other questions, use `Github Discussions <https://github.com/astronomer/airflow-provider-anyscale/discussions/>`_
+If you have other questions, use `Github Discussions <https://github.com/astronomer/astro-provider-anyscale/discussions/>`_
 
 
 Prepare PR
@@ -24,11 +24,11 @@ Prepare PR
 
 1. Update the local sources to address the issue you are working on.
 
-   * Make sure your fork's main is synced with airflow-provider-anyscale's main before you create a branch. See
+   * Make sure your fork's main is synced with astro-provider-anyscale's main before you create a branch. See
      `How to sync your fork <#how-to-sync-your-fork>`_ for details.
 
    * Create a local branch for your development. Make sure to use latest
-     ``airflow-provider-anyscale/main`` as base for the branch. This allows you to easily compare
+     ``astro-provider-anyscale/main`` as base for the branch. This allows you to easily compare
      changes, have several changes that you work on at the same time and many more.
 
    * Add necessary code and unit tests.
@@ -78,7 +78,7 @@ Before you submit a pull request (PR), check that it meets these guidelines:
 Static code checks
 ------------------
 
-We check our code quality via static code checks. The static code checks in airflow-provider-anyscale are used to verify
+We check our code quality via static code checks. The static code checks in astro-provider-anyscale are used to verify
 that the code meets certain quality standards. All the static code checks can be run through pre-commit hooks.
 
 Your code must pass all the static code checks in the CI in order to be eligible for Code Review.
@@ -110,7 +110,7 @@ Installing pre-commit hooks
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 It is the best to use pre-commit hooks when you have your local virtualenv or conda environment
-for airflow-provider-anyscale activated since then pre-commit hooks and other dependencies are
+for astro-provider-anyscale activated since then pre-commit hooks and other dependencies are
 automatically installed. You can also install the pre-commit hooks manually
 using ``pip install``.
 
@@ -163,4 +163,4 @@ All tests are inside ``./tests`` directory.
 - Just run ``pytest filepath+filename`` to run the tests.
 
 
-For more information, please see the contributing guide available `here <https://github.com/astronomer/airflow-provider-anyscale/blob/main/CONTRIBUTING.rst>`_
+For more information, please see the contributing guide available `here <https://github.com/astronomer/astro-provider-anyscale/blob/main/CONTRIBUTING.rst>`_

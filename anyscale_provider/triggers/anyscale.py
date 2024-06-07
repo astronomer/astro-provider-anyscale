@@ -1,9 +1,9 @@
-
 import time
 import logging
 import asyncio
 from functools import partial
 from datetime import datetime, timedelta
+from typing import Any, Dict
 
 from anyscale.job.models import JobState
 from anyscale.service.models import ServiceState
@@ -14,7 +14,6 @@ from airflow.compat.functools import cached_property
 from anyscale_provider.hooks.anyscale import AnyscaleHook
 
 class AnyscaleJobTrigger(BaseTrigger):
-
     """
     Triggers and monitors the status of a job submitted to Anyscale.
 
@@ -35,7 +34,7 @@ class AnyscaleJobTrigger(BaseTrigger):
     :raises AirflowException: If no job_id is provided or an error occurs during polling.
     """
 
-    def __init__(self, conn_id, job_id, job_start_time, poll_interval=60, timeout=3600):  # Default timeout set to one hour
+    def __init__(self, conn_id: str, job_id: str, job_start_time: str, poll_interval: int = 60, timeout: int = 3600) -> None:
         super().__init__()
         self.conn_id = conn_id
         self.job_id = job_id
@@ -49,7 +48,7 @@ class AnyscaleJobTrigger(BaseTrigger):
         """Return an instance of the AnyscaleHook."""
         return AnyscaleHook(conn_id=self.conn_id)
 
-    def serialize(self):
+    def serialize(self) -> tuple:
         return ("anyscale_provider.triggers.anyscale.AnyscaleJobTrigger", {
             "conn_id": self.conn_id,
             "job_id": self.job_id,
@@ -58,7 +57,7 @@ class AnyscaleJobTrigger(BaseTrigger):
             "timeout": self.timeout
         })
 
-    async def run(self):
+    async def run(self) -> None:
         if not self.job_id:
             self.log.info("No job_id provided")
             yield TriggerEvent({"status": "error", "message": "No job_id provided to async trigger", "job_id": self.job_id})
@@ -99,18 +98,16 @@ class AnyscaleJobTrigger(BaseTrigger):
                 "job_id": self.job_id
             })
 
-    def get_current_status(self, job_id):
+    def get_current_status(self, job_id: str) -> str:
         return self.hook.get_job_status(job_id=job_id).state
 
-    def is_terminal_status(self, job_id):
+    def is_terminal_status(self, job_id: str) -> bool:
         job_status = self.get_current_status(job_id)
         self.log.info(f"Current job status for {job_id} is: {job_status}")
         return job_status not in (JobState.STARTING, JobState.RUNNING)
 
 
-
 class AnyscaleServiceTrigger(BaseTrigger):
-
     """
     Triggers and monitors the status of a service deployment on Anyscale.
 
@@ -135,12 +132,14 @@ class AnyscaleServiceTrigger(BaseTrigger):
                  conn_id: str,
                  service_name: str,
                  expected_state: str,
+                 canary_percent: float,
                  poll_interval: int = 60,
-                 timeout: int = 600):
+                 timeout: int = 600) -> None:
         super().__init__()
         self.conn_id = conn_id
         self.service_name = service_name
         self.expected_state = expected_state
+        self.canary_percent = canary_percent
         self.poll_interval = poll_interval
         self.timeout = timeout
         self.end_time = time.time() + timeout
@@ -150,17 +149,17 @@ class AnyscaleServiceTrigger(BaseTrigger):
         """Return an instance of the AnyscaleHook."""
         return AnyscaleHook(conn_id=self.conn_id)
 
-    def serialize(self):
+    def serialize(self) -> tuple:
         return ("anyscale_provider.triggers.anyscale.AnyscaleServiceTrigger", {
             "conn_id": self.conn_id,
             "service_name": self.service_name,
             "expected_state": self.expected_state,
+            "canary_percent": self.canary_percent,
             "poll_interval": self.poll_interval,
             "timeout": self.timeout
         })
 
-    async def run(self):
-        
+    async def run(self) -> Any:
         if not self.service_name:
             self.log.info("No service_name provided")
             yield TriggerEvent({"status": ServiceState.SYSTEM_FAILURE, "message": "No service_name provided to async trigger", "service_name": self.service_name})
@@ -183,7 +182,7 @@ class AnyscaleServiceTrigger(BaseTrigger):
 
             if current_state == ServiceState.RUNNING:
                 yield TriggerEvent({"status": ServiceState.RUNNING,
-                                    "message":"Service deployment succeeded",
+                                    "message": "Service deployment succeeded",
                                     "service_name": self.service_name})
                 return
             elif self.expected_state != current_state and not self.check_current_status(self.service_name):
@@ -196,12 +195,16 @@ class AnyscaleServiceTrigger(BaseTrigger):
 
         except Exception as e:
             self.log.error("An error occurred during monitoring:", exc_info=True)
-            yield TriggerEvent({"status": ServiceState.SYSTEM_FAILURE, "message": str(e),"service_name": self.service_name})
+            yield TriggerEvent({"status": ServiceState.SYSTEM_FAILURE, "message": str(e), "service_name": self.service_name})
     
-    def get_current_status(self, service_name: str):
-        return self.hook.get_service_status(service_name).state
+    def get_current_status(self, service_name: str) -> str:
+        service_status = self.hook.get_service_status(service_name)
+        if 0.0 < self.canary_percent < 100.0:
+            return service_status.canary_version.state
+        else:
+            return service_status.state
         
     def check_current_status(self, service_name: str) -> bool:
         job_status = self.get_current_status(service_name)
         self.log.info(f"Current job status for {service_name} is: {job_status}")
-        return job_status in (ServiceState.STARTING,ServiceState.UPDATING,ServiceState.ROLLING_OUT, ServiceState.UNHEALTHY)
+        return job_status in (ServiceState.STARTING, ServiceState.UPDATING, ServiceState.ROLLING_OUT, ServiceState.UNHEALTHY)

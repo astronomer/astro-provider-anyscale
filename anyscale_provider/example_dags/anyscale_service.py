@@ -1,12 +1,6 @@
-
 from datetime import datetime, timedelta
 from airflow import DAG
-import os
-
 from anyscale_provider.operators.anyscale import RolloutAnyscaleService
-
-from airflow.models.connection import Connection
-from airflow.utils.dates import days_ago
 
 default_args = {
     'owner': 'airflow',
@@ -31,25 +25,17 @@ dag = DAG(
 
 deploy_anyscale_service = RolloutAnyscaleService(
     task_id="rollout_anyscale_service",
-    conn_id = ANYSCALE_CONN_ID,
+    conn_id=ANYSCALE_CONN_ID,
     name="AstroService",
-    build_id="bld_7qsgb3mnjp7juibl6jetl9lhbu",
-    compute_config_id="cpt_8kfdcvmckjnjqd1xwnctmpldl4",
-    ray_serve_config={ 
-        "applications": [
-            {
-                "name": "sentiment_analysis",
-                "runtime_env": {
-                    "working_dir": "https://github.com/anyscale/docs_examples/archive/refs/heads/main.zip"
-                },
-                "import_path": "sentiment_analysis.app:model",
-            }
-        ]
-    },
-    version = 11,
+    image_uri='anyscale/ray:2.23.0-py311',
+    compute_config='my-compute-config:1',
+    working_dir="https://github.com/anyscale/docs_examples/archive/refs/heads/main.zip",
+    applications=[{"import_path": "sentiment_analysis.app:model"}],
+    requirements=["transformers", "requests", "pandas", "numpy", "torch"],
+    in_place=False,
+    canary_percent=None,
     dag=dag
 )
-
 
 # Defining the task sequence
 deploy_anyscale_service

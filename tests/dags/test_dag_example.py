@@ -1,84 +1,47 @@
 """Example DAGs test. This test ensures that all Dags have tags, retries set to two, and no import errors. This is an example pytest and may not be fit the context of your DAGs. Feel free to add and remove tests."""
-"""
+
 import os
 import logging
 from contextlib import contextmanager
 import pytest
+from pathlib import Path
 from airflow.models import DagBag
+from airflow.utils.db import create_default_connections
+from airflow.utils.session import provide_session
+from airflow.utils.session import create_session
+from airflow.models import Connection
+
+import utils as test_utils
+
+EXAMPLE_DAGS_DIR = Path(__file__).parent.parent.parent / "anyscale_provider/example_dags"
 
 
-@contextmanager
-def suppress_logging(namespace):
-    logger = logging.getLogger(namespace)
-    old_value = logger.disabled
-    logger.disabled = True
-    try:
-        yield
-    finally:
-        logger.disabled = old_value
-
-
-def get_import_errors():
-    
-    Generate a tuple for import errors in the dag bag
-    
-    with suppress_logging("airflow"):
-        dag_bag = DagBag(include_examples=False)
-
-        def strip_path_prefix(path):
-            return os.path.relpath(path, os.environ.get("AIRFLOW_HOME"))
-
-        # prepend "(None,None)" to ensure that a test object is always created even if it's a no op.
-        return [(None, None)] + [
-            (strip_path_prefix(k), v.strip()) for k, v in dag_bag.import_errors.items()
-        ]
-
-
-def get_dags():
-    
-    Generate a tuple of dag_id, <DAG objects> in the DagBag
-    
-    with suppress_logging("airflow"):
-        dag_bag = DagBag(include_examples=False)
+def get_dags(dag_folder=None):
+    # Generate a tuple of dag_id, <DAG objects> in the DagBag
+    dag_bag = DagBag(dag_folder=dag_folder, include_examples=False) if dag_folder else DagBag(include_examples=False)
 
     def strip_path_prefix(path):
         return os.path.relpath(path, os.environ.get("AIRFLOW_HOME"))
 
-    return [(k, v, strip_path_prefix(v.fileloc)) for k, v in dag_bag.dags.items()]
-
-
-@pytest.mark.parametrize(
-    "rel_path,rv", get_import_errors(), ids=[x[0] for x in get_import_errors()]
-)
-def test_file_imports(rel_path, rv):
-    """"""Test for import errors on a file""""""
-    if rel_path and rv:
-        raise Exception(f"{rel_path} failed to import with message \n {rv}")
-
-
-APPROVED_TAGS = {}
-
-
-@pytest.mark.parametrize(
-    "dag_id,dag,fileloc", get_dags(), ids=[x[2] for x in get_dags()]
-)
-def test_dag_tags(dag_id, dag, fileloc):
+    dags_info = [(k, v, strip_path_prefix(v.fileloc)) for k, v in dag_bag.dags.items()]
     
-    test if a DAG is tagged and if those TAGs are in the approved list
+    # Print the paths
+    for dag_id, dag, fileloc in dags_info:
+        print(f"DAG ID: {dag_id}, File Location: {fileloc}")
     
-    assert dag.tags, f"{dag_id} in {fileloc} has no tags"
-    if APPROVED_TAGS:
-        assert not set(dag.tags) - APPROVED_TAGS
+    return dags_info
 
+@pytest.mark.integration
+@pytest.mark.parametrize("dag_id,dag, fileloc", get_dags(EXAMPLE_DAGS_DIR), ids=[x[2] for x in get_dags()])
+def test_dag_runs(dag_id, dag, fileloc):
 
-@pytest.mark.parametrize(
-    "dag_id,dag, fileloc", get_dags(), ids=[x[2] for x in get_dags()]
-)
-def test_dag_retries(dag_id, dag, fileloc):
-    
-    test if a DAG has retries set
-    
-    assert (
-        dag.default_args.get("retries", None) >= 2
-    ), f"{dag_id} in {fileloc} must have task retries >= 2."
-"""
+    with create_session() as session:
+        create_default_connections(session)
+        conn = Connection(conn_id="anyscale_conn",
+                          conn_type="anyscale",
+                          password=os.getenv("ANYSCALE_CLI_TOKEN"))
+        session.add(conn)
+        session.commit()  # Ensure the connection is committed to the database
+
+        # Run the example dags
+        test_utils.run_dag(dag)

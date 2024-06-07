@@ -1,13 +1,6 @@
 from datetime import datetime, timedelta
 from airflow import DAG
-import os
-# Assuming these hooks and operators are custom or provided by a plugin
 from anyscale_provider.operators.anyscale import SubmitAnyscaleJob
-from anyscale_provider.hooks.anyscale import AnyscaleHook
-
-from airflow.models.connection import Connection
-from airflow.providers.amazon.aws.transfers.local_to_s3 import LocalFilesystemToS3Operator
-from airflow.utils.dates import days_ago
 
 default_args = {
     'owner': 'airflow',
@@ -23,9 +16,7 @@ default_args = {
 ANYSCALE_CONN_ID = "anyscale_conn"
 
 # Constants
-BUCKET_NAME = 'anyscale-production-data-cld-g7m5cn8nnhkydikcjc6lj4ekye'
-FILE_PATH = '/usr/local/airflow/example_dags/ray_scripts/script.py'
-AWS_CONN_ID = 'aws_conn'
+FOLDER_PATH = '/usr/local/airflow/dags/ray_scripts'
 
 dag = DAG(
     'sample_anyscale_workflow',
@@ -35,37 +26,19 @@ dag = DAG(
     catchup=False,
 )
 
-runtime_env = {"working_dir": FILE_PATH,
-               "upload_path": "s3://"+BUCKET_NAME,
-               "pip": ["requests","pandas","numpy","torch"]}
-
-# Extract the filename from the file path for S3 key construction
-filename = os.path.basename(FILE_PATH)
-s3_key = f'scripts/{filename}'
-
-upload_file_to_s3 = LocalFilesystemToS3Operator(
-    task_id='upload_file_to_s3',
-    filename=FILE_PATH,
-    dest_key=s3_key,
-    dest_bucket=BUCKET_NAME,
-    aws_conn_id=AWS_CONN_ID,
-    replace=True,
-    dag=dag
-)
-
-
 submit_anyscale_job = SubmitAnyscaleJob(
     task_id='submit_anyscale_job',
     conn_id = ANYSCALE_CONN_ID,
     name = 'AstroJob',
-    config = {"entrypoint": 'python script.py',
-             "build_id": 'anyscaleray2100-py39',
-             "compute_config_id": 'cpt_8kfdcvmckjnjqd1xwnctmpldl4',
-             "runtime_env": runtime_env,
-             "max_retries": 2},
+    image_uri = 'anyscale/ray:2.23.0-py311', 
+    compute_config = 'my-compute-config:1',
+    working_dir = FOLDER_PATH,
+    entrypoint= 'python script.py',
+    requirements = ["requests","pandas","numpy","torch"],
+    max_retries = 1,
     dag=dag,
 )
 
 
 # Defining the task sequence
-upload_file_to_s3 >> submit_anyscale_job
+submit_anyscale_job

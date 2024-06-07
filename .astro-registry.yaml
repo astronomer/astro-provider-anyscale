@@ -1,7 +1,7 @@
-package-name: airflow-provider-anyscale
+package-name: astro-provider-anyscale
 display-name: Anyscale
 
-docs-url: https://github.com/astronomer/airflow-provider-anyscale/blob/main/README.md
+docs-url: https://github.com/astronomer/astro-provider-anyscale/blob/main/README.md
 
 hooks:
   - module: anyscale_provider.hooks.anyscale.AnyscaleHook

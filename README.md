@@ -1,4 +1,4 @@
-# airflow-provider-anyscale
+# astro-provider-anyscale
 
 This repository provides a set of tools for integrating Anyscale with Apache Airflow, enabling the orchestration of Anyscale jobs within Airflow workflows. It includes a custom hook, two operators, and two triggers specifically designed for managing and monitoring Anyscale jobs and services.
 
@@ -112,7 +112,7 @@ deploy_anyscale_service = RolloutAnyscaleService(
 _________
 
 We follow [Semantic Versioning](https://semver.org/) for releases.
-Check [CHANGELOG.rst](https://github.com/astronomer/airflow-provider-anyscale/blob/main/CHANGELOG.rst)
+Check [CHANGELOG.rst](https://github.com/astronomer/astro-provider-anyscale/blob/main/CHANGELOG.rst)
 for the latest changes.
 
 
@@ -121,4 +121,4 @@ __________________
 
 All contributions, bug reports, bug fixes, documentation improvements, enhancements are welcome.
 
-A detailed overview an how to contribute can be found in the [Contributing Guide](https://github.com/astronomer/airflow-provider-anyscale/blob/main/CONTRIBUTING.rst)
+A detailed overview an how to contribute can be found in the [Contributing Guide](https://github.com/astronomer/astro-provider-anyscale/blob/main/CONTRIBUTING.rst)

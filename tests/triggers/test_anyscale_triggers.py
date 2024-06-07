@@ -8,7 +8,9 @@ from anyscale_provider.triggers.anyscale import AnyscaleJobTrigger,AnyscaleServi
 
 class TestAnyscaleJobTrigger(unittest.TestCase):
     def setUp(self):
-        self.trigger = AnyscaleJobTrigger(conn_id='default_conn', job_id='123', job_start_time=datetime.now())
+        self.trigger = AnyscaleJobTrigger(conn_id='default_conn',
+                                          job_id='123',
+                                          job_start_time=datetime.now())
 
     @patch('anyscale_provider.triggers.anyscale.AnyscaleJobTrigger.get_current_status')
     def test_is_terminal_status(self, mock_get_status):
@@ -35,7 +37,10 @@ class TestAnyscaleJobTrigger(unittest.TestCase):
 
 class TestAnyscaleServiceTrigger(unittest.TestCase):
     def setUp(self):
-        self.trigger = AnyscaleServiceTrigger(conn_id='default_conn', service_name='service123', expected_state='RUNNING')
+        self.trigger = AnyscaleServiceTrigger(conn_id='default_conn',
+                                              service_name='service123',
+                                              expected_state='RUNNING',
+                                              canary_percent=None)
 
     @patch('anyscale_provider.triggers.anyscale.AnyscaleServiceTrigger.get_current_status')
     def test_check_current_status(self, mock_get_status):

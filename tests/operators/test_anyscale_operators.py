@@ -85,6 +85,7 @@ class TestRolloutAnyscaleService(unittest.TestCase):
             conn_id='test_conn',
             name='test_service',
             image_uri='test_image_uri',
+            working_dir='/test/dir', 
             applications=[{'name': 'app1', 'import_path': 'module.optional_submodule:app'}],
             compute_config='config123',
             task_id='rollout_service_test'
@@ -120,6 +121,7 @@ class TestRolloutAnyscaleService(unittest.TestCase):
             conn_id='test_conn',
             service_name='test_service',
             expected_state=ServiceState.RUNNING,
+            canary_percent=None,
             poll_interval=60,
             timeout=600
         )
