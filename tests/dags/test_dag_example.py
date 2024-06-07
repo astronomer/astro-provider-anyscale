@@ -36,7 +36,6 @@ def get_dags(dag_folder=None):
 def test_dag_runs(dag_id, dag, fileloc):
 
     with create_session() as session:
-        create_default_connections(session)
         conn = Connection(conn_id="anyscale_conn",
                           conn_type="anyscale",
                           password=os.getenv("ANYSCALE_CLI_TOKEN"))
