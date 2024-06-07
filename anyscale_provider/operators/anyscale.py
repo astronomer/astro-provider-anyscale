@@ -79,7 +79,6 @@ class SubmitAnyscaleJob(BaseOperator):
         self.max_retries = max_retries
 
         self.job_id: Optional[str] = None
-        self.created_at: Optional[float] = None
 
         self.fields: Dict[str, Any] = {
             "name": name,
@@ -123,7 +122,7 @@ class SubmitAnyscaleJob(BaseOperator):
         # Submit the job to Anyscale
         job_config = JobConfig(**self.fields)
         self.job_id = self.hook.submit_job(job_config)
-        self.created_at = time.time()
+        self.created_at: float = time.time()
         self.log.info(f"Submitted Anyscale job with ID: {self.job_id}")
 
         current_status = self.get_current_status(self.job_id)

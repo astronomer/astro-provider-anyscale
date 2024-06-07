@@ -139,8 +139,8 @@ class AnyscaleHook(BaseHook):
 
     def deploy_service(self, config: ServiceConfig,
                        in_place: bool = False,
-                       canary_percent: Optional[int] = None,
-                       max_surge_percent: Optional[int] = None) -> str:
+                       canary_percent: Optional[float] = None,
+                       max_surge_percent: Optional[float] = None) -> str:
         self.log.info("Deploying a service with configuration: {}".format(config))
         service_id: str = self.sdk.service.deploy(config=config,
                                                   in_place=in_place,

@@ -35,7 +35,7 @@ class AnyscaleJobTrigger(BaseTrigger):
     """
 
     def __init__(self, conn_id: str, job_id: str, job_start_time: float, poll_interval: int = 60, timeout: int = 3600):
-        super().__init__()
+        super().__init__() # type: ignore[no-untyped-call]
         self.conn_id = conn_id
         self.job_id = job_id
         self.job_start_time = job_start_time
@@ -136,7 +136,7 @@ class AnyscaleServiceTrigger(BaseTrigger):
                  canary_percent: Optional[float],
                  poll_interval: int = 60,
                  timeout: int = 600):
-        super().__init__()
+        super().__init__() # type: ignore[no-untyped-call]
         self.conn_id = conn_id
         self.service_name = service_name
         self.expected_state = expected_state
@@ -200,11 +200,12 @@ class AnyscaleServiceTrigger(BaseTrigger):
     
     def get_current_status(self, service_name: str) -> str:
         service_status = self.hook.get_service_status(service_name)
-        
-        if self.canary_percent is None or 0.0 < self.canary_percent < 100.0:
-            return str(service_status.canary_version.state)
-        else:
+
+        if self.canary_percent is None or self.canary_percent == 100.0:
             return str(service_status.state)
+        else:
+            if service_status.canary_version and service_status.canary_version.state:
+                return str(service_status.canary_version.state)
         
     def check_current_status(self, service_name: str) -> bool:
         job_status = self.get_current_status(service_name)

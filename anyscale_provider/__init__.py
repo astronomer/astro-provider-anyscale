@@ -1,6 +1,8 @@
 __version__ = "1.0.0"
 
-def get_provider_info():
+from typing import Any, Dict, Optional
+
+def get_provider_info() -> Dict[str,Any]:
     return {
         "package-name": "astro-provider-anyscale",  # Required
         "name": "Anyscale",  # Required

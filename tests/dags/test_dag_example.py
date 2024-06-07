@@ -5,16 +5,13 @@ import logging
 from contextlib import contextmanager
 import pytest
 from pathlib import Path
-from airflow.models import DagBag
+from airflow.models import DagBag, Connection
 from airflow.utils.db import create_default_connections
-from airflow.utils.session import provide_session
-from airflow.utils.session import create_session
-from airflow.models import Connection
+from airflow.utils.session import provide_session, create_session
 
 import utils as test_utils
 
 EXAMPLE_DAGS_DIR = Path(__file__).parent.parent.parent / "anyscale_provider/example_dags"
-
 
 def get_dags(dag_folder=None):
     # Generate a tuple of dag_id, <DAG objects> in the DagBag
@@ -31,16 +28,22 @@ def get_dags(dag_folder=None):
     
     return dags_info
 
-@pytest.mark.integration
-@pytest.mark.parametrize("dag_id,dag, fileloc", get_dags(EXAMPLE_DAGS_DIR), ids=[x[2] for x in get_dags()])
-def test_dag_runs(dag_id, dag, fileloc):
-
+@pytest.fixture(scope="module")
+def setup_airflow_db():
+    # Initialize the database
+    os.system('airflow db init')
     with create_session() as session:
-        conn = Connection(conn_id="anyscale_conn",
-                          conn_type="anyscale",
-                          password=os.getenv("ANYSCALE_CLI_TOKEN"))
+        # Add anyscale connection
+        conn = Connection(
+            conn_id="anyscale_conn",
+            conn_type="anyscale",
+            extra=f'{{"ANYSCALE_CLI_TOKEN": "{os.environ["ANYSCALE_CLI_TOKEN"]}"}}'
+        )
         session.add(conn)
-        session.commit()  # Ensure the connection is committed to the database
+        session.commit()
 
-        # Run the example dags
-        test_utils.run_dag(dag)
+@pytest.mark.integration
+@pytest.mark.parametrize("dag_id,dag, fileloc", get_dags(EXAMPLE_DAGS_DIR), ids=[x[2] for x in get_dags(EXAMPLE_DAGS_DIR)])
+def test_dag_runs(setup_airflow_db, dag_id, dag, fileloc):
+    # Run the example dags
+    test_utils.run_dag(dag)
