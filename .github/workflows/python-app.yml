@@ -114,6 +114,10 @@ jobs:
           ls -al
           ls -R
 
+      - name: Create .airflowignore file
+        run: |
+          echo "logs/" > anyscale_provider/example_dags/.airflowignore
+
       - name: Install packages and dependencies
         run: |
           python -m pip install hatch
