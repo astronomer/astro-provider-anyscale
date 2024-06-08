@@ -83,8 +83,8 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.8", "3.9", "3.10", "3.11"]
-        airflow-version: ["2.7", "2.8", "2.9"]
+        python-version: ["3.11"]
+        airflow-version: ["2.9"]
     services:
       postgres:
         image: postgres

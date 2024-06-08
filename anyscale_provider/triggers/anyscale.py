@@ -206,6 +206,8 @@ class AnyscaleServiceTrigger(BaseTrigger):
         else:
             if service_status.canary_version and service_status.canary_version.state:
                 return str(service_status.canary_version.state)
+            else:
+                return str(service_status.state)
         
     def check_current_status(self, service_name: str) -> bool:
         job_status = self.get_current_status(service_name)
