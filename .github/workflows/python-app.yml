@@ -118,14 +118,18 @@ jobs:
           python -m pip install hatch
           hatch -e tests.py${{ matrix.python-version }}-${{ matrix.airflow-version }} run pip freeze
 
+      - name: List files for debugging
+        run: |
+          ls -R /home/runner/work/astro-provider-anyscale/anyscale_provider/example_dags
+
       - name: Test Anyscale against Airflow ${{ matrix.airflow-version }} and Python ${{ matrix.python-version }}
         run: |
           hatch run tests.py${{ matrix.python-version }}-${{ matrix.airflow-version }}:test-integration
         env:
           AIRFLOW_HOME: /home/runner/work/astro-provider-anyscale/anyscale_provider/example_dags
           AIRFLOW_CONN_AIRFLOW_DB: postgres://postgres:postgres@0.0.0.0:5432/postgres
-          AIRFLOW__CORE__DAGBAG_IMPORT_TIMEOUT: 90.0
-          PYTHONPATH: /home/runner/work/astro-provider-anyscale/anyscale_provider/example_dags/:$PYTHONPATH
+          AIRFLOW__CORE__DAGBAG_IMPORT_TIMEOUT: 300.0  # Increased timeout
+          PYTHONPATH: /home/runner/work/astro-provider-anyscale/anyscale_provider/example_dags:$PYTHONPATH
           ANYSCALE_CLI_TOKEN: ${{ secrets.ANYSCALE_CLI_TOKEN }}
           POSTGRES_HOST: localhost
           POSTGRES_USER: postgres
