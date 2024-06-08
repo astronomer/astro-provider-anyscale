@@ -130,7 +130,7 @@ jobs:
           AIRFLOW_HOME: /home/runner/work/astro-provider-anyscale/astro-provider-anyscale/anyscale_provider/example_dags
           AIRFLOW_CONN_AIRFLOW_DB: postgres://postgres:postgres@0.0.0.0:5432/postgres
           AIRFLOW__CORE__DAGBAG_IMPORT_TIMEOUT: 300.0  # Increased timeout
-          PYTHONPATH: /home/runner/work/astro-provider-anyscale/astro-provider-anyscale/anyscale_provider:$PYTHONPATH
+          PYTHONPATH: /home/runner/work/astro-provider-anyscale/astro-provider-anyscale/anyscale_provider/example_dags/:$PYTHONPATH
           ANYSCALE_CLI_TOKEN: ${{ secrets.ANYSCALE_CLI_TOKEN }}
           POSTGRES_HOST: localhost
           POSTGRES_USER: postgres

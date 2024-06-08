@@ -16,7 +16,7 @@ default_args = {
 ANYSCALE_CONN_ID = "anyscale_conn"
 
 # Constants
-FOLDER_PATH = ' ./anyscale_provider/example_dags/ray_scripts'
+FOLDER_PATH = ' ./ray_scripts'
 
 dag = DAG(
     'sample_anyscale_workflow',
