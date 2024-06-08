@@ -1,5 +1,3 @@
-"""Example DAGs test. This test ensures that all Dags have tags, retries set to two, and no import errors. This is an example pytest and may not be fit the context of your DAGs. Feel free to add and remove tests."""
-
 import os
 import logging
 from contextlib import contextmanager
@@ -12,6 +10,7 @@ from airflow.utils.session import provide_session, create_session
 import utils as test_utils
 
 EXAMPLE_DAGS_DIR = Path(__file__).parent.parent.parent / "anyscale_provider/example_dags"
+print(f"EXAMPLE_DAGS_DIR: {EXAMPLE_DAGS_DIR}")
 
 def get_dags(dag_folder=None):
     # Generate a tuple of dag_id, <DAG objects> in the DagBag
@@ -46,4 +45,9 @@ def setup_airflow_db():
 @pytest.mark.parametrize("dag_id,dag, fileloc", get_dags(EXAMPLE_DAGS_DIR), ids=[x[2] for x in get_dags(EXAMPLE_DAGS_DIR)])
 def test_dag_runs(setup_airflow_db, dag_id, dag, fileloc):
     # Run the example dags
-    test_utils.run_dag(dag)
+    print(f"Testing DAG: {dag_id}, located at: {fileloc}")
+    try:
+        test_utils.run_dag(dag)
+    except Exception as e:
+        print(f"Error running DAG {dag_id}: {e}")
+        raise e
