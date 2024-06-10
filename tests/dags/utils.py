@@ -24,8 +24,6 @@ def run_dag(dag: DAG, conn_file_path: str | None = None) -> DagRun:
     return test_dag(dag=dag, conn_file_path=conn_file_path)
 
 
-# DAG.test() was added in Airflow version 2.5.0. And to test on older Airflow versions, we need to copy the
-# implementation here.
 @provide_session
 def test_dag(
     dag,
@@ -72,9 +70,6 @@ def test_dag(
 
     tasks = dag.task_dict
     dag.log.debug("starting dagrun")
-    # Instead of starting a scheduler, we run the minimal loop possible to check
-    # for task readiness and dependency management. This is notably faster
-    # than creating a BackfillJob and allows us to surface logs to the user
     while dr.state == State.RUNNING:
         schedulable_tis, _ = dr.update_state(session=session)
         for ti in schedulable_tis:
@@ -82,14 +77,22 @@ def test_dag(
             ti.task = tasks[ti.task_id]
             _run_task(ti, session=session)
         
-        # Add handling for DEFERRED tasks
+        # Handle DEFERRED tasks
         deferred_tis = [ti for ti in dr.get_task_instances() if ti.state == State.DEFERRED]
         if deferred_tis:
-            # Simulate trigger event
+            # Simulate trigger event for deferred tasks
             for ti in deferred_tis:
-                ti.set_state(State.SCHEDULED, session=session)
                 ti.task = tasks[ti.task_id]
-                _run_task(ti, session=session)
+                try:
+                    ti.task.execute_complete(context={}, event={"status": "success"})
+                except Exception as e:
+                    ti.state = State.FAILED
+                    ti.log.exception("Error while resuming deferred task %s: %s", ti.task_id, str(e))
+                    session.commit()
+                    raise
+                else:
+                    ti.set_state(State.SCHEDULED, session=session)
+                    _run_task(ti, session=session)
 
     if conn_file_path or variable_file_path:
         # Remove the local variables we have added to the secrets_backend_list
@@ -107,7 +110,6 @@ def add_logger_if_needed(dag: DAG, ti: TaskInstance):
     in the command line, rather than needing to search for a log file.
     Args:
         ti: The taskinstance that will receive a logger
-
     """
     logging_format = logging.Formatter("[%(asctime)s] {%(filename)s:%(lineno)d} %(levelname)s - %(message)s")
     handler = logging.StreamHandler(sys.stdout)
