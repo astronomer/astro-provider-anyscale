@@ -76,27 +76,7 @@ def test_dag(
             add_logger_if_needed(dag, ti)
             ti.task = tasks[ti.task_id]
             _run_task(ti, session=session)
-        
-        # Handle DEFERRED tasks
-        deferred_tis = [ti for ti in dr.get_task_instances() if ti.state == State.DEFERRED]
-        if deferred_tis:
-            # Simulate trigger event for deferred tasks
-            for ti in deferred_tis:
-                ti.task = tasks[ti.task_id]
-                try:
-                    event = {"status": "success", "job_id": ti.job_id}  # Simulate a successful event payload
-                    if ti.service_name:
-                        event["service_name"] = ti.service_name
-                    ti.task.execute_complete(context={}, event=event)
-                except Exception as e:
-                    ti.state = State.FAILED
-                    ti.log.exception("Error while resuming deferred task %s: %s", ti.task_id, str(e))
-                    session.commit()
-                    raise
-                else:
-                    ti.set_state(State.SCHEDULED, session=session)
-                    _run_task(ti, session=session)
-
+            
     if conn_file_path or variable_file_path:
         # Remove the local variables we have added to the secrets_backend_list
         secrets_backend_list.pop(0)
