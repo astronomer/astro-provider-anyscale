@@ -9,13 +9,14 @@ from airflow.configuration import secrets_backend_list
 from airflow.exceptions import AirflowSkipException
 from airflow.models.dag import DAG
 from airflow.models.dagrun import DagRun
-from airflow.models.taskinstance import TaskInstance
+from airflow.models.taskinstance import TaskInstance, TaskReturnCode
 from airflow.secrets.local_filesystem import LocalFilesystemBackend
 from airflow.utils import timezone
 from airflow.utils.session import NEW_SESSION, provide_session
 from airflow.utils.state import DagRunState, State
 from airflow.utils.types import DagRunType
 from sqlalchemy.orm.session import Session
+from airflow.models.operator import Operator
 
 log = logging.getLogger(__name__)
 
@@ -76,7 +77,7 @@ def test_dag(
             add_logger_if_needed(dag, ti)
             ti.task = tasks[ti.task_id]
             _run_task(ti, session=session)
-            
+
     if conn_file_path or variable_file_path:
         # Remove the local variables we have added to the secrets_backend_list
         secrets_backend_list.pop(0)
@@ -103,7 +104,6 @@ def add_logger_if_needed(dag: DAG, ti: TaskInstance):
         dag.log.debug("Adding Streamhandler to taskinstance %s", ti.task_id)
         ti.log.addHandler(handler)
 
-
 def _run_task(ti: TaskInstance, session):
     """
     Run a single task instance, and push result to Xcom for downstream tasks. Bypasses a lot of
@@ -119,7 +119,9 @@ def _run_task(ti: TaskInstance, session):
     else:
         log.info("Running task %s", ti.task_id)
     try:
-        ti._run_raw_task(session=session)
+        task_status = ti._run_raw_task(session=session)
+        if task_status == TaskReturnCode.DEFERRED:
+            ti._schedule_downstream_tasks(session=session)
         session.flush()
         log.info("%s ran successfully!", ti.task_id)
     except AirflowSkipException:
