@@ -84,7 +84,10 @@ def test_dag(
             for ti in deferred_tis:
                 ti.task = tasks[ti.task_id]
                 try:
-                    ti.task.execute_complete(context={}, event={"status": "success"})
+                    ti.task.execute_complete(context={}, event={"status": "success",
+                                                                "job_id":"anyscale_job_integration_test",
+                                                                "service_name": "anyscale_svc_integration_test",
+                                                                "message":"Integration succeeded"})
                 except Exception as e:
                     ti.state = State.FAILED
                     ti.log.exception("Error while resuming deferred task %s: %s", ti.task_id, str(e))
