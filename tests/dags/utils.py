@@ -85,6 +85,8 @@ def test_dag(
                 ti.task = tasks[ti.task_id]
                 try:
                     event = {"status": "success", "job_id": ti.job_id}  # Simulate a successful event payload
+                    if ti.service_name:
+                        event["service_name"] = ti.service_name
                     ti.task.execute_complete(context={}, event=event)
                 except Exception as e:
                     ti.state = State.FAILED
