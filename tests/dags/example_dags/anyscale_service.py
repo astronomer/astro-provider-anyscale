@@ -1,6 +1,8 @@
 from datetime import datetime, timedelta
 from airflow import DAG
+from airflow.operators.python import PythonOperator
 from anyscale_provider.operators.anyscale import RolloutAnyscaleService
+from anyscale_provider.hooks.anyscale import AnyscaleHook
 
 default_args = {
     'owner': 'airflow',
@@ -37,5 +39,17 @@ deploy_anyscale_service = RolloutAnyscaleService(
     dag=dag
 )
 
+def terminate_service():
+    hook = AnyscaleHook(conn_id=ANYSCALE_CONN_ID)
+    result = hook.terminate_service(service_id="AstroService",
+                                    time_delay=5)
+    print(result)
+
+terminate_anyscale_service = PythonOperator(
+    task_id='initialize_anyscale_hook',
+    python_callable=terminate_service,
+    dag=dag,
+)
+
 # Defining the task sequence
-deploy_anyscale_service
+deploy_anyscale_service >> terminate_anyscale_service
