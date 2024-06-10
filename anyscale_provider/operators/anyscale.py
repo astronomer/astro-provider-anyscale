@@ -23,8 +23,6 @@ from airflow.utils.decorators import apply_defaults
 from anyscale_provider.hooks.anyscale import AnyscaleHook
 from anyscale_provider.triggers.anyscale import AnyscaleJobTrigger, AnyscaleServiceTrigger
 
-logging.basicConfig(level=logging.DEBUG)
-
 class SubmitAnyscaleJob(BaseOperator):
     """
     Submits a job to Anyscale from Apache Airflow.
