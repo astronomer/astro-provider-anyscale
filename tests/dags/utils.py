@@ -121,7 +121,7 @@ def _run_task(ti: TaskInstance, session):
     try:
         task_status = ti._run_raw_task(session=session)
         if task_status == TaskReturnCode.DEFERRED:
-            ti._schedule_downstream_tasks(ti= ti, session=session)
+            ti._run_raw_task(session=session)
         session.flush()
         log.info("%s ran successfully!", ti.task_id)
     except AirflowSkipException:
