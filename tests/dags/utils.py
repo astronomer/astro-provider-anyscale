@@ -81,6 +81,16 @@ def test_dag(
             add_logger_if_needed(dag, ti)
             ti.task = tasks[ti.task_id]
             _run_task(ti, session=session)
+        
+        # Add handling for DEFERRED tasks
+        deferred_tis = [ti for ti in dr.get_task_instances() if ti.state == State.DEFERRED]
+        if deferred_tis:
+            # Simulate trigger event
+            for ti in deferred_tis:
+                ti.set_state(State.SCHEDULED, session=session)
+                ti.task = tasks[ti.task_id]
+                _run_task(ti, session=session)
+
     if conn_file_path or variable_file_path:
         # Remove the local variables we have added to the secrets_backend_list
         secrets_backend_list.pop(0)
