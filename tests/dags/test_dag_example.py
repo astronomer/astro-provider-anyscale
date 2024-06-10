@@ -9,7 +9,7 @@ from airflow.utils.session import provide_session, create_session
 
 import utils as test_utils
 
-EXAMPLE_DAGS_DIR = Path(__file__).parent.parent.parent / "anyscale_provider/example_dags"
+EXAMPLE_DAGS_DIR = Path(__file__)/ "tests/dags/example_dags"
 print(f"EXAMPLE_DAGS_DIR: {EXAMPLE_DAGS_DIR}")
 
 def get_dags(dag_folder=None):
