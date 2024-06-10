@@ -3,4 +3,6 @@ pytest -vv \
     --cov-report=term-missing \
     --cov-report=xml \
     --durations=0 \
-    -m integration
+    -m integration \
+    -s \
+    --log-cli-level=DEBUG
