@@ -10,7 +10,7 @@ from airflow.utils.session import provide_session, create_session
 import utils as test_utils
 
 # Correctly construct the example DAGs directory path
-EXAMPLE_DAGS_DIR = Path(__file__).parent / "dags/example_dags"
+EXAMPLE_DAGS_DIR = Path(__file__).parent / "example_dags"
 print(f"EXAMPLE_DAGS_DIR: {EXAMPLE_DAGS_DIR}")
 
 def get_dags(dag_folder=None):
@@ -29,6 +29,8 @@ def get_dags(dag_folder=None):
 @pytest.fixture(scope="module")
 def setup_airflow_db():
     os.system('airflow db init')
+    # Explicitly create the tables if necessary
+    create_default_connections()
     with create_session() as session:
         conn = Connection(
             conn_id="anyscale_conn",
@@ -39,11 +41,13 @@ def setup_airflow_db():
         session.commit()
 
 dags = get_dags(EXAMPLE_DAGS_DIR)
+print(f"Discovered DAGs: {dags}")
 
 @pytest.mark.integration
 @pytest.mark.parametrize("dag_id,dag,fileloc", dags, ids=[x[2] for x in dags])
 def test_dag_runs(setup_airflow_db, dag_id, dag, fileloc):
     print(f"Testing DAG: {dag_id}, located at: {fileloc}")
+    assert dag is not None, f"DAG {dag_id} not found!"
     try:
         test_utils.run_dag(dag)
     except Exception as e:
