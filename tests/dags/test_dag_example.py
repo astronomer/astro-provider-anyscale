@@ -49,7 +49,7 @@ def test_dag_runs(setup_airflow_db, dag_id, dag, fileloc):
     print(f"Testing DAG: {dag_id}, located at: {fileloc}")
     assert dag is not None, f"DAG {dag_id} not found!"
     try:
-        test_utils.run_dag(dag)
+        dag.test()
     except Exception as e:
         print(f"Error running DAG {dag_id}: {e}")
         raise e
