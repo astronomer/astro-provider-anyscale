@@ -7,8 +7,6 @@ from airflow.models import DagBag, Connection
 from airflow.utils.db import create_default_connections
 from airflow.utils.session import provide_session, create_session
 
-import utils as test_utils
-
 # Correctly construct the example DAGs directory path
 EXAMPLE_DAGS_DIR = Path(__file__).parent / "example_dags"
 print(f"EXAMPLE_DAGS_DIR: {EXAMPLE_DAGS_DIR}")
