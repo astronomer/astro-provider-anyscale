@@ -89,3 +89,46 @@ class TestAnyscaleHook:
         
         mock_terminate_job.assert_called_once_with("test_job_id")
         assert result == {"status": "terminated"}
+    
+    @patch('anyscale_provider.hooks.anyscale.AnyscaleHook.get_ui_field_behaviour')
+    def test_get_ui_field_behaviour(self, mock_get_ui_field_behaviour):
+        expected_behavior = {
+            "hidden_fields": ["schema", "port", "login"],
+            "relabeling": {"password": "API Key"},
+            "placeholders": {"password": "Enter API Key here"},
+        }
+        mock_get_ui_field_behaviour.return_value = expected_behavior
+        
+        result = self.hook.get_ui_field_behaviour()
+        
+        mock_get_ui_field_behaviour.assert_called_once()
+        assert result == expected_behavior
+
+    @patch('anyscale_provider.hooks.anyscale.AnyscaleHook.terminate_service')
+    def test_terminate_service(self, mock_terminate_service):
+        mock_terminate_service.return_value = {"status": "terminated"}
+        
+        result = self.hook.terminate_service("test_service_id", time_delay=1)
+        
+        mock_terminate_service.assert_called_once_with("test_service_id", time_delay=1)
+        assert result == {"status": "terminated"}
+
+    @patch('anyscale_provider.hooks.anyscale.AnyscaleHook.deploy_service')
+    def test_deploy_service(self, mock_deploy_service):
+        service_config = ServiceConfig(name="test_service", applications=[{"name": "app1",
+                                                                           "import_path":"module.optional_submodule:app"}])
+        mock_deploy_service.return_value = {"service_id": "test_service_id"}
+        
+        result = self.hook.deploy_service(service_config, in_place=False, canary_percent=10, max_surge_percent=20)
+        
+        mock_deploy_service.assert_called_once_with(service_config, in_place=False, canary_percent=10, max_surge_percent=20)
+        assert result == {"service_id": "test_service_id"}
+    
+    @patch('anyscale_provider.hooks.anyscale.AnyscaleHook.get_logs')
+    def test_get_logs(self, mock_get_logs):
+        mock_get_logs.return_value = "job logs"
+        
+        result = self.hook.get_logs("test_job_id")
+        
+        mock_get_logs.assert_called_once_with("test_job_id")
+        assert result == "job logs"
