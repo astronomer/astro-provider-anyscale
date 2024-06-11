@@ -151,7 +151,7 @@ class SubmitAnyscaleJob(BaseOperator):
     def get_current_status(self, job_id: str) -> str:
         return str(self.hook.get_job_status(job_id=job_id).state)
 
-    def execute_complete(self, context: Context, event: TriggerEvent) -> None:
+    def execute_complete(self, context: Context, event: Any) -> None:
         current_job_id = event["job_id"]
         
         if event["status"] == JobState.FAILED:
@@ -282,7 +282,7 @@ class RolloutAnyscaleService(BaseOperator):
         self.log.info(f"Service rollout id: {service_id}")        
         return service_id
     
-    def execute_complete(self, context: Context, event: TriggerEvent) -> None:
+    def execute_complete(self, context: Context, event: Any) -> None:
         self.log.info(f"Execution completed...")
         service_id = event["service_name"]
         
