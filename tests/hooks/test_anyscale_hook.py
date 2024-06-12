@@ -158,6 +158,24 @@ class TestAnyscaleHook:
         mock_get_logs.assert_called_once_with("test_job_id")
         assert result == "job logs"
 
+    @patch('anyscale_provider.hooks.anyscale.AnyscaleHook.get_logs')
+    def test_get_logs_empty(self, mock_get_logs):
+        mock_get_logs.return_value = ""
+
+        result = self.hook.get_logs("test_job_id")
+
+        mock_get_logs.assert_called_once_with("test_job_id")
+        assert result == ""
+
+    @patch('anyscale_provider.hooks.anyscale.AnyscaleHook.get_logs')
+    def test_get_logs_error(self, mock_get_logs):
+        mock_get_logs.side_effect = AirflowException("Failed to get logs")
+
+        with pytest.raises(AirflowException) as exc:
+            self.hook.get_logs("test_job_id")
+
+        assert str(exc.value) == "Failed to get logs"
+
     @patch('anyscale_provider.hooks.anyscale.AnyscaleHook.get_service_status')
     def test_get_service_status(self, mock_get_service_status):
         mock_service_status = ServiceStatus(id="test_service_id", name="test_service", query_url="http://example.com", state=ServiceState.RUNNING)
@@ -205,7 +223,7 @@ class TestAnyscaleHook:
             mock_terminate.assert_called_once_with(name="test_job_id")
             mock_sleep.assert_called_once_with(1)
             assert result is True
-    
+
     @patch("anyscale_provider.hooks.anyscale.time.sleep", return_value=None)
     def test_terminate_service_with_delay(self, mock_sleep):
         with patch.object(self.hook.sdk.service, 'terminate', return_value=None) as mock_terminate:
@@ -213,21 +231,3 @@ class TestAnyscaleHook:
             mock_terminate.assert_called_once_with(name="test_service_id")
             mock_sleep.assert_called_once_with(1)
             assert result is True
-
-    @patch('anyscale_provider.hooks.anyscale.AnyscaleHook.get_logs')
-    def test_get_logs_empty(self, mock_get_logs):
-        mock_get_logs.return_value = ""
-
-        result = self.hook.get_logs("test_job_id")
-
-        mock_get_logs.assert_called_once_with("test_job_id")
-        assert result == ""
-
-    @patch('anyscale_provider.hooks.anyscale.AnyscaleHook.get_logs')
-    def test_get_logs_error(self, mock_get_logs):
-        mock_get_logs.side_effect = AirflowException("Failed to get logs")
-
-        with pytest.raises(AirflowException) as exc:
-            self.hook.get_logs("test_job_id")
-
-        assert str(exc.value) == "Failed to get logs"
