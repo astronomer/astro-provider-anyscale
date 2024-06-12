@@ -2,11 +2,19 @@ import unittest
 from unittest.mock import patch, MagicMock
 import asyncio
 from datetime import datetime
+import os
+import pytest
+from pathlib import Path
+from airflow.models import DagBag, Connection
+from airflow.utils.db import create_default_connections
+from airflow.utils.session import provide_session, create_session
 
 from anyscale.job.models import JobState
 from anyscale.service.models import ServiceState
 
 from anyscale_provider.triggers.anyscale import AnyscaleJobTrigger, AnyscaleServiceTrigger
+from airflow.triggers.base import TriggerEvent
+from airflow.models.connection import Connection
 
 class TestAnyscaleJobTrigger(unittest.TestCase):
     def setUp(self):
@@ -50,6 +58,17 @@ class TestAnyscaleJobTrigger(unittest.TestCase):
         self.assertEqual(len(events), 1)
         self.assertEqual(events[0]['status'], JobState.FAILED)
         self.assertIn('Error occurred', events[0]['message'])
+
+    async def test_run_no_job_id_provided(self):
+        trigger = AnyscaleJobTrigger(conn_id='default_conn',
+                                     job_id='',
+                                     job_start_time=datetime.now().timestamp())
+        events = []
+        async for event in trigger.run():
+            events.append(event)
+        self.assertEqual(len(events), 1)
+        self.assertEqual(events[0]['status'], 'error')
+        self.assertIn('No job_id provided', events[0]['message'])
 
 class TestAnyscaleServiceTrigger(unittest.TestCase):
     def setUp(self):
