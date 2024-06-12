@@ -60,7 +60,7 @@ class TestAnyscaleHook:
     
     @patch('anyscale_provider.hooks.anyscale.AnyscaleHook.submit_job')
     def test_submit_job(self, mock_submit_job):
-        job_config = JobConfig(name="test_job",entrypoint="python script.py")
+        job_config = JobConfig(name="test_job", entrypoint="python script.py")
         mock_submit_job.return_value = {"job_id": "test_job_id"}
         
         result = self.hook.submit_job(job_config)
@@ -70,10 +70,10 @@ class TestAnyscaleHook:
 
     @patch('anyscale_provider.hooks.anyscale.AnyscaleHook.get_job_status')
     def test_get_job_status(self, mock_get_job_status):
-        job_config = JobConfig(name="test_job",entrypoint="python script.py")
-        mock_get_job_status.return_value = JobStatus(id = "test_job_id",name="test_job_id",
-                                                    config = job_config, state=JobState.SUCCEEDED,
-                                                    runs = [JobRunStatus(name="test", state = JobState.SUCCEEDED)] )
+        job_config = JobConfig(name="test_job", entrypoint="python script.py")
+        mock_get_job_status.return_value = JobStatus(id="test_job_id", name="test_job_id",
+                                                     config=job_config, state=JobState.SUCCEEDED,
+                                                     runs=[JobRunStatus(name="test", state=JobState.SUCCEEDED)])
         
         result = self.hook.get_job_status("test_job_id")
         
@@ -83,13 +83,22 @@ class TestAnyscaleHook:
 
     @patch('anyscale_provider.hooks.anyscale.AnyscaleHook.terminate_job')
     def test_terminate_job(self, mock_terminate_job):
-        mock_terminate_job.return_value = {"status": "terminated"}
+        mock_terminate_job.return_value = True
         
-        result = self.hook.terminate_job("test_job_id")
+        result = self.hook.terminate_job("test_job_id", time_delay=1)
         
-        mock_terminate_job.assert_called_once_with("test_job_id")
-        assert result == {"status": "terminated"}
-    
+        mock_terminate_job.assert_called_once_with("test_job_id", time_delay=1)
+        assert result == True
+
+    @patch('anyscale_provider.hooks.anyscale.AnyscaleHook.terminate_job')
+    def test_terminate_job_exception(self, mock_terminate_job):
+        mock_terminate_job.side_effect = AirflowException("Job termination failed with error")
+        
+        with pytest.raises(AirflowException) as exc:
+            self.hook.terminate_job("test_job_id", time_delay=1)
+        
+        assert str(exc.value) == "Job termination failed with error"
+
     @patch('anyscale_provider.hooks.anyscale.AnyscaleHook.get_ui_field_behaviour')
     def test_get_ui_field_behaviour(self, mock_get_ui_field_behaviour):
         expected_behavior = {
@@ -106,12 +115,21 @@ class TestAnyscaleHook:
 
     @patch('anyscale_provider.hooks.anyscale.AnyscaleHook.terminate_service')
     def test_terminate_service(self, mock_terminate_service):
-        mock_terminate_service.return_value = {"status": "terminated"}
+        mock_terminate_service.return_value = True
         
         result = self.hook.terminate_service("test_service_id", time_delay=1)
         
         mock_terminate_service.assert_called_once_with("test_service_id", time_delay=1)
-        assert result == {"status": "terminated"}
+        assert result == True
+
+    @patch('anyscale_provider.hooks.anyscale.AnyscaleHook.terminate_service')
+    def test_terminate_service_exception(self, mock_terminate_service):
+        mock_terminate_service.side_effect = AirflowException("Service termination failed with error")
+        
+        with pytest.raises(AirflowException) as exc:
+            self.hook.terminate_service("test_service_id", time_delay=1)
+        
+        assert str(exc.value) == "Service termination failed with error"
 
     @patch('anyscale_provider.hooks.anyscale.AnyscaleHook.deploy_service')
     def test_deploy_service(self, mock_deploy_service):
@@ -123,7 +141,7 @@ class TestAnyscaleHook:
         
         mock_deploy_service.assert_called_once_with(service_config, in_place=False, canary_percent=10, max_surge_percent=20)
         assert result == {"service_id": "test_service_id"}
-    
+
     @patch('anyscale_provider.hooks.anyscale.AnyscaleHook.get_logs')
     def test_get_logs(self, mock_get_logs):
         mock_get_logs.return_value = "job logs"
@@ -132,3 +150,16 @@ class TestAnyscaleHook:
         
         mock_get_logs.assert_called_once_with("test_job_id")
         assert result == "job logs"
+
+    @patch('anyscale_provider.hooks.anyscale.AnyscaleHook.get_service_status')
+    def test_get_service_status(self, mock_get_service_status):
+        mock_service_status = ServiceStatus(id="test_service_id", name="test_service", query_url="http://example.com", state=ServiceState.RUNNING)
+        mock_get_service_status.return_value = mock_service_status
+        
+        result = self.hook.get_service_status("test_service_name")
+        
+        mock_get_service_status.assert_called_once_with("test_service_name")
+        assert result.id == "test_service_id"
+        assert result.name == "test_service"
+        assert result.query_url == "http://example.com"
+        assert result.state == ServiceState.RUNNING
