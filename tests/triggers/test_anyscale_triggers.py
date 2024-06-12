@@ -18,13 +18,13 @@ from airflow.models.connection import Connection
 
 class TestAnyscaleJobTrigger(unittest.TestCase):
     def setUp(self):
-        self.trigger = AnyscaleJobTrigger(conn_id='default_conn',
+        self.trigger = AnyscaleJobTrigger(conn_id='anyscale_default',
                                           job_id='123',
                                           job_start_time=datetime.now().timestamp())
 
     @patch('anyscale_provider.triggers.anyscale.AnyscaleJobTrigger.get_current_status')
     def test_is_terminal_status(self, mock_get_status):
-        mock_get_status.return_value = 'COMPLETED'
+        mock_get_status.return_value = 'SUCCEEDED'
         self.assertTrue(self.trigger.is_terminal_status('123'))
 
     @patch('anyscale_provider.triggers.anyscale.AnyscaleJobTrigger.get_current_status')
@@ -33,13 +33,13 @@ class TestAnyscaleJobTrigger(unittest.TestCase):
         self.assertFalse(self.trigger.is_terminal_status('123'))
 
     @patch('asyncio.sleep', return_value=None)
-    @patch('anyscale_provider.triggers.anyscale.AnyscaleJobTrigger.get_current_status', side_effect=['RUNNING', 'RUNNING', 'COMPLETED'])
+    @patch('anyscale_provider.triggers.anyscale.AnyscaleJobTrigger.get_current_status', side_effect=['RUNNING', 'RUNNING', 'SUCCEEDED'])
     async def test_run_successful_completion(self, mock_get_status, mock_sleep):
         events = []
         async for event in self.trigger.run():
             events.append(event)
         self.assertEqual(len(events), 1)
-        self.assertEqual(events[0]['status'], 'COMPLETED')
+        self.assertEqual(events[0]['status'], 'SUCCEEDED')
 
     @patch('time.time', side_effect=[100, 200, 300, 400, 10000])  # Simulating time passing and timeout
     @patch('asyncio.sleep', return_value=None)
@@ -58,6 +58,13 @@ class TestAnyscaleJobTrigger(unittest.TestCase):
         self.assertEqual(len(events), 1)
         self.assertEqual(events[0]['status'], JobState.FAILED)
         self.assertIn('Error occurred', events[0]['message'])
+
+    @patch('anyscale_provider.hooks.anyscale.AnyscaleHook.get_job_status')
+    def test_get_current_status(self, mock_get_job_status):
+        mock_get_job_status.return_value = MagicMock(state=JobState.SUCCEEDED)
+        status = self.trigger.get_current_status('123')
+        self.assertEqual(status, JobState.SUCCEEDED)
+        mock_get_job_status.assert_called_once_with(job_id='123')
 
     async def test_run_no_job_id_provided(self):
         trigger = AnyscaleJobTrigger(conn_id='default_conn',
