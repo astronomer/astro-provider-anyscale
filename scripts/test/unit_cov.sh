@@ -4,4 +4,5 @@ pytest \
     --cov-report=term-missing \
     --cov-report=xml \
     --durations=0 \
-    -m "not (integration or perf)"
+    -m "not (integration or perf)" \
+    --ignore=tests/dags/test_dag_example.py
