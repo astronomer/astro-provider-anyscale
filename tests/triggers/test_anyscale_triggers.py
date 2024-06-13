@@ -71,8 +71,6 @@ class TestAnyscaleJobTrigger(unittest.TestCase):
             
             # Call the method to test
             status = trigger.get_current_status('123')
-            
-            print(status)
 
             # Verify the result
             self.assertEqual(status, 'SUCCEEDED')
@@ -215,14 +213,14 @@ class TestAnyscaleServiceTrigger(unittest.TestCase):
         self.assertEqual(result, expected_output)
     
     @patch('anyscale_provider.hooks.anyscale.AnyscaleHook.get_service_status')
-    def test_get_current_status(self, mock_get_service_status):
+    def test_get_current_status_canary_0_percent(self, mock_get_service_status):
         # Mock the return value of get_service_status
         mock_service_status = MagicMock()
         mock_service_status.state = ServiceState.RUNNING
         mock_service_status.canary_version.state = ServiceState.RUNNING
         mock_get_service_status.return_value = mock_service_status
         
-        # Initialize the trigger
+        # Initialize the trigger with canary_percent set to 0.0
         trigger = AnyscaleServiceTrigger(conn_id='default_conn',
                                          service_name="AstroService",
                                          expected_state=ServiceState.RUNNING,
@@ -235,11 +233,35 @@ class TestAnyscaleServiceTrigger(unittest.TestCase):
             # Call the method to test
             status = trigger.get_current_status('AstroService')
             
-            # Print the result
-            print(status)
-            
             # Verify the result
             self.assertEqual(status, 'RUNNING')
+            
+            # Ensure the mock was called correctly
+            mock_get_service_status.assert_called_once_with('AstroService')
+    
+    @patch('anyscale_provider.hooks.anyscale.AnyscaleHook.get_service_status')
+    def test_get_current_status_canary_100_percent(self, mock_get_service_status):
+        # Mock the return value of get_service_status
+        mock_service_status = MagicMock()
+        mock_service_status.state = ServiceState.TERMINATED
+        mock_service_status.canary_version.state = ServiceState.RUNNING
+        mock_get_service_status.return_value = mock_service_status
+        
+        # Initialize the trigger with canary_percent set to 100.0
+        trigger = AnyscaleServiceTrigger(conn_id='default_conn',
+                                         service_name="AstroService",
+                                         expected_state=ServiceState.RUNNING,
+                                         canary_percent=100.0)
+        
+        # Mock the hook property to return our mocked hook
+        with patch.object(AnyscaleServiceTrigger, 'hook', new_callable=PropertyMock) as mock_hook:
+            mock_hook.return_value.get_service_status = mock_get_service_status
+            
+            # Call the method to test
+            status = trigger.get_current_status('AstroService')
+            
+            # Verify the result
+            self.assertEqual(status, 'TERMINATED')
             
             # Ensure the mock was called correctly
             mock_get_service_status.assert_called_once_with('AstroService')
