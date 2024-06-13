@@ -1,5 +1,4 @@
 import unittest
-from unittest import mock, TestCase
 from unittest.mock import patch, MagicMock, PropertyMock
 import asyncio
 from datetime import datetime
