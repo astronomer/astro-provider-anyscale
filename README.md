@@ -25,14 +25,16 @@ To integrate Airflow with Anyscale, you will need to provide several configurati
   - Dynamically provide this via the `compute_config` input parameter, or
   - Create a compute configuration in Anyscale and use the resulting ID in the `compute_config_id` parameter.
 
-- **image_uri**: Retrieve the Image URI by logging into the [Anyscale platform](https://anyscale.com/).
+- **Image URI**: Retrieve the Image URI by logging into the [Anyscale platform](https://anyscale.com/).
 
 
 ### Usage
 
-Install the anyscale provider using the below pip command
+Install the Anyscale provider using the command below:
 
-```pip install astro-provider-anyscale```
+```sh
+pip install astro-provider-anyscale
+```
 
 
 The provided `submit_anyscale_job.py` script is an example of how to configure and use the `SubmitAnyscaleJob` operator within an Airflow DAG:
