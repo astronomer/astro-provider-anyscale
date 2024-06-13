@@ -51,44 +51,66 @@ class TestAnyscaleHook:
         hook = AnyscaleHook()
         assert hook.get_connection('anyscale_default').password == API_KEY
 
-    @patch('anyscale_provider.hooks.anyscale.AnyscaleHook.submit_job')
-    def test_submit_job(self, mock_submit_job):
+    @patch("anyscale_provider.hooks.anyscale.Anyscale")
+    def test_submit_job(self, mock_anyscale):
         job_config = JobConfig(name="test_job", entrypoint="python script.py")
-        mock_submit_job.return_value = "test_job_id"
-
+        
+        # Create a mock SDK instance with a mock job submit method
+        mock_sdk_instance = mock_anyscale.return_value
+        mock_sdk_instance.job.submit.return_value = "test_job_id"
+        
+        # Patch the instance's sdk attribute directly
+        self.hook.sdk = mock_sdk_instance
+        
         result = self.hook.submit_job(job_config)
 
-        mock_submit_job.assert_called_once_with(job_config)
+        mock_sdk_instance.job.submit.assert_called_once_with(config=job_config)
         assert result == "test_job_id"
 
-    @patch('anyscale_provider.hooks.anyscale.AnyscaleHook.submit_job')
-    def test_submit_job_error(self, mock_submit_job):
+    @patch("anyscale_provider.hooks.anyscale.Anyscale")
+    def test_submit_job_error(self, mock_anyscale):
         job_config = JobConfig(name="test_job", entrypoint="python script.py")
-        mock_submit_job.side_effect = AirflowException("Submit job failed")
+
+        mock_sdk_instance = mock_anyscale.return_value
+        mock_sdk_instance.job.submit.side_effect = AirflowException("Submit job failed")
+        
+        self.hook.sdk = mock_sdk_instance
 
         with pytest.raises(AirflowException) as exc:
             self.hook.submit_job(job_config)
 
+        mock_sdk_instance.job.submit.assert_called_once_with(config=job_config)
         assert str(exc.value) == "Submit job failed"
 
-    @patch('anyscale_provider.hooks.anyscale.AnyscaleHook.deploy_service')
-    def test_deploy_service(self, mock_deploy_service):
+    @patch("anyscale_provider.hooks.anyscale.Anyscale")
+    def test_deploy_service(self, mock_anyscale):
         service_config = ServiceConfig(name="test_service", applications=[{"name": "app1", "import_path": "module.optional_submodule:app"}])
-        mock_deploy_service.return_value = "test_service_id"
-
-        result = self.hook.deploy_service(service_config, in_place=False, canary_percent=10, max_surge_percent=20)
-
-        mock_deploy_service.assert_called_once_with(service_config, in_place=False, canary_percent=10, max_surge_percent=20)
+    
+        # Create a mock SDK instance with a mock service deploy method
+        mock_sdk_instance = mock_anyscale.return_value
+        mock_sdk_instance.service.deploy.return_value = "test_service_id"
+        self.hook.sdk = mock_sdk_instance
+    
+        result = self.hook.deploy_service(service_config,
+                                          in_place=False,
+                                          canary_percent=10,
+                                          max_surge_percent=20)
+    
+        mock_sdk_instance.service.deploy.assert_called_once_with(config=service_config, in_place=False, canary_percent=10, max_surge_percent=20)
         assert result == "test_service_id"
 
-    @patch('anyscale_provider.hooks.anyscale.AnyscaleHook.deploy_service')
-    def test_deploy_service_error(self, mock_deploy_service):
+    @patch('anyscale_provider.hooks.anyscale.Anyscale')
+    def test_deploy_service_error(self, mock_anyscale):
         service_config = ServiceConfig(name="test_service", applications=[{"name": "app1", "import_path": "module.optional_submodule:app"}])
-        mock_deploy_service.side_effect = AirflowException("Deploy service failed")
+        
+        mock_sdk_instance = mock_anyscale.return_value
+        mock_sdk_instance.service.deploy.side_effect = AirflowException("Deploy service failed")
+        self.hook.sdk = mock_sdk_instance
 
         with pytest.raises(AirflowException) as exc:
             self.hook.deploy_service(service_config, in_place=False, canary_percent=10, max_surge_percent=20)
 
+        mock_sdk_instance.service.deploy.assert_called_once_with(config=service_config, in_place=False, canary_percent=10, max_surge_percent=20) 
         assert str(exc.value) == "Deploy service failed"
 
     @patch('anyscale_provider.hooks.anyscale.AnyscaleHook.get_job_status')
