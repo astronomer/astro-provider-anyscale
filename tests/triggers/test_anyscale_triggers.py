@@ -1,8 +1,10 @@
 import unittest
+from unittest import mock, TestCase
 from unittest.mock import patch, MagicMock, PropertyMock
 import asyncio
 from datetime import datetime
 import os
+import time
 import pytest
 from typing import Any, Dict, AsyncIterator, Tuple, Optional
 from pathlib import Path
@@ -127,6 +129,34 @@ class TestAnyscaleJobTrigger(unittest.TestCase):
         
         # Check if the result matches the expected output
         self.assertEqual(result, expected_output)
+    
+    @pytest.mark.asyncio
+    @mock.patch("anyscale_provider.hooks.anyscale.AnyscaleHook.get_job_status")
+    @mock.patch("anyscale_provider.hooks.anyscale.AnyscaleHook.get_logs")
+    async def test_anyscale_run_trigger(self, mocked_get_logs, mocked_get_job_status):
+        """Test AnyscaleJobTrigger run method with mocked details."""
+        mocked_get_job_status.return_value.state = JobState.SUCCEEDED
+        mocked_get_logs.return_value = "log line 1\nlog line 2"
+
+        trigger = AnyscaleJobTrigger(
+            conn_id="test_conn",
+            job_id="1234",
+            job_start_time=time.time(),
+            poll_interval=1,
+            timeout=5,
+        )
+
+        task = asyncio.create_task(trigger.run().__anext__())
+        await asyncio.sleep(0.5)
+
+        assert task.done() is False
+
+        await asyncio.sleep(2)
+        result = await task
+
+        assert result.payload["status"] == JobState.SUCCEEDED
+        assert result.payload["message"] == "Job 1234 completed with status JobState.SUCCEEDED."
+        assert result.payload["job_id"] == "1234"
     
 
 class TestAnyscaleServiceTrigger(unittest.TestCase):

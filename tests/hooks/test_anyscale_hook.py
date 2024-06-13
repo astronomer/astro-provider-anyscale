@@ -214,22 +214,27 @@ class TestAnyscaleHook:
             mock_sdk_instance.service.terminate.assert_called_once_with(name="test_service_id")
             assert str(exc.value) == "Service termination failed with error: Terminate service failed"
     
-    @patch('anyscale_provider.hooks.anyscale.AnyscaleHook.get_logs')
-    def test_get_logs(self, mock_get_logs):
-        mock_get_logs.return_value = "job logs"
+    @patch('anyscale_provider.hooks.anyscale.Anyscale')
+    def test_get_logs(self, mock_anyscale):
+
+        mock_sdk_instance = mock_anyscale.return_value
+        mock_sdk_instance.job.get_logs.return_value = "job logs"
+        self.hook.sdk = mock_sdk_instance
 
         result = self.hook.get_logs("test_job_id")
 
-        mock_get_logs.assert_called_once_with("test_job_id")
+        mock_sdk_instance.job.get_logs.assert_called_once_with(job_id = "test_job_id")
         assert result == "job logs"
 
-    @patch('anyscale_provider.hooks.anyscale.AnyscaleHook.get_logs')
-    def test_get_logs_empty(self, mock_get_logs):
-        mock_get_logs.return_value = ""
+    @patch('anyscale_provider.hooks.anyscale.Anyscale')
+    def test_get_logs_empty(self, mock_anyscale):
+        mock_sdk_instance = mock_anyscale.return_value
+        mock_sdk_instance.job.get_logs.return_value = ""
+        self.hook.sdk = mock_sdk_instance
 
         result = self.hook.get_logs("test_job_id")
 
-        mock_get_logs.assert_called_once_with("test_job_id")
+        mock_sdk_instance.job.get_logs.assert_called_once_with(job_id = "test_job_id")
         assert result == ""
 
     @patch('anyscale_provider.hooks.anyscale.AnyscaleHook.get_service_status')
