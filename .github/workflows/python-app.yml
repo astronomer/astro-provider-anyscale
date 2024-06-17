@@ -20,20 +20,18 @@ jobs:
     steps:
       - run: true
 
-  Type-Check:
+  Static-Check:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
           ref: ${{ github.event.pull_request.head.sha || github.ref }}
-
       - uses: actions/setup-python@v4
         with:
-          python-version: "3.9"
+          python-version: "3.11"
           architecture: "x64"
-
       - run: pip3 install hatch
-      - run: hatch run tests.py3.9-2.7:type-check
+      - run: hatch run tests.py3.9-2.7:static-check
 
   Run-Unit-Tests:
     runs-on: ubuntu-latest
