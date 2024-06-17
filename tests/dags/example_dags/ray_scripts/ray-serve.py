@@ -1,8 +1,7 @@
 # Filename: local_dev.py
-from starlette.requests import Request
-
 from ray import serve
-from ray.serve.handle import DeploymentHandle, DeploymentResponse
+from ray.serve.handle import DeploymentHandle
+from starlette.requests import Request
 
 
 @serve.deployment

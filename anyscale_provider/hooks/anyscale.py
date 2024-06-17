@@ -1,17 +1,13 @@
 import os
 import time
-import logging
 from typing import Any, Dict, Optional
 
-import anyscale
+from airflow.exceptions import AirflowException
+from airflow.hooks.base import BaseHook  # Adjusted import based on Airflow's newer version
 from anyscale import Anyscale
 from anyscale.job.models import JobConfig, JobStatus
-from anyscale.service.models import ServiceConfig, ServiceStatus, ServiceState
+from anyscale.service.models import ServiceConfig, ServiceStatus
 
-from airflow.hooks.base import BaseHook  # Adjusted import based on Airflow's newer version
-from airflow.exceptions import AirflowException
-from airflow.compat.functools import cached_property
-from anyscale.sdk.anyscale_client.models import *
 
 class AnyscaleHook(BaseHook):
     """
@@ -116,12 +112,11 @@ class AnyscaleHook(BaseHook):
         # If the token is not found in the connection, try to get it from the environment variable
         if not token:
             token = os.getenv("ANYSCALE_CLI_TOKEN")
-        
+
         if not token:
             raise AirflowException(f"Missing API token for connection id {self.conn_id}")
 
         self.sdk = Anyscale(auth_token=token)
-
 
     @classmethod
     def get_ui_field_behaviour(cls) -> Dict[str, Any]:
@@ -133,23 +128,25 @@ class AnyscaleHook(BaseHook):
         }
 
     def submit_job(self, config: JobConfig) -> str:
-        self.log.info("Creating a job with configuration: {}".format(config))
+        self.log.info(f"Creating a job with configuration: {config}")
         job_id: str = self.sdk.job.submit(config=config)
         return job_id
 
-    def deploy_service(self, config: ServiceConfig,
-                       in_place: bool = False,
-                       canary_percent: Optional[float] = None,
-                       max_surge_percent: Optional[float] = None) -> str:
-        self.log.info("Deploying a service with configuration: {}".format(config))
-        service_id: str = self.sdk.service.deploy(config=config,
-                                                  in_place=in_place,
-                                                  canary_percent=canary_percent,
-                                                  max_surge_percent=max_surge_percent)
+    def deploy_service(
+        self,
+        config: ServiceConfig,
+        in_place: bool = False,
+        canary_percent: Optional[float] = None,
+        max_surge_percent: Optional[float] = None,
+    ) -> str:
+        self.log.info(f"Deploying a service with configuration: {config}")
+        service_id: str = self.sdk.service.deploy(
+            config=config, in_place=in_place, canary_percent=canary_percent, max_surge_percent=max_surge_percent
+        )
         return service_id
 
     def get_job_status(self, job_id: str) -> JobStatus:
-        self.log.info("Fetching job status for Job name: {}".format(job_id))
+        self.log.info(f"Fetching job status for Job name: {job_id}")
         return self.sdk.job.status(job_id=job_id)
 
     def get_service_status(self, service_name: str) -> ServiceStatus:
