@@ -292,7 +292,7 @@ class RolloutAnyscaleService(BaseOperator):
 
         if event["status"] == ServiceState.SYSTEM_FAILURE:
             self.log.info(f"Anyscale service deployment {service_id} ended with status: {event['status']}")
-            raise AirflowException(f"Job {service_id} failed with error {event['message']}")
+            raise AirflowException(f"Service {service_id} failed with error {event['message']}")
         else:
             self.log.info(f"Anyscale service deployment {service_id} completed with status: {event['status']}")
 
