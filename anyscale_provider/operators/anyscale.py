@@ -1,11 +1,7 @@
-# Standard library imports
 import time
 from typing import Any, Dict, List, Optional, Union
 
-# Third-party imports
 import anyscale
-
-# Airflow imports
 from airflow.compat.functools import cached_property
 from airflow.exceptions import AirflowException
 from airflow.models import BaseOperator

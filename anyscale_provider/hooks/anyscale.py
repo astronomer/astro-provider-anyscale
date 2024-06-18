@@ -3,7 +3,7 @@ import time
 from typing import Any, Dict, Optional
 
 from airflow.exceptions import AirflowException
-from airflow.hooks.base import BaseHook  # Adjusted import based on Airflow's newer version
+from airflow.hooks.base import BaseHook
 from anyscale import Anyscale
 from anyscale.job.models import JobConfig, JobStatus
 from anyscale.service.models import ServiceConfig, ServiceStatus
@@ -18,81 +18,6 @@ class AnyscaleHook(BaseHook):
         :ref:`howto/hook:AnyscaleHook`
 
     :param conn_id: Optional. The connection ID to use for Anyscale. Defaults to "anyscale_default".
-
-    :raises AirflowException: If the API token is missing.
-
-    .. attribute:: conn_name_attr
-        :annotation: = "conn_id"
-        Name attribute for the connection.
-
-    .. attribute:: default_conn_name
-        :annotation: = "anyscale_default"
-        Default connection name.
-
-    .. attribute:: conn_type
-        :annotation: = "anyscale"
-        Type of the connection.
-
-    .. attribute:: hook_name
-        :annotation: = "Anyscale"
-        Name of the hook.
-
-    .. method:: get_ui_field_behaviour
-        Return custom field behaviour for the connection form in the UI.
-
-    .. method:: submit_job
-        Submit a job to Anyscale.
-
-        :param config: Required. Configuration dictionary for the job.
-        :return: The job ID.
-        :rtype: str
-
-    .. method:: deploy_service
-        Deploy a service to Anyscale.
-
-        :param config: Required. Configuration dictionary for the service.
-        :param in_place: Optional. Whether to perform an in-place update. Defaults to False.
-        :param canary_percent: Optional. Canary percentage for deployment.
-        :param max_surge_percent: Optional. Maximum surge percentage for deployment.
-        :return: The service ID.
-        :rtype: str
-
-    .. method:: get_job_status
-        Fetch the status of a job.
-
-        :param job_id: Required. The ID of the job.
-        :return: The status of the job.
-        :rtype: str
-
-    .. method:: get_service_status
-        Fetch the status of a service.
-
-        :param service_name: Required. The name of the service.
-        :return: The status of the service.
-        :rtype: str
-
-    .. method:: terminate_job
-        Terminate a running job.
-
-        :param job_id: Required. The ID of the job.
-        :return: True if the termination was successful.
-        :rtype: bool
-        :raises AirflowException: If the job termination fails.
-
-    .. method:: terminate_service
-        Terminate a running service.
-
-        :param service_id: Required. The ID of the service.
-        :return: True if the termination was successful.
-        :rtype: bool
-        :raises AirflowException: If the service termination fails.
-
-    .. method:: fetch_logs
-        Fetch the logs for a job.
-
-        :param job_id: Required. The ID of the job.
-        :return: The logs of the job.
-        :rtype: str
     """
 
     conn_name_attr = "conn_id"
@@ -128,6 +53,11 @@ class AnyscaleHook(BaseHook):
         }
 
     def submit_job(self, config: JobConfig) -> str:
+        """
+        Submit a job to Anyscale.
+
+        :param config: Required. Configuration dictionary for the job.
+        """
         self.log.info(f"Creating a job with configuration: {config}")
         job_id: str = self.sdk.job.submit(config=config)
         return job_id
@@ -139,6 +69,14 @@ class AnyscaleHook(BaseHook):
         canary_percent: Optional[float] = None,
         max_surge_percent: Optional[float] = None,
     ) -> str:
+        """
+        Deploy a service to Anyscale.
+
+        :param config: Required. Configuration dictionary for the service.
+        :param in_place: Optional. Whether to perform an in-place update. Defaults to False.
+        :param canary_percent: Optional. Canary percentage for deployment.
+        :param max_surge_percent: Optional. Maximum surge percentage for deployment.
+        """
         self.log.info(f"Deploying a service with configuration: {config}")
         service_id: str = self.sdk.service.deploy(
             config=config, in_place=in_place, canary_percent=canary_percent, max_surge_percent=max_surge_percent
@@ -146,13 +84,28 @@ class AnyscaleHook(BaseHook):
         return service_id
 
     def get_job_status(self, job_id: str) -> JobStatus:
+        """
+        Fetch the status of a job.
+
+        :param job_id: The ID of the job.
+        """
         self.log.info(f"Fetching job status for Job name: {job_id}")
         return self.sdk.job.status(job_id=job_id)
 
     def get_service_status(self, service_name: str) -> ServiceStatus:
+        """
+        Fetch the status of a service.
+
+        :param service_name: The name of the service.
+        """
         return self.sdk.service.status(name=service_name)
 
     def terminate_job(self, job_id: str, time_delay: int) -> bool:
+        """
+        Terminate a running job.
+
+        :param job_id: The ID of the job.
+        """
         self.log.info(f"Terminating Job ID: {job_id}")
         try:
             self.sdk.job.terminate(name=job_id)
@@ -163,6 +116,12 @@ class AnyscaleHook(BaseHook):
         return True
 
     def terminate_service(self, service_id: str, time_delay: int) -> bool:
+        """
+        Terminate a running service.
+
+        :param service_id: The ID of the service.
+        :param time_delay:
+        """
         self.log.info(f"Terminating Service ID: {service_id}")
         try:
             self.sdk.service.terminate(name=service_id)
@@ -173,5 +132,10 @@ class AnyscaleHook(BaseHook):
         return True
 
     def get_logs(self, job_id: str) -> str:
+        """
+         Fetch the logs for a job.
+
+        :param job_id: Required. The ID of the job.
+        """
         logs: str = self.sdk.job.get_logs(job_id=job_id)
         return logs
