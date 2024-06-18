@@ -53,6 +53,8 @@ class SubmitAnyscaleJob(BaseOperator):
         requirements: Optional[Union[str, List[str]]] = None,
         env_vars: Optional[Dict[str, str]] = None,
         py_modules: Optional[List[str]] = None,
+        job_timeout_seconds: int = 3600,
+        poll_interval: int = 60,
         max_retries: int = 1,
         *args: Any,
         **kwargs: Any,
@@ -69,6 +71,8 @@ class SubmitAnyscaleJob(BaseOperator):
         self.py_modules = py_modules
         self.entrypoint = entrypoint
         self.max_retries = max_retries
+        self.job_timeout_seconds = job_timeout_seconds
+        self.poll_interval = poll_interval
 
         self.job_id: Optional[str] = None
 
@@ -138,7 +142,7 @@ class SubmitAnyscaleJob(BaseOperator):
         self.log.info("Deferring the polling to AnyscaleJobTrigger...")
         self.defer(
             trigger=AnyscaleJobTrigger(
-                conn_id=self.conn_id, job_id=job_id, job_start_time=self.created_at, poll_interval=60
+                conn_id=self.conn_id, job_id=job_id, job_start_time=self.created_at, poll_interval=self.poll_interval,timeout=self.job_timeout_seconds
             ),
             method_name="execute_complete",
         )
@@ -214,10 +218,14 @@ class RolloutAnyscaleService(BaseOperator):
         in_place: bool = False,
         canary_percent: Optional[float] = None,
         max_surge_percent: Optional[float] = None,
+        service_timeout_seconds: int = 600,
+        poll_interval: int = 60,
         **kwargs: Any,
     ) -> None:
         super().__init__(**kwargs)
         self.conn_id = conn_id
+        self.service_timeout_seconds = service_timeout_seconds
+        self.poll_interval = poll_interval
 
         # Set up explicit parameters
         self.service_params: Dict[str, Any] = {
@@ -277,8 +285,8 @@ class RolloutAnyscaleService(BaseOperator):
                 service_name=self.service_params["name"],
                 expected_state=ServiceState.RUNNING,
                 canary_percent=self.canary_percent,
-                poll_interval=60,
-                timeout=600,
+                poll_interval=self.poll_interval,
+                timeout=self.service_timeout_seconds,
             ),
             method_name="execute_complete",
         )
