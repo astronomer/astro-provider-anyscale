@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 import time
-from typing import Any, Dict, List, Optional, Union
+from typing import Any
 
 import anyscale
 from airflow.compat.functools import cached_property
@@ -46,13 +48,13 @@ class SubmitAnyscaleJob(BaseOperator):
         conn_id: str,
         name: str,
         image_uri: str,
-        compute_config: Union[ComputeConfig, Dict[str, Any], str],
+        compute_config: ComputeConfig | dict[str, Any] | str,
         working_dir: str,
         entrypoint: str,
-        excludes: Optional[List[str]] = None,
-        requirements: Optional[Union[str, List[str]]] = None,
-        env_vars: Optional[Dict[str, str]] = None,
-        py_modules: Optional[List[str]] = None,
+        excludes: list[str] | None = None,
+        requirements: str | list[str] | None = None,
+        env_vars: dict[str, str] | None = None,
+        py_modules: list[str] | None = None,
         max_retries: int = 1,
         *args: Any,
         **kwargs: Any,
@@ -70,9 +72,9 @@ class SubmitAnyscaleJob(BaseOperator):
         self.entrypoint = entrypoint
         self.max_retries = max_retries
 
-        self.job_id: Optional[str] = None
+        self.job_id: str | None = None
 
-        self.fields: Dict[str, Any] = {
+        self.fields: dict[str, Any] = {
             "name": name,
             "image_uri": image_uri,
             "compute_config": compute_config,
@@ -103,7 +105,7 @@ class SubmitAnyscaleJob(BaseOperator):
         """Return an instance of the AnyscaleHook."""
         return AnyscaleHook(conn_id=self.conn_id)
 
-    def execute(self, context: Context) -> Optional[str]:
+    def execute(self, context: Context) -> str | None:
 
         if not self.hook:
             self.log.info("SDK is not available.")
@@ -198,29 +200,29 @@ class RolloutAnyscaleService(BaseOperator):
         conn_id: str,
         name: str,
         image_uri: str,
-        compute_config: Union[ComputeConfig, Dict[str, Any], str],
-        applications: List[Dict[str, Any]],
+        compute_config: ComputeConfig | dict[str, Any] | str,
+        applications: list[dict[str, Any]],
         working_dir: str,
-        containerfile: Optional[str] = None,
-        excludes: Optional[List[str]] = None,
-        requirements: Optional[Union[str, List[str]]] = None,
-        env_vars: Optional[Dict[str, str]] = None,
-        py_modules: Optional[List[str]] = None,
+        containerfile: str | None = None,
+        excludes: list[str] | None = None,
+        requirements: str | list[str] | None = None,
+        env_vars: dict[str, str] | None = None,
+        py_modules: list[str] | None = None,
         query_auth_token_enabled: bool = False,
-        http_options: Optional[Dict[str, Any]] = None,
-        grpc_options: Optional[Dict[str, Any]] = None,
-        logging_config: Optional[Dict[str, Any]] = None,
-        ray_gcs_external_storage_config: Optional[Union[RayGCSExternalStorageConfig, Dict[str, Any]]] = None,
+        http_options: dict[str, Any] | None = None,
+        grpc_options: dict[str, Any] | None = None,
+        logging_config: dict[str, Any] | None = None,
+        ray_gcs_external_storage_config: RayGCSExternalStorageConfig | dict[str, Any] | None = None,
         in_place: bool = False,
-        canary_percent: Optional[float] = None,
-        max_surge_percent: Optional[float] = None,
+        canary_percent: float | None = None,
+        max_surge_percent: float | None = None,
         **kwargs: Any,
     ) -> None:
         super().__init__(**kwargs)
         self.conn_id = conn_id
 
         # Set up explicit parameters
-        self.service_params: Dict[str, Any] = {
+        self.service_params: dict[str, Any] = {
             "name": name,
             "image_uri": image_uri,
             "containerfile": containerfile,
@@ -255,7 +257,7 @@ class RolloutAnyscaleService(BaseOperator):
         """Return an instance of the AnyscaleHook."""
         return AnyscaleHook(conn_id=self.conn_id)
 
-    def execute(self, context: Context) -> Optional[str]:
+    def execute(self, context: Context) -> str | None:
         if not self.hook:
             self.log.info(f"SDK is not available...")
             raise AirflowException("SDK is not available")

@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import asyncio
 import time
 from functools import partial
-from typing import Any, AsyncIterator, Dict, Optional, Tuple
+from typing import Any, AsyncIterator
 
 from airflow.compat.functools import cached_property
 from airflow.triggers.base import BaseTrigger, TriggerEvent
@@ -46,7 +48,7 @@ class AnyscaleJobTrigger(BaseTrigger):
         """Return an instance of the AnyscaleHook."""
         return AnyscaleHook(conn_id=self.conn_id)
 
-    def serialize(self) -> Tuple[str, Dict[str, Any]]:
+    def serialize(self) -> tuple[str, dict[str, Any]]:
         return (
             "anyscale_provider.triggers.anyscale.AnyscaleJobTrigger",
             {
@@ -140,7 +142,7 @@ class AnyscaleServiceTrigger(BaseTrigger):
         conn_id: str,
         service_name: str,
         expected_state: str,
-        canary_percent: Optional[float],
+        canary_percent: float | None,
         poll_interval: int = 60,
         timeout: int = 600,
     ):
@@ -158,7 +160,7 @@ class AnyscaleServiceTrigger(BaseTrigger):
         """Return an instance of the AnyscaleHook."""
         return AnyscaleHook(conn_id=self.conn_id)
 
-    def serialize(self) -> Tuple[str, Dict[str, Any]]:
+    def serialize(self) -> tuple[str, dict[str, Any]]:
         return (
             "anyscale_provider.triggers.anyscale.AnyscaleServiceTrigger",
             {

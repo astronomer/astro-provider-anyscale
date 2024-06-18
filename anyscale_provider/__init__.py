@@ -1,9 +1,11 @@
+from __future__ import annotations
+
 __version__ = "1.0.0"
 
-from typing import Any, Dict
+from typing import Any
 
 
-def get_provider_info() -> Dict[str, Any]:
+def get_provider_info() -> dict[str, Any]:
     return {
         "package-name": "astro-provider-anyscale",  # Required
         "name": "Anyscale",  # Required
