@@ -125,7 +125,10 @@ class SubmitAnyscaleJob(BaseOperator):
         elif current_status in (JobState.STARTING, JobState.RUNNING):
             self.defer(
                 trigger=AnyscaleJobTrigger(
-                    conn_id=self.conn_id, job_id=self.job_id, job_start_time=created_at, poll_interval=60
+                    conn_id=self.conn_id,
+                    job_id=self.job_id,
+                    job_start_time=created_at,
+                    poll_interval=self.poll_interval,
                 ),
                 method_name="execute_complete",
                 timeout=self.job_timeout_seconds if self.job_timeout_seconds else self.execution_timeout,
