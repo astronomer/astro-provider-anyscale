@@ -43,7 +43,6 @@ def setup_airflow_db():
         session.commit()
 
 
-
 dags = get_dags(EXAMPLE_DAGS_DIR)
 print(f"Discovered DAGs: {dags}")
 
