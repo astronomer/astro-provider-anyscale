@@ -39,8 +39,6 @@ class SubmitAnyscaleJob(BaseOperator):
     :param env_vars: Optional. Environment variables for the job. Defaults to None.
     :param py_modules: Optional. Python modules to include. Defaults to None.
     :param max_retries: Optional. Maximum number of retries for the job. Defaults to 1.
-
-    :raises AirflowException: If job name or entrypoint is not provided.
     """
 
     def __init__(
@@ -74,6 +72,13 @@ class SubmitAnyscaleJob(BaseOperator):
 
         self.job_id: str | None = None
 
+        if not self.name:
+            raise AirflowException("Job name is required.")
+
+        # Ensure entrypoint is not empty
+        if not self.entrypoint:
+            raise AirflowException("Entrypoint must be specified.")
+
         self.fields: dict[str, Any] = {
             "name": name,
             "image_uri": image_uri,
@@ -87,13 +92,6 @@ class SubmitAnyscaleJob(BaseOperator):
             "max_retries": max_retries,
         }
 
-        if not self.name:
-            raise AirflowException("Job name is required.")
-
-        # Ensure entrypoint is not empty
-        if not self.entrypoint:
-            raise AirflowException("Entrypoint must be specified.")
-
     def on_kill(self) -> None:
         if self.job_id is not None:
             self.hook.terminate_job(self.job_id, 5)
@@ -106,47 +104,31 @@ class SubmitAnyscaleJob(BaseOperator):
         return AnyscaleHook(conn_id=self.conn_id)
 
     def execute(self, context: Context) -> str | None:
-
-        if not self.hook:
-            self.log.info("SDK is not available.")
-            raise AirflowException("SDK is not available.")
-        else:
-            self.log.info(f"Using Anyscale version {anyscale.__version__}")
-
+        self.log.info(f"Using Anyscale version {anyscale.__version__}")
         # Submit the job to Anyscale
         job_config = JobConfig(**self.fields)
         self.job_id = self.hook.submit_job(job_config)
-        self.created_at: float = time.time()
+        created_at: float = time.time()
         self.log.info(f"Submitted Anyscale job with ID: {self.job_id}")
 
-        current_status = self.get_current_status(self.job_id)
+        current_status = str(self.hook.get_job_status(self.job_id).state)
         self.log.info(f"Current status for {self.job_id} is: {current_status}")
 
-        self.process_job_status(self.job_id, current_status)
+        if current_status == JobState.SUCCEEDED:
+            self.log.info(f"Job {self.job_id} completed successfully.")
+        elif current_status == JobState.FAILED:
+            raise AirflowException(f"Job {self.job_id} failed.")
+        elif current_status in (JobState.STARTING, JobState.RUNNING):
+            self.defer(
+                trigger=AnyscaleJobTrigger(
+                    conn_id=self.conn_id, job_id=self.job_id, job_start_time=created_at, poll_interval=60
+                ),
+                method_name="execute_complete",
+            )
+        else:
+            raise Exception(f"Unexpected state `{current_status}` for job_id `{self.job_id}`.")
 
         return self.job_id
-
-    def process_job_status(self, job_id: str, current_status: str) -> None:
-        if current_status in (JobState.STARTING, JobState.RUNNING):
-            self.defer_job_polling(job_id)
-        elif current_status == JobState.SUCCEEDED:
-            self.log.info(f"Job {job_id} completed successfully.")
-        elif current_status == JobState.FAILED:
-            raise AirflowException(f"Job {job_id} failed.")
-        else:
-            raise Exception(f"Unexpected state `{current_status}` for job_id `{job_id}`.")
-
-    def defer_job_polling(self, job_id: str) -> None:
-        self.log.info("Deferring the polling to AnyscaleJobTrigger...")
-        self.defer(
-            trigger=AnyscaleJobTrigger(
-                conn_id=self.conn_id, job_id=job_id, job_start_time=self.created_at, poll_interval=60
-            ),
-            method_name="execute_complete",
-        )
-
-    def get_current_status(self, job_id: str) -> str:
-        return str(self.hook.get_job_status(job_id=job_id).state)
 
     def execute_complete(self, context: Context, event: Any) -> None:
         current_job_id = event["job_id"]
@@ -190,9 +172,6 @@ class RolloutAnyscaleService(BaseOperator):
     :param in_place: Optional. Flag for in-place updates. Defaults to False.
     :param canary_percent: Optional[float]. Percentage of canary deployment. Defaults to None.
     :param max_surge_percent: Optional[float]. Maximum percentage of surge during deployment. Defaults to None.
-
-    :raises ValueError: If service name or applications list is not provided.
-    :raises AirflowException: If the SDK is not available or the service deployment fails.
     """
 
     def __init__(
@@ -220,7 +199,10 @@ class RolloutAnyscaleService(BaseOperator):
     ) -> None:
         super().__init__(**kwargs)
         self.conn_id = conn_id
-
+        if not name:
+            raise ValueError("Service name is required.")
+        if not applications:
+            raise ValueError("At least one application must be specified.")
         # Set up explicit parameters
         self.service_params: dict[str, Any] = {
             "name": name,
@@ -244,24 +226,13 @@ class RolloutAnyscaleService(BaseOperator):
         self.canary_percent = canary_percent
         self.max_surge_percent = max_surge_percent
 
-        # Ensure name is not empty
-        if not self.service_params["name"]:
-            raise ValueError("Service name is required.")
-
-        # Ensure at least one application is specified
-        if not self.service_params["applications"]:
-            raise ValueError("At least one application must be specified.")
-
     @cached_property
     def hook(self) -> AnyscaleHook:
         """Return an instance of the AnyscaleHook."""
         return AnyscaleHook(conn_id=self.conn_id)
 
     def execute(self, context: Context) -> str | None:
-        if not self.hook:
-            self.log.info(f"SDK is not available...")
-            raise AirflowException("SDK is not available")
-
+        self.log.info(f"Using Anyscale version {anyscale.__version__}")
         svc_config = ServiceConfig(**self.service_params)
         self.log.info(f"Service with config object: {svc_config}")
 
@@ -272,7 +243,6 @@ class RolloutAnyscaleService(BaseOperator):
             canary_percent=self.canary_percent,
             max_surge_percent=self.max_surge_percent,
         )
-
         self.defer(
             trigger=AnyscaleServiceTrigger(
                 conn_id=self.conn_id,
@@ -280,22 +250,26 @@ class RolloutAnyscaleService(BaseOperator):
                 expected_state=ServiceState.RUNNING,
                 canary_percent=self.canary_percent,
                 poll_interval=60,
-                timeout=600,
             ),
             method_name="execute_complete",
+            timeout=self.execution_timeout,
         )
 
         self.log.info(f"Service rollout id: {service_id}")
         return service_id
 
     def execute_complete(self, context: Context, event: Any) -> None:
-        self.log.info(f"Execution completed...")
         service_id = event["service_name"]
+        status = event["status"]
 
-        if event["status"] == ServiceState.SYSTEM_FAILURE:
-            self.log.info(f"Anyscale service deployment {service_id} ended with status: {event['status']}")
-            raise AirflowException(f"Job {service_id} failed with error {event['message']}")
+        self.log.info(f"Execution completed for service {service_id} with status: {status}")
+
+        if status == ServiceState.SYSTEM_FAILURE:
+            error_message = event.get("message", "")
+            error_msg = f"Anyscale service deployment {service_id} failed with error: {error_message}"
+            self.log.error(error_msg)
+            raise AirflowException(error_msg)
         else:
-            self.log.info(f"Anyscale service deployment {service_id} completed with status: {event['status']}")
+            self.log.info(f"Anyscale service deployment {service_id} completed successfully")
 
         return None
