@@ -14,7 +14,11 @@ classifiers = [
     "License :: OSI Approved :: Apache Software License",
     "Operating System :: OS Independent",
     "Programming Language :: Python",
-    "Programming Language :: Python :: 3"
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
 ]
 dynamic = ["version"]
 requires-python = "~=3.8"
@@ -50,7 +54,6 @@ packages = ["/anyscale_provider"]
 
 [tool.hatch.envs.tests]
 dependencies = [
-    "astro-provider-anyscale[tests]",
     "types-PyYAML",
     "types-attrs",
     "types-requests",
@@ -83,11 +86,11 @@ static-check = "pre-commit run --all-files"
 ######################################
 [tool.black]
 line-length = 120
-target-version = ['py37', 'py38', 'py39', 'py310']
+target-version = ['py38', 'py39', 'py310', 'py311']
 
 [tool.isort]
 profile = "black"
-known_third_party = ["airflow", "jinja2"]
+known_third_party = ["airflow"]
 
 [tool.mypy]
 strict = true
@@ -100,7 +103,7 @@ line-length = 120
 select = ["C901", "I", "F"]
 ignore = ["F541"]
 [tool.ruff.lint.mccabe]
-max-complexity = 10
+max-complexity = 7
 
 [tool.distutils.bdist_wheel]
 universal = true
