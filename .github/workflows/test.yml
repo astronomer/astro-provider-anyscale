@@ -2,12 +2,9 @@ name: test
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main", "clean_ci" ]
   pull_request:
-    branches: [ "main" ]
-
-permissions:
-  contents: read
+    branches: [ "main", "clean_ci" ]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
@@ -31,7 +28,7 @@ jobs:
           python-version: "3.11"
           architecture: "x64"
       - run: pip3 install hatch
-      - run: hatch run tests.py3.9-2.7:static-check
+      - run: hatch run tests.py3.11-2.9:static-check
 
   Run-Unit-Tests:
     runs-on: ubuntu-latest
@@ -78,18 +75,6 @@ jobs:
       matrix:
         python-version: ["3.11"]
         airflow-version: ["2.9"]
-    services:
-      postgres:
-        image: postgres
-        env:
-          POSTGRES_PASSWORD: postgres
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 5432:5432
     steps:
       - uses: actions/checkout@v4
         with:
@@ -114,18 +99,6 @@ jobs:
       - name: Test Anyscale against Airflow ${{ matrix.airflow-version }} and Python ${{ matrix.python-version }}
         run: |
           hatch run tests.py${{ matrix.python-version }}-${{ matrix.airflow-version }}:test-integration
-        env:
-          AIRFLOW_HOME: /home/runner/work/astro-provider-anyscale/astro-provider-anyscale/
-          AIRFLOW_CONN_AIRFLOW_DB: postgres://postgres:postgres@0.0.0.0:5432/postgres
-          AIRFLOW__CORE__DAGBAG_IMPORT_TIMEOUT: 300.0  # Increased timeout
-          PYTHONPATH: /home/runner/work/astro-provider-anyscale/astro-provider-anyscale/:$PYTHONPATH
-          ANYSCALE_CLI_TOKEN: ${{ secrets.ANYSCALE_CLI_TOKEN }}
-          POSTGRES_HOST: localhost
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: postgres
-          POSTGRES_SCHEMA: public
-          POSTGRES_PORT: 5432
 
       - name: Upload coverage to Github
         uses: actions/upload-artifact@v4
