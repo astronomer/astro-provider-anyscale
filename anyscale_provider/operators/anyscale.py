@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import time
 from typing import Any
+from datetime import timedelta
 
 import anyscale
 from airflow.compat.functools import cached_property
@@ -71,7 +72,7 @@ class SubmitAnyscaleJob(BaseOperator):
         self.py_modules = py_modules
         self.entrypoint = entrypoint
         self.max_retries = max_retries
-        self.job_timeout_seconds = job_timeout_seconds
+        self.job_timeout_seconds = timedelta(seconds=job_timeout_seconds)
         self.poll_interval = poll_interval
 
         self.job_id: str | None = None
@@ -209,7 +210,7 @@ class RolloutAnyscaleService(BaseOperator):
     ) -> None:
         super().__init__(**kwargs)
         self.conn_id = conn_id
-        self.service_rollout_timeout_seconds = service_rollout_timeout_seconds
+        self.service_rollout_timeout_seconds = timedelta(seconds=service_rollout_timeout_seconds)
         self.poll_interval = poll_interval
         if not name:
             raise ValueError("Service name is required.")
