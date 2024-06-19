@@ -30,16 +30,23 @@ def get_dags(dag_folder=None):
 @pytest.fixture(scope="module")
 def setup_airflow_db():
     os.system("airflow db init")
+    conn_id="anyscale_conn"
     # Explicitly create the tables if necessary
     create_default_connections()
+    token = os.getenv("ANYSCALE_CLI_TOKEN", "")
     with create_session() as session:
+        conn_exists = session.query(Connection).filter(Connection.conn_id == conn_id).first()
+        if conn_exists:
+            session.delete(conn_exists)
+            session.commit()
         conn = Connection(
             conn_id="anyscale_conn",
             conn_type="anyscale",
-            extra=f'{{"ANYSCALE_CLI_TOKEN": "{os.environ.get("ANYSCALE_CLI_TOKEN", "")}"}}',
+            password=token,
         )
         session.add(conn)
         session.commit()
+
 
 
 dags = get_dags(EXAMPLE_DAGS_DIR)
@@ -51,6 +58,10 @@ print(f"Discovered DAGs: {dags}")
 def test_dag_runs(setup_airflow_db, dag_id, dag, fileloc):
     print(f"Testing DAG: {dag_id}, located at: {fileloc}")
     assert dag is not None, f"DAG {dag_id} not found!"
+
+    if not os.getenv("ANYSCALE_CLI_TOKEN"):
+        pytest.fail("ANYSCALE_CLI_TOKEN environment variable is not set. Failing early.")
+
     try:
         dag.test()
     except Exception as e:

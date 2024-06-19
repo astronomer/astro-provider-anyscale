@@ -1,3 +1,4 @@
+import uuid
 from datetime import datetime, timedelta
 
 from airflow import DAG
@@ -18,6 +19,7 @@ default_args = {
 
 # Define the Anyscale connection
 ANYSCALE_CONN_ID = "anyscale_conn"
+SERVICE_NAME = f"AstroService-{uuid.uuid4()}"
 
 dag = DAG(
     "sample_anyscale_service_workflow",
@@ -30,7 +32,7 @@ dag = DAG(
 deploy_anyscale_service = RolloutAnyscaleService(
     task_id="rollout_anyscale_service",
     conn_id=ANYSCALE_CONN_ID,
-    name="AstroService",
+    name=SERVICE_NAME,
     image_uri="anyscale/ray:2.23.0-py311",
     compute_config="my-compute-config:1",
     working_dir="https://github.com/anyscale/docs_examples/archive/refs/heads/main.zip",
@@ -44,7 +46,7 @@ deploy_anyscale_service = RolloutAnyscaleService(
 
 def terminate_service():
     hook = AnyscaleHook(conn_id=ANYSCALE_CONN_ID)
-    result = hook.terminate_service(service_id="AstroService", time_delay=5)
+    result = hook.terminate_service(service_id=SERVICE_NAME, time_delay=5)
     print(result)
 
 

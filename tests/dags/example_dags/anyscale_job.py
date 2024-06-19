@@ -22,7 +22,7 @@ ANYSCALE_CONN_ID = "anyscale_conn"
 FOLDER_PATH = Path(__file__).parent / "ray_scripts"
 
 dag = DAG(
-    "sample_anyscale_workflow",
+    "sample_anyscale_job_workflow",
     default_args=default_args,
     description="A DAG to interact with Anyscale triggered manually",
     schedule_interval=None,  # This DAG is not scheduled, only triggered manually
@@ -36,7 +36,7 @@ submit_anyscale_job = SubmitAnyscaleJob(
     image_uri="anyscale/ray:2.23.0-py311",
     compute_config="my-compute-config:1",
     working_dir=str(FOLDER_PATH),
-    entrypoint="python script.py",
+    entrypoint="python ray-job.py",
     requirements=["requests", "pandas", "numpy", "torch"],
     max_retries=1,
     dag=dag,
