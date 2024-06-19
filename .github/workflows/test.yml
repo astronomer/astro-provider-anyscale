@@ -2,7 +2,7 @@ name: test
 
 on:
   push:
-    branches: [ "main", "clean_ci" ]
+    branches: [ "main" ]
   pull_request:
     branches: [ "main", "clean_ci" ]
 
