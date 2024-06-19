@@ -236,7 +236,7 @@ class TestRolloutAnyscaleService(unittest.TestCase):
         event = {"status": ServiceState.SYSTEM_FAILURE, "service_name": "service123", "message": "Deployment failed"}
         with self.assertRaises(AirflowException) as cm:
             self.operator.execute_complete(Context(), event)
-        self.assertIn("Job service123 failed with error Deployment failed", str(cm.exception))
+        self.assertIn("Service service123 failed with error Deployment failed", str(cm.exception))
 
     @patch("anyscale_provider.operators.anyscale.RolloutAnyscaleService.hook")
     def test_execute_complete_success(self, mock_hook):
