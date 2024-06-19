@@ -142,7 +142,11 @@ class SubmitAnyscaleJob(BaseOperator):
         self.log.info("Deferring the polling to AnyscaleJobTrigger...")
         self.defer(
             trigger=AnyscaleJobTrigger(
-                conn_id=self.conn_id, job_id=job_id, job_start_time=self.created_at, poll_interval=self.poll_interval,timeout=self.job_timeout_seconds
+                conn_id=self.conn_id,
+                job_id=job_id,
+                job_start_time=self.created_at,
+                poll_interval=self.poll_interval,
+                timeout=self.job_timeout_seconds,
             ),
             method_name="execute_complete",
         )

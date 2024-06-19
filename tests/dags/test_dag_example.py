@@ -30,7 +30,7 @@ def get_dags(dag_folder=None):
 @pytest.fixture(scope="module")
 def setup_airflow_db():
     os.system("airflow db init")
-    conn_id="anyscale_conn"
+    conn_id = "anyscale_conn"
     # Explicitly create the tables if necessary
     create_default_connections()
     token = os.getenv("ANYSCALE_CLI_TOKEN", "")
@@ -46,7 +46,6 @@ def setup_airflow_db():
         )
         session.add(conn)
         session.commit()
-
 
 
 dags = get_dags(EXAMPLE_DAGS_DIR)
