@@ -271,7 +271,7 @@ class RolloutAnyscaleService(BaseOperator):
     
     def on_kill(self) -> None:
         if self.service_params["name"] is not None:
-            self.hook.terminate_job(self.service_params["name"], 5)
+            self.hook.terminate_service(self.service_params["name"], 5)
             self.log.info("Termination request received. Submitted request to terminate the anyscale job.")
         return
 
