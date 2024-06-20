@@ -98,8 +98,8 @@ submit_anyscale_job = SubmitAnyscaleJob(
     entrypoint="python script.py",
     requirements=["requests", "pandas", "numpy", "torch"],
     max_retries=1,
-    job_timeout_seconds = 3000,
-    poll_interval = 120,
+    job_timeout_seconds=3000,
+    poll_interval=120,
     dag=dag,
 )
 
@@ -148,7 +148,7 @@ deploy_anyscale_service = RolloutAnyscaleService(
     requirements=["transformers", "requests", "pandas", "numpy", "torch"],
     in_place=False,
     canary_percent=None,
-    service_timeout_seconds = 600,
+    service_timeout_seconds=600,
     poll_interval=120,
     dag=dag,
 )
