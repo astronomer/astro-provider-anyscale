@@ -1,6 +1,8 @@
+from __future__ import annotations
+
 import os
 import time
-from typing import Any, Dict, Optional
+from typing import Any
 
 from airflow.exceptions import AirflowException
 from airflow.hooks.base import BaseHook
@@ -44,7 +46,7 @@ class AnyscaleHook(BaseHook):
         self.sdk = Anyscale(auth_token=token)
 
     @classmethod
-    def get_ui_field_behaviour(cls) -> Dict[str, Any]:
+    def get_ui_field_behaviour(cls) -> dict[str, Any]:
         """Return custom field behaviour for the connection form in the UI."""
         return {
             "hidden_fields": ["schema", "port", "login"],
@@ -66,8 +68,8 @@ class AnyscaleHook(BaseHook):
         self,
         config: ServiceConfig,
         in_place: bool = False,
-        canary_percent: Optional[float] = None,
-        max_surge_percent: Optional[float] = None,
+        canary_percent: float | None = None,
+        max_surge_percent: float | None = None,
     ) -> str:
         """
         Deploy a service to Anyscale.
