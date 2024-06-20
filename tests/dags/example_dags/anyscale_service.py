@@ -40,7 +40,7 @@ deploy_anyscale_service = RolloutAnyscaleService(
     requirements=["transformers", "requests", "pandas", "numpy", "torch"],
     in_place=False,
     canary_percent=None,
-    service_timeout_seconds = 600,
+    service_timeout_seconds=600,
     poll_interval=120,
     dag=dag,
 )

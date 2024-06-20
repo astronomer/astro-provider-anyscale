@@ -268,7 +268,7 @@ class RolloutAnyscaleService(BaseOperator):
     def hook(self) -> AnyscaleHook:
         """Return an instance of the AnyscaleHook."""
         return AnyscaleHook(conn_id=self.conn_id)
-    
+
     def on_kill(self) -> None:
         if self.service_params["name"] is not None:
             self.hook.terminate_service(self.service_params["name"], 5)
