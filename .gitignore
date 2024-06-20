@@ -2,7 +2,9 @@
 __pycache__/
 *.py[cod]
 *$py.class
-*.DS_Store
+
+# Unique to mac machines
+tests/.DS_Store
 
 # C extensions
 *.so
