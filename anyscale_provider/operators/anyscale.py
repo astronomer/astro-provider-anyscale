@@ -268,6 +268,12 @@ class RolloutAnyscaleService(BaseOperator):
     def hook(self) -> AnyscaleHook:
         """Return an instance of the AnyscaleHook."""
         return AnyscaleHook(conn_id=self.conn_id)
+    
+    def on_kill(self) -> None:
+        if self.service_params["name"] is not None:
+            self.hook.terminate_job(self.service_params["name"], 5)
+            self.log.info("Termination request received. Submitted request to terminate the anyscale job.")
+        return
 
     def execute(self, context: Context) -> str | None:
         if not self.hook:
