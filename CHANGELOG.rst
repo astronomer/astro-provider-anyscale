@@ -15,7 +15,7 @@ CHANGELOG
    * - ``AnyscaleHook``
      - .. code-block:: python
 
-        from anyscale_provider.hooks.anyscale import AnyscaleHook
+            from anyscale_provider.hooks.anyscale import AnyscaleHook
 
 .. list-table::
    :header-rows: 1
@@ -27,14 +27,14 @@ CHANGELOG
    * - ``SubmitAnyscaleJob``
      - .. code-block:: python
 
-        from anyscale_provider.operators.anyscale import SubmitAnyscaleJob
-     - `anyscale_job<https://github.com/astronomer/astro-provider-anyscale/blob/main/tests/dags/example_dags/anyscale_job.py>`_
+            from anyscale_provider.operators.anyscale import SubmitAnyscaleJob
+     - `anyscale_job <https://github.com/astronomer/astro-provider-anyscale/blob/main/tests/dags/example_dags/anyscale_job.py>`_
 
-   * - ``AnyscaleDeployService``
+   * - ``RolloutAnyscaleService``
      - .. code-block:: python
 
-        from anyscale_provider.operators.anyscale import RolloutAnyscaleService
-     - `anyscale_service<https://github.com/astronomer/astro-provider-anyscale/blob/main/tests/dags/example_dags/anyscale_service.py>`_
+            from anyscale_provider.operators.anyscale import RolloutAnyscaleService
+     - `anyscale_service <https://github.com/astronomer/astro-provider-anyscale/blob/main/tests/dags/example_dags/anyscale_service.py>`_
 
 .. list-table::
    :header-rows: 1
@@ -45,9 +45,9 @@ CHANGELOG
    * - ``AnyscaleJobTrigger``
      - .. code-block:: python
 
-        from anyscale_provider.triggers.anyscale import AnyscaleJobTrigger
+            from anyscale_provider.triggers.anyscale import AnyscaleJobTrigger
 
    * - ``AnyscaleServiceTrigger``
      - .. code-block:: python
 
-        from anyscale_provider.triggers.anyscale import AnyscaleServiceTrigger
+            from anyscale_provider.triggers.anyscale import AnyscaleServiceTrigger
