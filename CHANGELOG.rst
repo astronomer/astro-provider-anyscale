@@ -51,3 +51,4 @@ CHANGELOG
      - .. code-block:: python
 
             from anyscale_provider.triggers.anyscale import AnyscaleServiceTrigger
+            
