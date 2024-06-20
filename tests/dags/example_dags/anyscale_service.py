@@ -19,7 +19,7 @@ default_args = {
 
 # Define the Anyscale connection
 ANYSCALE_CONN_ID = "anyscale_conn"
-SERVICE_NAME = f"AstroService-{uuid.uuid4()}"
+SERVICE_NAME = f"AstroService-CICD-{uuid.uuid4()}"
 
 dag = DAG(
     "sample_anyscale_service_workflow",

@@ -1,6 +1,6 @@
 # astro-provider-anyscale
 
-This repository provides a set of tools for integrating Anyscale with Apache Airflow, enabling the orchestration of Anyscale jobs within Airflow workflows. It includes a custom hook, two operators, and two triggers specifically designed for managing and monitoring Anyscale jobs and services.
+This repository provides a set of tools for integrating Anyscale with Apache Airflow, enabling the orchestration of Anyscale jobs and services within Airflow workflows. It includes a custom hook, two operators, and two triggers specifically designed for managing and monitoring Anyscale jobs and services.
 
 ### Components
 
@@ -19,13 +19,13 @@ This repository provides a set of tools for integrating Anyscale with Apache Air
 
 To integrate Airflow with Anyscale, you will need to provide several configuration details:
 
-- **Anyscale API Token**: Obtain your API token by logging in to the [Anyscale website](https://anyscale.com/).
+- **Anyscale API Token**: Obtain your API token either by using the anyscale cli or through the [Anyscale console](https://console.anyscale.com/v2/api-keys?api-keys-tab=platform).
 
 - **Compute Config ID**: This ID specifies the machines that will execute your Ray script. You can either:
   - Dynamically provide this via the `compute_config` input parameter, or
   - Create a compute configuration in Anyscale and use the resulting ID in the `compute_config_id` parameter.
 
-- **Image URI**: Retrieve the Image URI by logging into the [Anyscale platform](https://anyscale.com/).
+- **Image URI**: Specify the docker image you would like your operator to use. Make sure your image is accessible within your Anyscale account.
 
 
 ### Usage
@@ -36,8 +36,28 @@ Install the Anyscale provider using the command below:
 pip install astro-provider-anyscale
 ```
 
+### Airflow Connection Configuration
 
-The provided `submit_anyscale_job.py` script is an example of how to configure and use the `SubmitAnyscaleJob` operator within an Airflow DAG:
+To integrate Airflow with Anyscale, configure an Airflow connection with a unique name and set the password as the API token gathered through the Anyscale console.
+
+1. **Access Airflow Web UI:**
+   - Open the Airflow web interface and log in using your Airflow credentials.
+
+2. **Create a New Connection in Airflow:**
+   - Go to the "Admin" tab and select "Connections" from the dropdown menu.
+   - Click the "Add a new record" button to create a new connection.
+
+3. **Configure the Connection:**
+   - **Conn Id:** Enter a unique identifier for the connection, e.g., `anyscale_conn`.
+   - **Password:** Paste the API token you copied from the Anyscale console.
+   - Leave other fields (Host, Schema, Login, Extra) blank as they are not required.
+
+4. **Save the Connection:**
+   - After filling in the required details, click the "Save" button at the bottom of the form to save the new connection.
+
+### Code samples
+
+The below script is an example of how to configure and use the `SubmitAnyscaleJob` operator within an Airflow DAG:
 
 ```python
 from datetime import datetime, timedelta
@@ -86,7 +106,7 @@ submit_anyscale_job = SubmitAnyscaleJob(
 # Defining the task sequence
 submit_anyscale_job
 ```
-The `deploy_anyscale_service.py` script uses the `RolloutAnyscaleService` operator to deploy a service on Anyscale:
+The below script uses the `RolloutAnyscaleService` operator to deploy a service on Anyscale:
 
 ```python
 from datetime import datetime, timedelta

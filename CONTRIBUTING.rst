@@ -82,14 +82,8 @@ We check our code quality via static code checks. The static code checks in astr
 that the code meets certain quality standards. All the static code checks can be run through pre-commit hooks.
 
 Your code must pass all the static code checks in the CI in order to be eligible for Code Review.
-The easiest way to make sure your code is good before pushing is to use pre-commit checks locally
-as described in the static code checks documentation.
+The easiest way to make sure your code is good before pushing is to use pre-commit checks locally.
 
-You can also run some static code checks via make command using available bash scripts.
-
-.. code-block:: bash
-
-    make run-static-checks
 
 Pre-commit hooks
 ----------------
