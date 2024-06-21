@@ -144,7 +144,7 @@ class AnyscaleServiceTrigger(BaseTrigger):
 
     async def run(self) -> AsyncIterator[TriggerEvent]:
         try:
-            while self._get_current_status(self.service_name):
+            while self._check_current_status(self.service_name):
                 await asyncio.sleep(self.poll_interval)
 
             current_state = self._get_current_status(self.service_name)
