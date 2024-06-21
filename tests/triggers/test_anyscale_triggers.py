@@ -4,7 +4,7 @@ from datetime import datetime
 from unittest.mock import MagicMock, PropertyMock, patch
 
 from airflow.exceptions import AirflowNotFoundException
-from anyscale.job.models import JobState
+from anyscale.job.models import JobConfig, JobState, JobStatus
 from anyscale.service.models import ServiceState
 
 from anyscale_provider.triggers.anyscale import AnyscaleJobTrigger, AnyscaleServiceTrigger
@@ -16,15 +16,19 @@ class TestAnyscaleJobTrigger(unittest.TestCase):
             conn_id="anyscale_default", job_id="123", job_start_time=datetime.now().timestamp()
         )
 
-    @patch("anyscale_provider.triggers.anyscale.AnyscaleJobTrigger.get_current_status")
+    @patch("anyscale_provider.hooks.anyscale.AnyscaleHook.get_job_status")
     def test_is_terminal_status(self, mock_get_status):
-        mock_get_status.return_value = "SUCCEEDED"
-        self.assertTrue(self.trigger.is_terminal_status("123"))
+        mock_get_status.return_value = JobStatus(
+            state=JobState.SUCCEEDED, name="test", config=JobConfig(entrypoint="122"), id="1", runs=[]
+        )
+        self.assertTrue(self.trigger._is_terminal_status("123"))
 
-    @patch("anyscale_provider.triggers.anyscale.AnyscaleJobTrigger.get_current_status")
+    @patch("anyscale_provider.hooks.anyscale.AnyscaleHook.get_job_status")
     def test_is_not_terminal_status(self, mock_get_status):
-        mock_get_status.return_value = "RUNNING"
-        self.assertFalse(self.trigger.is_terminal_status("123"))
+        mock_get_status.return_value = JobStatus(
+            state=JobState.RUNNING, name="test", config=JobConfig(entrypoint="122"), id="1", runs=[]
+        )
+        self.assertFalse(self.trigger._is_terminal_status("123"))
 
     @patch("asyncio.sleep", return_value=None)
     @patch(
@@ -59,23 +63,6 @@ class TestAnyscaleJobTrigger(unittest.TestCase):
         self.assertEqual(events[0].payload["status"], JobState.FAILED)
         self.assertIn("Error occurred", events[0].payload["message"])
 
-    @patch("anyscale_provider.hooks.anyscale.AnyscaleHook.get_job_status")
-    def test_get_current_status(self, mock_get_job_status):
-        mock_get_job_status.return_value = MagicMock(state=JobState.SUCCEEDED)
-        trigger = AnyscaleJobTrigger(conn_id="default_conn", job_id="123", job_start_time=datetime.now().timestamp())
-        # Mock the hook property to return our mocked hook
-        with patch.object(AnyscaleJobTrigger, "hook", new_callable=PropertyMock) as mock_hook:
-            mock_hook.return_value.get_job_status = mock_get_job_status
-
-            # Call the method to test
-            status = trigger.get_current_status("123")
-
-            # Verify the result
-            self.assertEqual(status, "SUCCEEDED")
-
-            # Ensure the mock was called correctly
-            mock_get_job_status.assert_called_once_with(job_id="123")
-
     @patch("anyscale_provider.hooks.anyscale.AnyscaleHook.get_logs")
     @patch(
         "anyscale_provider.triggers.anyscale.AnyscaleJobTrigger.get_current_status",
@@ -108,7 +95,7 @@ class TestAnyscaleJobTrigger(unittest.TestCase):
         trigger = AnyscaleJobTrigger(conn_id="default_conn", job_id="123", job_start_time=datetime.now().timestamp())
 
         with self.assertRaises(AirflowNotFoundException) as context:
-            trigger.hook()
+            trigger.hook.client
 
         self.assertIn("The conn_id `default_conn` isn't defined", str(context.exception))
 
@@ -119,7 +106,7 @@ class TestAnyscaleJobTrigger(unittest.TestCase):
         result = trigger.serialize()
         expected_output = (
             "anyscale_provider.triggers.anyscale.AnyscaleJobTrigger",
-            {"conn_id": "default_conn", "job_id": "123", "job_start_time": time, "poll_interval": 60, "timeout": 3600},
+            {"conn_id": "default_conn", "job_id": "123", "job_start_time": time, "poll_interval": 60},
         )
 
         # Check if the result is a tuple
@@ -145,7 +132,6 @@ class TestAnyscaleJobTrigger(unittest.TestCase):
             job_id="1234",
             job_start_time=datetime.now().timestamp(),
             poll_interval=1,
-            timeout=5,
         )
 
         task = asyncio.create_task(trigger.run().__anext__())
@@ -167,10 +153,10 @@ class TestAnyscaleServiceTrigger(unittest.TestCase):
             conn_id="default_conn", service_name="service123", expected_state="RUNNING", canary_percent=None
         )
 
-    @patch("anyscale_provider.triggers.anyscale.AnyscaleServiceTrigger.get_current_status")
+    @patch("anyscale_provider.triggers.anyscale.AnyscaleServiceTrigger._get_current_status")
     def test_check_current_status(self, mock_get_status):
         mock_get_status.return_value = "STARTING"
-        self.assertTrue(self.trigger.check_current_status("service123"))
+        self.assertTrue(self.trigger._check_current_status("service123"))
 
     @patch("asyncio.sleep", return_value=None)
     @patch(
@@ -217,7 +203,7 @@ class TestAnyscaleServiceTrigger(unittest.TestCase):
         )
 
         with self.assertRaises(AirflowNotFoundException) as context:
-            trigger.hook()
+            trigger.hook.client
 
         self.assertIn("The conn_id `default_conn` isn't defined", str(context.exception))
 
@@ -236,7 +222,6 @@ class TestAnyscaleServiceTrigger(unittest.TestCase):
                 "expected_state": ServiceState.RUNNING,
                 "canary_percent": 0.0,
                 "poll_interval": 60,
-                "timeout": 600,
             },
         )
 
@@ -268,7 +253,7 @@ class TestAnyscaleServiceTrigger(unittest.TestCase):
             mock_hook.return_value.get_service_status = mock_get_service_status
 
             # Call the method to test
-            status = trigger.get_current_status("AstroService")
+            status = trigger._get_current_status("AstroService")
 
             # Verify the result
             self.assertEqual(status, "RUNNING")
@@ -297,7 +282,7 @@ class TestAnyscaleServiceTrigger(unittest.TestCase):
             mock_hook.return_value.get_service_status = mock_get_service_status
 
             # Call the method to test
-            status = trigger.get_current_status("AstroService")
+            status = trigger._get_current_status("AstroService")
 
             # Verify the result
             self.assertEqual(status, "TERMINATED")

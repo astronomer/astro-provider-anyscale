@@ -22,27 +22,22 @@ class TestSubmitAnyscaleJob(unittest.TestCase):
             task_id="submit_job_test",
         )
 
-    @patch("anyscale_provider.operators.anyscale.SubmitAnyscaleJob.get_current_status")
     @patch("anyscale_provider.operators.anyscale.SubmitAnyscaleJob.hook", new_callable=MagicMock)
-    def test_execute_successful(self, mock_hook, mock_get_status):
+    def test_execute_successful(self, mock_hook):
+        mock_hook.get_job_status.return_value.state = JobState.SUCCEEDED
         job_result_mock = MagicMock()
         job_result_mock.id = "123"
         mock_hook.submit_job.return_value = "123"
-        mock_get_status.return_value = JobState.SUCCEEDED
 
         job_id = self.operator.execute(Context())
 
         mock_hook.submit_job.assert_called_once()
-        mock_get_status.assert_called_with("123")
         self.assertEqual(job_id, "123")
 
-    @patch("anyscale_provider.operators.anyscale.SubmitAnyscaleJob.process_job_status")
-    @patch("anyscale_provider.operators.anyscale.SubmitAnyscaleJob.get_current_status")
     @patch("anyscale_provider.operators.anyscale.SubmitAnyscaleJob.hook")
-    def test_execute_fail_on_status(self, mock_hook, mock_get_current_status, mock_process_job_status):
+    def test_execute_fail_on_status(self, mock_hook):
         mock_hook.submit_job.return_value = "123"
-        mock_get_current_status.return_value = JobState.FAILED
-        mock_process_job_status.side_effect = AirflowException("Job 123 failed.")
+        mock_hook.get_job_status.return_value.state = JobState.FAILED
 
         with self.assertRaises(AirflowException) as context:
             self.operator.execute(Context())
@@ -54,18 +49,6 @@ class TestSubmitAnyscaleJob(unittest.TestCase):
         self.operator.job_id = "123"
         self.operator.on_kill()
         mock_hook.terminate_job.assert_called_once_with("123", 5)
-
-    @patch("anyscale_provider.operators.anyscale.SubmitAnyscaleJob.hook")
-    def test_process_job_status_unexpected_state(self, mock_hook):
-        with self.assertRaises(Exception):
-            self.operator.process_job_status(None, "UNKNOWN_STATE")
-
-    @patch("anyscale_provider.operators.anyscale.SubmitAnyscaleJob.defer_job_polling")
-    @patch("anyscale_provider.operators.anyscale.SubmitAnyscaleJob.hook")
-    def test_defer_job_polling_called(self, mock_hook, mock_defer_job_polling):
-        mock_hook.get_job_status.return_value = JobState.STARTING
-        self.operator.process_job_status("123", JobState.STARTING)
-        mock_defer_job_polling.assert_called_once()
 
     @patch("anyscale_provider.operators.anyscale.SubmitAnyscaleJob.hook")
     def test_execute_complete(self, mock_hook):
@@ -108,7 +91,7 @@ class TestSubmitAnyscaleJob(unittest.TestCase):
     @patch("anyscale_provider.operators.anyscale.SubmitAnyscaleJob.hook", new_callable=PropertyMock)
     def test_check_anyscale_hook(self, mock_hook_property):
         # Access the hook property
-        self.operator.hook
+        self.operator.hook.client
         # Verify that the hook property was accessed
         mock_hook_property.assert_called_once()
 
@@ -123,33 +106,15 @@ class TestSubmitAnyscaleJob(unittest.TestCase):
 
         self.assertTrue("SDK is not available." in str(context.exception))
 
-    @patch("anyscale_provider.operators.anyscale.SubmitAnyscaleJob.get_current_status")
     @patch("anyscale_provider.operators.anyscale.SubmitAnyscaleJob.hook", new_callable=MagicMock)
-    def test_job_state_failed(self, mock_hook, mock_get_status):
+    def test_job_state_failed(self, mock_hook):
         job_result_mock = MagicMock()
         job_result_mock.id = "123"
         mock_hook.submit_job.return_value = "123"
-        mock_get_status.return_value = JobState.FAILED
-
+        mock_hook.get_job_status.return_value.state = JobState.FAILED
         with self.assertRaises(AirflowException) as context:
             self.operator.execute(Context())
         self.assertTrue("Job 123 failed." in str(context.exception))
-
-    @patch("anyscale_provider.operators.anyscale.SubmitAnyscaleJob.hook", new_callable=PropertyMock)
-    def test_get_current_status(self, mock_hook_property):
-        mock_hook = MagicMock()
-        mock_job_status = MagicMock(state=JobState.SUCCEEDED)
-        mock_hook.get_job_status.return_value = mock_job_status
-        mock_hook_property.return_value = mock_hook
-
-        # Call the method to test
-        status = self.operator.get_current_status("123")
-
-        # Verify the result
-        self.assertEqual(status, "SUCCEEDED")
-
-        # Ensure the mock was called correctly
-        mock_hook.get_job_status.assert_called_once_with(job_id="123")
 
     @patch("airflow.models.BaseOperator.defer")
     @patch("anyscale_provider.operators.anyscale.SubmitAnyscaleJob.hook", new_callable=MagicMock)
@@ -189,15 +154,6 @@ class TestRolloutAnyscaleService(unittest.TestCase):
         with self.assertRaises(TaskDeferred):
             self.operator.execute(Context())
 
-    @patch("anyscale_provider.operators.anyscale.RolloutAnyscaleService.hook", new_callable=MagicMock)
-    def test_execute_fail_sdk_unavailable(self, mock_hook):
-        self.operator.hook = None
-
-        with self.assertRaises(AirflowException) as cm:
-            self.operator.execute(Context())
-
-        self.assertEqual(str(cm.exception), "SDK is not available")
-
     @patch("anyscale_provider.operators.anyscale.RolloutAnyscaleService.defer")
     @patch("anyscale_provider.operators.anyscale.RolloutAnyscaleService.hook", new_callable=MagicMock)
     def test_defer_trigger_called(self, mock_hook, mock_defer):
@@ -215,7 +171,6 @@ class TestRolloutAnyscaleService(unittest.TestCase):
             expected_state=ServiceState.RUNNING,
             canary_percent=None,
             poll_interval=60,
-            timeout=600,
         )
 
         expected_method_name = "execute_complete"
@@ -228,7 +183,6 @@ class TestRolloutAnyscaleService(unittest.TestCase):
         self.assertEqual(actual_trigger.service_name, expected_trigger.service_name)
         self.assertEqual(actual_trigger.expected_state, expected_trigger.expected_state)
         self.assertEqual(actual_trigger.poll_interval, expected_trigger.poll_interval)
-        self.assertEqual(actual_trigger.timeout, expected_trigger.timeout)
         self.assertEqual(actual_method_name, expected_method_name)
 
     @patch("anyscale_provider.operators.anyscale.RolloutAnyscaleService.hook")
@@ -236,17 +190,16 @@ class TestRolloutAnyscaleService(unittest.TestCase):
         event = {"status": ServiceState.SYSTEM_FAILURE, "service_name": "service123", "message": "Deployment failed"}
         with self.assertRaises(AirflowException) as cm:
             self.operator.execute_complete(Context(), event)
-        self.assertIn("Service service123 failed with error Deployment failed", str(cm.exception))
+        self.assertIn("Anyscale service deployment service123 failed with error", str(cm.exception))
 
-    @patch("anyscale_provider.operators.anyscale.RolloutAnyscaleService.hook")
-    def test_execute_complete_success(self, mock_hook):
+    def test_execute_complete_success(self):
         event = {"status": ServiceState.RUNNING, "service_name": "service123", "message": "Deployment succeeded"}
         self.operator.execute_complete(Context(), event)
         self.assertEqual(self.operator.service_params["name"], "test_service")
 
     @patch("anyscale_provider.operators.anyscale.RolloutAnyscaleService.hook", new_callable=PropertyMock)
     def test_check_anyscale_hook(self, mock_hook_property):
-        self.operator.hook
+        self.operator.hook.client
         mock_hook_property.assert_called_once()
 
     def test_no_service_name(self):
