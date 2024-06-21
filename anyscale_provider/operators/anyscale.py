@@ -263,8 +263,7 @@ class RolloutAnyscaleService(BaseOperator):
                 service_name=self.service_params["name"],
                 expected_state=ServiceState.RUNNING,
                 canary_percent=self.canary_percent,
-                poll_interval=self.poll_interval,
-                timeout=self.service_timeout_seconds,
+                poll_interval=self.poll_interval
             ),
             method_name="execute_complete",
             timeout=self.execution_timeout,
