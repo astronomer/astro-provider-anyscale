@@ -34,9 +34,7 @@ def setup_airflow_db():
     create_default_connections()
     with create_session() as session:
         conn = Connection(
-            conn_id="anyscale_conn",
-            conn_type="anyscale",
-            extra=f'{{"ANYSCALE_CLI_TOKEN": "{os.environ.get("ANYSCALE_CLI_TOKEN", "")}"}}',
+            conn_id="anyscale_conn", conn_type="anyscale", password=os.environ.get("ANYSCALE_CLI_TOKEN", "")
         )
         session.add(conn)
         session.commit()

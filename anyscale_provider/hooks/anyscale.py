@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 import time
+from functools import cached_property
 from typing import Any
 
 from airflow.exceptions import AirflowException
@@ -30,20 +31,22 @@ class AnyscaleHook(BaseHook):
     def __init__(self, conn_id: str = default_conn_name, **kwargs: Any) -> None:
         super().__init__()
         self.conn_id = conn_id
-        self.log.info(f"Initializing AnyscaleHook with connection_id: {self.conn_id}")
 
-        # Attempt to get the token from the connection
+    @cached_property
+    def client(self) -> Anyscale:
         conn = self.get_connection(self.conn_id)
         token = conn.password
+        self.log.info(f"Using Anyscale connection_id: {self.conn_id}")
 
         # If the token is not found in the connection, try to get it from the environment variable
         if not token:
+            self.log.info(f"Using token from ENV")
             token = os.getenv("ANYSCALE_CLI_TOKEN")
 
         if not token:
             raise AirflowException(f"Missing API token for connection id {self.conn_id}")
 
-        self.sdk = Anyscale(auth_token=token)
+        return Anyscale(auth_token=token)
 
     @classmethod
     def get_ui_field_behaviour(cls) -> dict[str, Any]:
@@ -61,7 +64,7 @@ class AnyscaleHook(BaseHook):
         :param config: Required. Configuration dictionary for the job.
         """
         self.log.info(f"Creating a job with configuration: {config}")
-        job_id: str = self.sdk.job.submit(config=config)
+        job_id: str = self.client.job.submit(config=config)
         return job_id
 
     def deploy_service(
@@ -80,7 +83,7 @@ class AnyscaleHook(BaseHook):
         :param max_surge_percent: Optional. Maximum surge percentage for deployment.
         """
         self.log.info(f"Deploying a service with configuration: {config}")
-        service_id: str = self.sdk.service.deploy(
+        service_id: str = self.client.service.deploy(
             config=config, in_place=in_place, canary_percent=canary_percent, max_surge_percent=max_surge_percent
         )
         return service_id
@@ -92,7 +95,7 @@ class AnyscaleHook(BaseHook):
         :param job_id: The ID of the job.
         """
         self.log.info(f"Fetching job status for Job name: {job_id}")
-        return self.sdk.job.status(job_id=job_id)
+        return self.client.job.status(job_id=job_id)
 
     def get_service_status(self, service_name: str) -> ServiceStatus:
         """
@@ -100,17 +103,18 @@ class AnyscaleHook(BaseHook):
 
         :param service_name: The name of the service.
         """
-        return self.sdk.service.status(name=service_name)
+        return self.client.service.status(name=service_name)
 
     def terminate_job(self, job_id: str, time_delay: int) -> bool:
         """
         Terminate a running job.
 
         :param job_id: The ID of the job.
+        :param time_delay:
         """
         self.log.info(f"Terminating Job ID: {job_id}")
         try:
-            self.sdk.job.terminate(name=job_id)
+            self.client.job.terminate(name=job_id)
             # Simulated delay
             time.sleep(time_delay)
         except Exception as e:
@@ -126,7 +130,7 @@ class AnyscaleHook(BaseHook):
         """
         self.log.info(f"Terminating Service ID: {service_id}")
         try:
-            self.sdk.service.terminate(name=service_id)
+            self.client.service.terminate(name=service_id)
             # Simulated delay
             time.sleep(time_delay)
         except Exception as e:
@@ -139,5 +143,5 @@ class AnyscaleHook(BaseHook):
 
         :param job_id: Required. The ID of the job.
         """
-        logs: str = self.sdk.job.get_logs(job_id=job_id)
+        logs: str = self.client.job.get_logs(job_id=job_id)
         return logs
