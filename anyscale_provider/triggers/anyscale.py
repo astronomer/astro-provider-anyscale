@@ -143,6 +143,9 @@ class AnyscaleServiceTrigger(BaseTrigger):
         )
 
     async def run(self) -> AsyncIterator[TriggerEvent]:
+        self.log.info(
+            f"Monitoring service {self.service_name} every {self.poll_interval} seconds to reach {self.expected_state}"
+        )
         try:
             while self._check_current_status(self.service_name):
                 await asyncio.sleep(self.poll_interval)
