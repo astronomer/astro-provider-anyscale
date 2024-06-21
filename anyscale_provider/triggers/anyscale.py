@@ -188,8 +188,8 @@ class AnyscaleServiceTrigger(BaseTrigger):
             else:
                 return str(service_status.state)
 
-    def check_current_status(self, service_name: str) -> bool:
-        service_status = self.get_current_status(service_name)
+    def _check_current_status(self, service_name: str) -> bool:
+        service_status = self._get_current_status(service_name)
         self.log.info(f"Current service status for {service_name} is: {service_status}")
         return service_status in (
             ServiceState.STARTING,
