@@ -2,9 +2,9 @@ name: test
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main", "py3.12" ]
   pull_request:
-    branches: [ "main" ]
+    branches: [ "main", "py3.12" ]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
@@ -34,8 +34,13 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.8", "3.9", "3.10", "3.11"]
+        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
         airflow-version: ["2.7", "2.8", "2.9"]
+        exclude:
+          - python-version: "3.12"
+            airflow-version: "2.7"
+          - python-version: "3.12"
+            airflow-version: "2.8"
     steps:
       - uses: actions/checkout@v4
         with:
