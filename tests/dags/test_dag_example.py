@@ -33,7 +33,6 @@ def setup_airflow_db():
     conn_id = "anyscale_conn"
     # Explicitly create the tables if necessary
     create_default_connections()
-    token = os.getenv("ANYSCALE_CLI_TOKEN", "")
     with create_session() as session:
         conn_exists = session.query(Connection).filter(Connection.conn_id == conn_id).first()
         if conn_exists:
