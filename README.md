@@ -59,9 +59,9 @@ To integrate Airflow with Anyscale, configure an Airflow connection with a uniqu
 The below script is an example of how to configure and use the `SubmitAnyscaleJob` operator within an Airflow DAG:
 
 ```python
+from pathlib import Path
 from datetime import datetime, timedelta
 from airflow import DAG
-from pathlib import Path
 from anyscale_provider.operators.anyscale import SubmitAnyscaleJob
 
 default_args = {
@@ -81,7 +81,7 @@ ANYSCALE_CONN_ID = "anyscale_conn"
 FOLDER_PATH = Path(__file__).parent / "ray_scripts"
 
 dag = DAG(
-    "sample_anyscale_workflow",
+    "sample_anyscale_job_workflow",
     default_args=default_args,
     description="A DAG to interact with Anyscale triggered manually",
     schedule_interval=None,  # This DAG is not scheduled, only triggered manually
@@ -95,7 +95,7 @@ submit_anyscale_job = SubmitAnyscaleJob(
     image_uri="anyscale/ray:2.23.0-py311",
     compute_config="my-compute-config:1",
     working_dir=str(FOLDER_PATH),
-    entrypoint="python script.py",
+    entrypoint="python ray-job.py",
     requirements=["requests", "pandas", "numpy", "torch"],
     max_retries=1,
     job_timeout_seconds=3000,
@@ -110,11 +110,14 @@ submit_anyscale_job
 The below script uses the `RolloutAnyscaleService` operator to deploy a service on Anyscale:
 
 ```python
+import uuid
 from datetime import datetime, timedelta
+
 from airflow import DAG
 from airflow.operators.python import PythonOperator
-from anyscale_provider.operators.anyscale import RolloutAnyscaleService
+
 from anyscale_provider.hooks.anyscale import AnyscaleHook
+from anyscale_provider.operators.anyscale import RolloutAnyscaleService
 
 default_args = {
     "owner": "airflow",
@@ -128,6 +131,7 @@ default_args = {
 
 # Define the Anyscale connection
 ANYSCALE_CONN_ID = "anyscale_conn"
+SERVICE_NAME = f"AstroService-CICD-{uuid.uuid4()}"
 
 dag = DAG(
     "sample_anyscale_service_workflow",
@@ -156,7 +160,7 @@ deploy_anyscale_service = RolloutAnyscaleService(
 
 def terminate_service():
     hook = AnyscaleHook(conn_id=ANYSCALE_CONN_ID)
-    result = hook.terminate_service(service_id="AstroService", time_delay=5)
+    result = hook.terminate_service(service_id=SERVICE_NAME, time_delay=5)
     print(result)
 
 

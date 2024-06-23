@@ -128,6 +128,7 @@ class SubmitAnyscaleJob(BaseOperator):
                     conn_id=self.conn_id, job_id=self.job_id, job_start_time=created_at, poll_interval=60
                 ),
                 method_name="execute_complete",
+                timeout=self.job_timeout_seconds if self.job_timeout_seconds else self.execution_timeout
             )
         else:
             raise Exception(f"Unexpected state `{current_status}` for job_id `{self.job_id}`.")
@@ -199,13 +200,13 @@ class RolloutAnyscaleService(BaseOperator):
         in_place: bool = False,
         canary_percent: float | None = None,
         max_surge_percent: float | None = None,
-        service_timeout_seconds: int = 600,
+        service_rollout_timeout_seconds: int = 600,
         poll_interval: int = 60,
         **kwargs: Any,
     ) -> None:
         super().__init__(**kwargs)
         self.conn_id = conn_id
-        self.service_timeout_seconds = service_timeout_seconds
+        self.service_rollout_timeout_seconds = service_rollout_timeout_seconds
         self.poll_interval = poll_interval
         if not name:
             raise ValueError("Service name is required.")
@@ -266,7 +267,7 @@ class RolloutAnyscaleService(BaseOperator):
                 poll_interval=self.poll_interval,
             ),
             method_name="execute_complete",
-            timeout=self.execution_timeout,
+            timeout=self.service_rollout_timeout_seconds if self.service_rollout_timeout_seconds else self.execution_timeout,
         )
 
         self.log.info(f"Service rollout id: {service_id}")
