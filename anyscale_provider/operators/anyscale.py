@@ -277,9 +277,7 @@ class RolloutAnyscaleService(BaseOperator):
                 poll_interval=self.poll_interval,
             ),
             method_name="execute_complete",
-            timeout=(
-                self.service_rollout_timeout_seconds if self.service_rollout_timeout_seconds else self.execution_timeout
-            ),
+            timeout=self.service_rollout_timeout_seconds if self.service_rollout_timeout_seconds else self.execution_timeout,
         )
 
         self.log.info(f"Service rollout id: {service_id}")
