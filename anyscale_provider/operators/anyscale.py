@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 import time
-from typing import Any
 from datetime import timedelta
+from typing import Any
 
 import anyscale
 from airflow.compat.functools import cached_property
