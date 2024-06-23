@@ -38,9 +38,7 @@ def setup_airflow_db():
         if conn_exists:
             session.delete(conn_exists)
             session.commit()
-        conn = Connection(
-            conn_id=conn_id, conn_type="anyscale", password=os.environ.get("ANYSCALE_CLI_TOKEN", "")
-        )
+        conn = Connection(conn_id=conn_id, conn_type="anyscale", password=os.environ.get("ANYSCALE_CLI_TOKEN", ""))
         session.add(conn)
         session.commit()
 
