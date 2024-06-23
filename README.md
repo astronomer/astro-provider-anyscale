@@ -78,7 +78,7 @@ default_args = {
 ANYSCALE_CONN_ID = "anyscale_conn"
 
 # Constants
-FOLDER_PATH = Path(__file__).parent / "ray_scripts"
+FOLDER_PATH = Path(__file__).parent / "example_dags/ray_scripts"
 
 dag = DAG(
     "sample_anyscale_job_workflow",
