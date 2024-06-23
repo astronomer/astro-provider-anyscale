@@ -6,9 +6,8 @@ Hi there! We're thrilled that you'd like to contribute to this project. Your hel
 Please note that this project is released with a `Contributor Code of Conduct <CODE_OF_CONDUCT.md>`_.
 By participating in this project you agree to abide by its terms.
 
-
 Overview
---------
+========
 
 To contribute to the **Astro Anyscale** project:
 
@@ -17,26 +16,24 @@ To contribute to the **Astro Anyscale** project:
 #. Link your issue to the pull request.
 #. Once developments are complete on your feature branch, request a review and it will be merged once approved.
 
-
 Test Changes Locally
-__________________________________
+====================
 
 Pre-requisites
-**************
+--------------
 
-* pre-commmit
 * pytest
 
 .. code-block:: bash
-    pip install pytest pre-commit
+
+    pip install pytest
 
 Run tests
-*****************
+---------
 
 All tests are inside ``./tests`` directory.
 
 - Just run ``pytest filepath+filename`` to run the tests.
-
 
 Static Code Checks
 ==================
@@ -55,6 +52,7 @@ your cloned ``astro-provider-anyscale`` directory:
 
 .. code-block:: bash
 
+    pip install pre-commit
     pre-commit install
 
 To run the checks manually, run:
@@ -89,7 +87,7 @@ Our pre-commit configuration includes the following checks:
 For more details on each hook and additional configuration options, refer to the official pre-commit documentation: https://pre-commit.com/hooks.html
 
 Building
-__________________________________
+========
 
 We use `hatch <https://hatch.pypa.io/latest/>`_ to build the project. To build the project, run:
 
@@ -97,9 +95,8 @@ We use `hatch <https://hatch.pypa.io/latest/>`_ to build the project. To build t
 
     hatch build
 
-
 Releasing
-__________________________________
+=========
 
 We use GitHub actions to create and deploy new releases. To create a new release, first create a new version using:
 
@@ -107,12 +104,10 @@ We use GitHub actions to create and deploy new releases. To create a new release
 
     hatch version minor
 
-
 hatch will automatically update the version for you. Then, create a new release on GitHub with the new version. The release will be automatically deployed to PyPI.
 
 .. note::
     You can update the version in a few different ways. Check out the `hatch docs <https://hatch.pypa.io/latest/version/#updating>`_ to learn more.
-
 
 To validate a release locally, it is possible to build it using:
 
@@ -125,4 +120,3 @@ To publish a release to PyPI, use:
 .. code-block:: bash
 
     hatch publish
-
