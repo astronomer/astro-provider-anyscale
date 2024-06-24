@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-import time
+from datetime import timedelta
 from typing import Any
 
 import anyscale
@@ -38,7 +38,9 @@ class SubmitAnyscaleJob(BaseOperator):
     :param requirements: Optional. Python requirements for the job. Defaults to None.
     :param env_vars: Optional. Environment variables for the job. Defaults to None.
     :param py_modules: Optional. Python modules to include. Defaults to None.
-    :param max_retries: Optional. Maximum number of retries for the job. Defaults to 1.
+    :param job_timeout_seconds: Optional[int]. Duration after which the trigger tracking the job times out. Defaults to 3600 seconds.
+    :param poll_interval: Optional[int]. Interval to poll the job status. Defaults to 60 seconds.
+    :param max_retries: Optional[int]. Maximum number of retries for the job. Defaults to 1.
     """
 
     def __init__(
@@ -53,6 +55,8 @@ class SubmitAnyscaleJob(BaseOperator):
         requirements: str | list[str] | None = None,
         env_vars: dict[str, str] | None = None,
         py_modules: list[str] | None = None,
+        job_timeout_seconds: int = 3600,
+        poll_interval: int = 60,
         max_retries: int = 1,
         *args: Any,
         **kwargs: Any,
@@ -69,6 +73,8 @@ class SubmitAnyscaleJob(BaseOperator):
         self.py_modules = py_modules
         self.entrypoint = entrypoint
         self.max_retries = max_retries
+        self.job_timeout_seconds = timedelta(seconds=job_timeout_seconds)
+        self.poll_interval = poll_interval
 
         self.job_id: str | None = None
 
@@ -79,7 +85,7 @@ class SubmitAnyscaleJob(BaseOperator):
         if not self.entrypoint:
             raise AirflowException("Entrypoint must be specified.")
 
-        self.fields: dict[str, Any] = {
+        self.job_params: dict[str, Any] = {
             "name": name,
             "image_uri": image_uri,
             "compute_config": compute_config,
@@ -106,9 +112,8 @@ class SubmitAnyscaleJob(BaseOperator):
     def execute(self, context: Context) -> str | None:
         self.log.info(f"Using Anyscale version {anyscale.__version__}")
         # Submit the job to Anyscale
-        job_config = JobConfig(**self.fields)
+        job_config = JobConfig(**self.job_params)
         self.job_id = self.hook.submit_job(job_config)
-        created_at: float = time.time()
         self.log.info(f"Submitted Anyscale job with ID: {self.job_id}")
 
         current_status = str(self.hook.get_job_status(self.job_id).state)
@@ -120,10 +125,9 @@ class SubmitAnyscaleJob(BaseOperator):
             raise AirflowException(f"Job {self.job_id} failed.")
         elif current_status in (JobState.STARTING, JobState.RUNNING):
             self.defer(
-                trigger=AnyscaleJobTrigger(
-                    conn_id=self.conn_id, job_id=self.job_id, job_start_time=created_at, poll_interval=60
-                ),
+                trigger=AnyscaleJobTrigger(conn_id=self.conn_id, job_id=self.job_id, poll_interval=self.poll_interval),
                 method_name="execute_complete",
+                timeout=self.job_timeout_seconds,
             )
         else:
             raise Exception(f"Unexpected state `{current_status}` for job_id `{self.job_id}`.")
@@ -172,6 +176,8 @@ class RolloutAnyscaleService(BaseOperator):
     :param in_place: Optional. Flag for in-place updates. Defaults to False.
     :param canary_percent: Optional[float]. Percentage of canary deployment. Defaults to None.
     :param max_surge_percent: Optional[float]. Maximum percentage of surge during deployment. Defaults to None.
+    :param service_rollout_timeout_seconds: Optional[int]. Duration after which the trigger tracking the model deployment times out. Defaults to 600 seconds.
+    :param poll_interval: Optional[int]. Interval to poll the service status. Defaults to 60 seconds.
     """
 
     def __init__(
@@ -195,10 +201,14 @@ class RolloutAnyscaleService(BaseOperator):
         in_place: bool = False,
         canary_percent: float | None = None,
         max_surge_percent: float | None = None,
+        service_rollout_timeout_seconds: int = 600,
+        poll_interval: int = 60,
         **kwargs: Any,
     ) -> None:
         super().__init__(**kwargs)
         self.conn_id = conn_id
+        self.service_rollout_timeout_seconds = timedelta(seconds=service_rollout_timeout_seconds)
+        self.poll_interval = poll_interval
         if not name:
             raise ValueError("Service name is required.")
         if not applications:
@@ -231,6 +241,12 @@ class RolloutAnyscaleService(BaseOperator):
         """Return an instance of the AnyscaleHook."""
         return AnyscaleHook(conn_id=self.conn_id)
 
+    def on_kill(self) -> None:
+        if self.service_params["name"] is not None:
+            self.hook.terminate_service(self.service_params["name"], 5)
+            self.log.info("Termination request received. Submitted request to terminate the anyscale service rollout.")
+        return
+
     def execute(self, context: Context) -> str | None:
         self.log.info(f"Using Anyscale version {anyscale.__version__}")
         svc_config = ServiceConfig(**self.service_params)
@@ -249,10 +265,10 @@ class RolloutAnyscaleService(BaseOperator):
                 service_name=self.service_params["name"],
                 expected_state=ServiceState.RUNNING,
                 canary_percent=self.canary_percent,
-                poll_interval=60,
+                poll_interval=self.poll_interval,
             ),
             method_name="execute_complete",
-            timeout=self.execution_timeout,
+            timeout=(self.service_rollout_timeout_seconds),
         )
 
         self.log.info(f"Service rollout id: {service_id}")

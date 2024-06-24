@@ -141,7 +141,7 @@ class AnyscaleHook(BaseHook):
         """
          Fetch the logs for a job.
 
-        :param job_id: Required. The ID of the job.
+        :param job_id: Required. The ID of the job or service.
         """
         logs: str = self.client.job.get_logs(job_id=job_id)
         return logs

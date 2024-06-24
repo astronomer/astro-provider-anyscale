@@ -26,15 +26,13 @@ class AnyscaleJobTrigger(BaseTrigger):
 
     :param conn_id: Required. The connection ID for Anyscale.
     :param job_id: Required. The ID of the job to monitor.
-    :param job_start_time: Required. The start time of the job.
     :param poll_interval: Optional. Interval in seconds between status checks. Defaults to 60 seconds.
     """
 
-    def __init__(self, conn_id: str, job_id: str, job_start_time: float, poll_interval: int = 60):
+    def __init__(self, conn_id: str, job_id: str, poll_interval: int = 60):
         super().__init__()  # type: ignore[no-untyped-call]
         self.conn_id = conn_id
         self.job_id = job_id
-        self.job_start_time = job_start_time
         self.poll_interval = poll_interval
 
     @cached_property
@@ -48,7 +46,6 @@ class AnyscaleJobTrigger(BaseTrigger):
             {
                 "conn_id": self.conn_id,
                 "job_id": self.job_id,
-                "job_start_time": self.job_start_time,
                 "poll_interval": self.poll_interval,
             },
         )
@@ -189,9 +186,9 @@ class AnyscaleServiceTrigger(BaseTrigger):
                 return str(service_status.state)
 
     def _check_current_status(self, service_name: str) -> bool:
-        job_status = self._get_current_status(service_name)
-        self.log.info(f"Current job status for {service_name} is: {job_status}")
-        return job_status in (
+        service_status = self._get_current_status(service_name)
+        self.log.info(f"Current service status for {service_name} is: {service_status}")
+        return service_status in (
             ServiceState.STARTING,
             ServiceState.UPDATING,
             ServiceState.ROLLING_OUT,

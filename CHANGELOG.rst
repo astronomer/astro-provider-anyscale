@@ -1,7 +1,7 @@
 CHANGELOG
 =========
 
-1.0.0 (2024-05-29)
+1.0.0 (2024-06-29)
 ------------------
 
 * Initial release, with the following hooks, operators, and triggers:
@@ -11,13 +11,11 @@ CHANGELOG
 
    * - Hook Class
      - Import Path
-     - Example DAG
 
    * - ``AnyscaleHook``
      - .. code-block:: python
 
-        from anyscale_provider.hooks.anyscale import AnyscaleHook
-     - N/A
+            from anyscale_provider.hooks.anyscale import AnyscaleHook
 
 .. list-table::
    :header-rows: 1
@@ -26,33 +24,30 @@ CHANGELOG
      - Import Path
      - Example DAG
 
-   * - ``AnyscaleSubmitJob``
+   * - ``SubmitAnyscaleJob``
      - .. code-block:: python
 
-        from anyscale_provider.operators.anyscale import AnyscaleSubmitJob
-     - Example DAG
+            from anyscale_provider.operators.anyscale import SubmitAnyscaleJob
+     - `anyscale_job <https://github.com/astronomer/astro-provider-anyscale/blob/main/example_dags/anyscale_job.py>`_
 
-   * - ``AnyscaleDeployService``
+   * - ``RolloutAnyscaleService``
      - .. code-block:: python
 
-        from anyscale_provider.operators.anyscale import RolloutAnyscaleService
-     - Example DAG
+            from anyscale_provider.operators.anyscale import RolloutAnyscaleService
+     - `anyscale_service <https://github.com/astronomer/astro-provider-anyscale/blob/main/example_dags/anyscale_service.py>`_
 
 .. list-table::
    :header-rows: 1
 
    * - Trigger Class
      - Import Path
-     - Example DAG
 
    * - ``AnyscaleJobTrigger``
      - .. code-block:: python
 
-        from anyscale_provider.triggers.anyscale import AnyscaleJobTrigger
-     - N/A
+            from anyscale_provider.triggers.anyscale import AnyscaleJobTrigger
 
    * - ``AnyscaleServiceTrigger``
      - .. code-block:: python
 
-        from anyscale_provider.triggers.anyscale import AnyscaleServiceTrigger
-     - N/A
+            from anyscale_provider.triggers.anyscale import AnyscaleServiceTrigger
