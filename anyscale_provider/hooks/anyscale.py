@@ -16,10 +16,6 @@ class AnyscaleHook(BaseHook):
     """
     This hook handles authenticating and making calls to the Anyscale SDK
 
-    .. seealso::
-        For more information on how to use this hook, take a look at the guide:
-        :ref:`howto/hook:AnyscaleHook`
-
     :param conn_id: Optional. The connection ID to use for Anyscale. Defaults to "anyscale_default".
     """
 
