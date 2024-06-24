@@ -61,28 +61,7 @@ To run the checks manually, run:
 
     pre-commit run --all-files
 
-Our pre-commit configuration includes the following checks:
-
-* Check if .env file is empty
-* Check for added large files
-* Check for merge conflicts
-* Check TOML files
-* Check YAML files (with --unsafe flag)
-* Remove debug statements
-* Fix end-of-file issues
-* Normalize mixed line endings
-* Pretty format JSON files (with --autofix)
-* Remove trailing whitespace
-* Check for common misspellings with codespell
-* Ensure correct usage of backticks in reStructuredText files
-* Check Python mock methods
-* Remove CRLF line endings
-* Remove tabs
-* Upgrade Python syntax with pyupgrade (for Python 3.7+)
-* Lint Python code with ruff (with --fix)
-* Format Python code with black (configured with pyproject.toml)
-* Format Python code in documentation with blacken-docs
-* Type check with mypy (configured with pyproject.toml)
+For details on the pre-commit configuration, refer to the `pre-commit config file <https://github.com/astronomer/astro-provider-anyscale/blob/main/.pre-commit-config.yaml>`_.
 
 For more details on each hook and additional configuration options, refer to the official pre-commit documentation: https://pre-commit.com/hooks.html
 

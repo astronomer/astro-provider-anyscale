@@ -25,7 +25,7 @@ dag = DAG(
     "sample_anyscale_job_workflow",
     default_args=default_args,
     description="A DAG to interact with Anyscale triggered manually",
-    schedule_interval=None,  # This DAG is not scheduled, only triggered manually
+    schedule=None,  # This DAG is not scheduled, only triggered manually
     catchup=False,
 )
 

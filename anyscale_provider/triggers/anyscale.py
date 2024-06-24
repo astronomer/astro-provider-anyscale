@@ -26,7 +26,6 @@ class AnyscaleJobTrigger(BaseTrigger):
 
     :param conn_id: Required. The connection ID for Anyscale.
     :param job_id: Required. The ID of the job to monitor.
-    :param job_start_time: Required. The start time of the job.
     :param poll_interval: Optional. Interval in seconds between status checks. Defaults to 60 seconds.
     """
 
@@ -34,7 +33,6 @@ class AnyscaleJobTrigger(BaseTrigger):
         super().__init__()  # type: ignore[no-untyped-call]
         self.conn_id = conn_id
         self.job_id = job_id
-        self.job_start_time = job_start_time
         self.poll_interval = poll_interval
 
     @cached_property
@@ -48,7 +46,6 @@ class AnyscaleJobTrigger(BaseTrigger):
             {
                 "conn_id": self.conn_id,
                 "job_id": self.job_id,
-                "job_start_time": self.job_start_time,
                 "poll_interval": self.poll_interval,
             },
         )

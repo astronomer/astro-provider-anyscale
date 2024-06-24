@@ -21,11 +21,11 @@ To integrate Airflow with Anyscale, you will need to provide several configurati
 
 - **Anyscale API Token**: Obtain your API token either by using the anyscale cli or through the [Anyscale console](https://console.anyscale.com/v2/api-keys?api-keys-tab=platform).
 
-- **Compute Config ID**: This ID specifies the machines that will execute your Ray script. You can either:
+- **Compute Config (optional)**: This ID specifies the machines that will execute your Ray script. You can either:
   - Dynamically provide this via the `compute_config` input parameter, or
   - Create a compute configuration in Anyscale and use the resulting ID in the `compute_config_id` parameter.
 
-- **Image URI**: Specify the docker image you would like your operator to use. Make sure your image is accessible within your Anyscale account.
+- **Image URI**: Specify the docker image you would like your operator to use. Make sure your image is accessible within your Anyscale account. Note, you can alternatively specify a containerfile that can be used to dynamically build the image
 
 
 ### Usage
@@ -85,7 +85,7 @@ dag = DAG(
     "sample_anyscale_job_workflow",
     default_args=default_args,
     description="A DAG to interact with Anyscale triggered manually",
-    schedule_interval=None,  # This DAG is not scheduled, only triggered manually
+    schedule=None,  # This DAG is not scheduled, only triggered manually
     catchup=False,
 )
 
@@ -139,7 +139,7 @@ dag = DAG(
     "sample_anyscale_service_workflow",
     default_args=default_args,
     description="A DAG to interact with Anyscale triggered manually",
-    schedule_interval=None,  # This DAG is not scheduled, only triggered manually
+    schedule=None,  # This DAG is not scheduled, only triggered manually
     catchup=False,
 )
 
