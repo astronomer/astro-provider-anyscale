@@ -42,7 +42,7 @@ deploy_anyscale_service = RolloutAnyscaleService(
     in_place=False,
     canary_percent=None,
     service_rollout_timeout_seconds=600,
-    poll_interval=120,
+    poll_interval=10,
     dag=dag,
 )
 

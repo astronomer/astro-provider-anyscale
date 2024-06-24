@@ -40,7 +40,7 @@ submit_anyscale_job = SubmitAnyscaleJob(
     requirements=["requests", "pandas", "numpy", "torch"],
     max_retries=1,
     job_timeout_seconds=3000,
-    poll_interval=120,
+    poll_interval=10,
     dag=dag,
 )
 
