@@ -29,7 +29,7 @@ class AnyscaleJobTrigger(BaseTrigger):
     :param poll_interval: Optional. Interval in seconds between status checks. Defaults to 60 seconds.
     """
 
-    def __init__(self, conn_id: str, job_id: str, job_start_time: float, poll_interval: int = 60):
+    def __init__(self, conn_id: str, job_id: str, poll_interval: int = 60):
         super().__init__()  # type: ignore[no-untyped-call]
         self.conn_id = conn_id
         self.job_id = job_id
