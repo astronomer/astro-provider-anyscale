@@ -49,6 +49,7 @@ To integrate Airflow with Anyscale, configure an Airflow connection with a uniqu
 
 3. **Configure the Connection:**
    - **Conn Id:** Enter a unique identifier for the connection, e.g., `anyscale_conn`.
+   - **Conn Type:** Select `Anyscale`
    - **Password:** Paste the API token you copied from the Anyscale console.
 
 4. **Save the Connection:**

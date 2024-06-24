@@ -28,13 +28,13 @@ CHANGELOG
      - .. code-block:: python
 
             from anyscale_provider.operators.anyscale import SubmitAnyscaleJob
-     - `anyscale_job <https://github.com/astronomer/astro-provider-anyscale/blob/main/tests/dags/example_dags/anyscale_job.py>`_
+     - `anyscale_job <https://github.com/astronomer/astro-provider-anyscale/blob/main/example_dags/anyscale_job.py>`_
 
    * - ``RolloutAnyscaleService``
      - .. code-block:: python
 
             from anyscale_provider.operators.anyscale import RolloutAnyscaleService
-     - `anyscale_service <https://github.com/astronomer/astro-provider-anyscale/blob/main/tests/dags/example_dags/anyscale_service.py>`_
+     - `anyscale_service <https://github.com/astronomer/astro-provider-anyscale/blob/main/example_dags/anyscale_service.py>`_
 
 .. list-table::
    :header-rows: 1
