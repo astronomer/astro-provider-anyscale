@@ -160,21 +160,23 @@ class RolloutAnyscaleService(BaseOperator):
         :ref:`howto/operator:RolloutAnyscaleServiceOperator`
 
     :param conn_id: Required. The connection ID for Anyscale.
-    :param name: Required. The name of the service to be deployed.
-    :param image_uri: Required. The URI of the container image to use for the service.
-    :param containerfile: Optional. Path to the container file. Defaults to None.
-    :param compute_config: Optional. The compute configuration for the service. Defaults to None.
-    :param working_dir: Optional. The working directory for the service. Defaults to None.
-    :param excludes: Optional. Files or directories to exclude. Defaults to None.
-    :param requirements: Optional. Python requirements for the service. Defaults to None.
-    :param env_vars: Optional. Environment variables for the service. Defaults to None.
-    :param py_modules: Optional. Python modules to include. Defaults to None.
-    :param applications: Required. List of applications to deploy.
-    :param query_auth_token_enabled: Optional. Flag to enable query authentication token. Defaults to False.
-    :param http_options: Optional. HTTP options for the service. Defaults to None.
-    :param grpc_options: Optional. gRPC options for the service. Defaults to None.
-    :param logging_config: Optional. Logging configuration for the service. Defaults to None.
-    :param ray_gcs_external_storage_config: Optional. Ray GCS external storage configuration. Defaults to None.
+    :param name: Required. Unique name of the service.
+    :param image_uri: Optional. URI of an existing image. Exclusive with `containerfile`.
+    :param containerfile: Optional. The file path to a containerfile that will be built into an image before running the workload. Exclusive with `image_uri`.
+    :param compute_config: Optional. The name of an existing registered compute config or an inlined ComputeConfig object.
+    :param working_dir: Optional. Directory that will be used as the working directory for the application. If a local directory is provided, it will be uploaded to cloud storage automatically. When running inside a workspace, this defaults to the current working directory ('.').
+    :param excludes: Optional. A list of file path globs that will be excluded when uploading local files for `working_dir`.
+    :param requirements: Optional. A list of requirements or a path to a `requirements.txt` file for the workload. When running inside a workspace, this defaults to the workspace-tracked requirements.
+    :param env_vars: Optional. A dictionary of environment variables that will be set for the workload.
+    :param py_modules: Optional. A list of local directories that will be uploaded and added to the Python path.
+    :param cloud: Optional. The Anyscale Cloud to run this workload on. If not provided, the organization default will be used (or, if running in a workspace, the cloud of the workspace).
+    :param project: Optional. The Anyscale project to run this workload in. If not provided, the organization default will be used (or, if running in a workspace, the project of the workspace).
+    :param applications: Required. List of Ray Serve applications to run. At least one application must be specified. For details, see the Ray Serve config file format documentation: https://docs.ray.io/en/latest/serve/production-guide/config.html.
+    :param query_auth_token_enabled: Optional. Whether or not queries to this service is gated behind an authentication token. If `True`, an auth token is generated the first time the service is deployed. You can find the token in the UI or by fetching the status of the service.
+    :param http_options: Optional. HTTP options that will be passed to Ray Serve. See https://docs.ray.io/en/latest/serve/production-guide/config.html for supported options.
+    :param grpc_options: Optional. gRPC options that will be passed to Ray Serve. See https://docs.ray.io/en/latest/serve/production-guide/config.html for supported options.
+    :param logging_config: Optional. Logging options that will be passed to Ray Serve. See https://docs.ray.io/en/latest/serve/production-guide/config.html for supported options.
+    :param ray_gcs_external_storage_config: Optional. Configuration options for external storage for the Ray Global Control Store (GCS).
     :param in_place: Optional. Flag for in-place updates. Defaults to False.
     :param canary_percent: Optional[float]. Percentage of canary deployment. Defaults to None.
     :param max_surge_percent: Optional[float]. Maximum percentage of surge during deployment. Defaults to None.
@@ -186,23 +188,25 @@ class RolloutAnyscaleService(BaseOperator):
         self,
         conn_id: str,
         name: str,
-        image_uri: str,
-        compute_config: ComputeConfig | dict[str, Any] | str,
         applications: list[dict[str, Any]],
-        working_dir: str,
+        image_uri: str | None = None,
         containerfile: str | None = None,
+        compute_config: ComputeConfig | dict[str, Any] | str | None = None,
+        working_dir: str | None = None,
         excludes: list[str] | None = None,
         requirements: str | list[str] | None = None,
         env_vars: dict[str, str] | None = None,
         py_modules: list[str] | None = None,
-        query_auth_token_enabled: bool = False,
+        cloud: str | None = None,
+        project: str | None = None,
+        query_auth_token_enabled: bool = True,
         http_options: dict[str, Any] | None = None,
         grpc_options: dict[str, Any] | None = None,
         logging_config: dict[str, Any] | None = None,
         ray_gcs_external_storage_config: RayGCSExternalStorageConfig | dict[str, Any] | None = None,
         in_place: bool = False,
-        canary_percent: float | None = None,
-        max_surge_percent: float | None = None,
+        canary_percent: int | None = None,
+        max_surge_percent: int | None = None,
         service_rollout_timeout_seconds: int = 600,
         poll_interval: int = 60,
         **kwargs: Any,
@@ -211,10 +215,7 @@ class RolloutAnyscaleService(BaseOperator):
         self.conn_id = conn_id
         self.service_rollout_timeout_seconds = timedelta(seconds=service_rollout_timeout_seconds)
         self.poll_interval = poll_interval
-        if not name:
-            raise ValueError("Service name is required.")
-        if not applications:
-            raise ValueError("At least one application must be specified.")
+
         # Set up explicit parameters
         self.service_params: dict[str, Any] = {
             "name": name,
@@ -226,6 +227,8 @@ class RolloutAnyscaleService(BaseOperator):
             "requirements": requirements,
             "env_vars": env_vars,
             "py_modules": py_modules,
+            "cloud": cloud,
+            "project": project,
             "applications": applications,
             "query_auth_token_enabled": query_auth_token_enabled,
             "http_options": http_options,

@@ -176,32 +176,6 @@ class TestRolloutAnyscaleService(unittest.TestCase):
         self.operator.hook.client
         mock_hook_property.assert_called_once()
 
-    def test_no_service_name(self):
-        with self.assertRaises(ValueError) as cm:
-            RolloutAnyscaleService(
-                conn_id="test_conn",
-                name="",  # No service name
-                image_uri="test_image_uri",
-                working_dir="/test/dir",
-                applications=[{"name": "app1", "import_path": "module.optional_submodule:app"}],
-                compute_config="config123",
-                task_id="rollout_service_test",
-            )
-        self.assertIn("Service name is required", str(cm.exception))
-
-    def test_no_applications(self):
-        with self.assertRaises(ValueError) as cm:
-            RolloutAnyscaleService(
-                conn_id="test_conn",
-                name="test_service",
-                image_uri="test_image_uri",
-                working_dir="/test/dir",
-                applications=[],  # No applications
-                compute_config="config123",
-                task_id="rollout_service_test",
-            )
-        self.assertIn("At least one application must be specified", str(cm.exception))
-
 
 if __name__ == "__main__":
     unittest.main()

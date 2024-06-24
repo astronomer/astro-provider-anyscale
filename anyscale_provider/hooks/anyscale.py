@@ -71,8 +71,8 @@ class AnyscaleHook(BaseHook):
         self,
         config: ServiceConfig,
         in_place: bool = False,
-        canary_percent: float | None = None,
-        max_surge_percent: float | None = None,
+        canary_percent: int | None = None,
+        max_surge_percent: int | None = None,
     ) -> str:
         """
         Deploy a service to Anyscale.
