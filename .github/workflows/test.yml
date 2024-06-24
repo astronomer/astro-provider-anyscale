@@ -2,7 +2,7 @@ name: test
 
 on:
   push:
-    branches: [ "main", "py3.12" ]
+    branches: [ "main" ]
   pull_request:
     branches: [ "main", "py3.12" ]
 
