@@ -62,32 +62,6 @@ class TestSubmitAnyscaleJob(unittest.TestCase):
             self.operator.execute_complete(Context(), event)
         self.assertTrue("Job 123 failed with error" in str(context.exception))
 
-    def test_no_job_name(self):
-        with self.assertRaises(AirflowException) as context:
-            SubmitAnyscaleJob(
-                conn_id="test_conn",
-                name="",  # No job name
-                image_uri="test_image_uri",
-                compute_config={},
-                working_dir="/test/dir",
-                entrypoint="test_entrypoint",
-                task_id="submit_job_test",
-            )
-        self.assertTrue("Job name is required." in str(context.exception))
-
-    def test_no_entrypoint_provided(self):
-        with self.assertRaises(AirflowException) as context:
-            SubmitAnyscaleJob(
-                conn_id="test_conn",
-                name="test_job",
-                image_uri="test_image_uri",
-                compute_config={},
-                working_dir="/test/dir",
-                entrypoint="",  # No entrypoint
-                task_id="submit_job_test",
-            )
-        self.assertTrue("Entrypoint must be specified." in str(context.exception))
-
     @patch("anyscale_provider.operators.anyscale.SubmitAnyscaleJob.hook", new_callable=PropertyMock)
     def test_check_anyscale_hook(self, mock_hook_property):
         # Access the hook property

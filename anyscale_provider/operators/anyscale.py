@@ -29,72 +29,74 @@ class SubmitAnyscaleJob(BaseOperator):
         :ref:`howto/operator:SubmitAnyscaleJobOperator`
 
     :param conn_id: Required. The connection ID for Anyscale.
-    :param name: Required. The name of the job to be submitted.
-    :param image_uri: Required. The URI of the container image to use for the job.
-    :param compute_config: Required. The compute configuration for the job.
-    :param working_dir: Required. The working directory for the job.
-    :param entrypoint: Required. The entry point script or command for the job.
-    :param excludes: Optional. Files or directories to exclude. Defaults to None.
-    :param requirements: Optional. Python requirements for the job. Defaults to None.
-    :param env_vars: Optional. Environment variables for the job. Defaults to None.
-    :param py_modules: Optional. Python modules to include. Defaults to None.
-    :param job_timeout_seconds: Optional[int]. Duration after which the trigger tracking the job times out. Defaults to 3600 seconds.
-    :param poll_interval: Optional[int]. Interval to poll the job status. Defaults to 60 seconds.
-    :param max_retries: Optional[int]. Maximum number of retries for the job. Defaults to 1.
+    :param entrypoint: Required. Command that will be run to execute the job, e.g., `python main.py`.
+    :param name: Optional. Name of the job. Multiple jobs can be submitted with the same name.
+    :param image_uri: Optional. URI of an existing image. Exclusive with `containerfile`.
+    :param containerfile: Optional. The file path to a containerfile that will be built into an image before running the workload. Exclusive with `image_uri`.
+    :param compute_config: Optional. The name of an existing registered compute config or an inlined ComputeConfig object.
+    :param working_dir: Optional. Directory that will be used as the working directory for the application. If a local directory is provided, it will be uploaded to cloud storage automatically. When running inside a workspace, this defaults to the current working directory ('.').
+    :param excludes: Optional. A list of file path globs that will be excluded when uploading local files for `working_dir`.
+    :param requirements: Optional. A list of requirements or a path to a `requirements.txt` file for the workload. When running inside a workspace, this defaults to the workspace-tracked requirements.
+    :param env_vars: Optional. A dictionary of environment variables that will be set for the workload.
+    :param py_modules: Optional. A list of local directories that will be uploaded and added to the Python path.
+    :param cloud: Optional. The Anyscale Cloud to run this workload on. If not provided, the organization default will be used (or, if running in a workspace, the cloud of the workspace).
+    :param project: Optional. The Anyscale project to run this workload in. If not provided, the organization default will be used (or, if running in a workspace, the project of the workspace).
+    :param max_retries: Optional. Maximum number of times the job will be retried before being marked failed. Defaults to `1`.
     """
 
     def __init__(
         self,
         conn_id: str,
-        name: str,
-        image_uri: str,
-        compute_config: ComputeConfig | dict[str, Any] | str,
-        working_dir: str,
         entrypoint: str,
+        name: str | None = None,
+        image_uri: str | None = None,
+        containerfile: str | None = None,
+        compute_config: ComputeConfig | dict[str, Any] | str | None = None,
+        working_dir: str | None = None,
         excludes: list[str] | None = None,
         requirements: str | list[str] | None = None,
         env_vars: dict[str, str] | None = None,
         py_modules: list[str] | None = None,
+        cloud: str | None = None,
+        project: str | None = None,
+        max_retries: int = 1,
         job_timeout_seconds: int = 3600,
         poll_interval: int = 60,
-        max_retries: int = 1,
         *args: Any,
         **kwargs: Any,
     ) -> None:
         super().__init__(*args, **kwargs)
         self.conn_id = conn_id
+        self.entrypoint = entrypoint
         self.name = name
         self.image_uri = image_uri
+        self.containerfile = containerfile
         self.compute_config = compute_config
         self.working_dir = working_dir
         self.excludes = excludes
         self.requirements = requirements
         self.env_vars = env_vars
         self.py_modules = py_modules
-        self.entrypoint = entrypoint
+        self.cloud = cloud
+        self.project = project
         self.max_retries = max_retries
         self.job_timeout_seconds = timedelta(seconds=job_timeout_seconds)
         self.poll_interval = poll_interval
-
         self.job_id: str | None = None
 
-        if not self.name:
-            raise AirflowException("Job name is required.")
-
-        # Ensure entrypoint is not empty
-        if not self.entrypoint:
-            raise AirflowException("Entrypoint must be specified.")
-
         self.job_params: dict[str, Any] = {
+            "entrypoint": entrypoint,
             "name": name,
             "image_uri": image_uri,
+            "containerfile": containerfile,
             "compute_config": compute_config,
             "working_dir": working_dir,
             "excludes": excludes,
             "requirements": requirements,
             "env_vars": env_vars,
             "py_modules": py_modules,
-            "entrypoint": entrypoint,
+            "cloud": cloud,
+            "project": project,
             "max_retries": max_retries,
         }
 
