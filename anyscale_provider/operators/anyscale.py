@@ -44,6 +44,25 @@ class SubmitAnyscaleJob(BaseOperator):
     :param max_retries: Optional. Maximum number of times the job will be retried before being marked failed. Defaults to `1`.
     """
 
+    template_fields = (
+        "conn_id",
+        "entrypoint",
+        "name",
+        "image_uri",
+        "containerfile",
+        "compute_config",
+        "working_dir",
+        "excludes",
+        "requirements",
+        "env_vars",
+        "py_modules",
+        "cloud",
+        "project",
+        "max_retries",
+        "job_timeout_seconds",
+        "poll_interval",
+    )
+
     def __init__(
         self,
         conn_id: str,
@@ -80,25 +99,10 @@ class SubmitAnyscaleJob(BaseOperator):
         self.cloud = cloud
         self.project = project
         self.max_retries = max_retries
-        self.job_timeout_seconds = timedelta(seconds=job_timeout_seconds)
+        self.job_timeout_seconds = job_timeout_seconds
         self.poll_interval = poll_interval
-        self.job_id: str | None = None
 
-        self.job_params: dict[str, Any] = {
-            "entrypoint": entrypoint,
-            "name": name,
-            "image_uri": image_uri,
-            "containerfile": containerfile,
-            "compute_config": compute_config,
-            "working_dir": working_dir,
-            "excludes": excludes,
-            "requirements": requirements,
-            "env_vars": env_vars,
-            "py_modules": py_modules,
-            "cloud": cloud,
-            "project": project,
-            "max_retries": max_retries,
-        }
+        self.job_id: str | None = None
 
     def on_kill(self) -> None:
         if self.job_id is not None:
@@ -112,9 +116,24 @@ class SubmitAnyscaleJob(BaseOperator):
         return AnyscaleHook(conn_id=self.conn_id)
 
     def execute(self, context: Context) -> str | None:
+        job_params: dict[str, Any] = {
+            "entrypoint": self.entrypoint,
+            "name": self.name,
+            "image_uri": self.image_uri,
+            "containerfile": self.containerfile,
+            "compute_config": self.compute_config,
+            "working_dir": self.working_dir,
+            "excludes": self.excludes,
+            "requirements": self.requirements,
+            "env_vars": self.env_vars,
+            "py_modules": self.py_modules,
+            "cloud": self.cloud,
+            "project": self.project,
+            "max_retries": self.max_retries,
+        }
         self.log.info(f"Using Anyscale version {anyscale.__version__}")
         # Submit the job to Anyscale
-        job_config = JobConfig(**self.job_params)
+        job_config = JobConfig(**job_params)
         self.job_id = self.hook.submit_job(job_config)
         self.log.info(f"Submitted Anyscale job with ID: {self.job_id}")
 
@@ -129,7 +148,7 @@ class SubmitAnyscaleJob(BaseOperator):
             self.defer(
                 trigger=AnyscaleJobTrigger(conn_id=self.conn_id, job_id=self.job_id, poll_interval=self.poll_interval),
                 method_name="execute_complete",
-                timeout=self.job_timeout_seconds,
+                timeout=timedelta(seconds=self.job_timeout_seconds),
             )
         else:
             raise Exception(f"Unexpected state `{current_state}` for job_id `{self.job_id}`.")
