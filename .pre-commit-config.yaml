@@ -2,6 +2,22 @@
 # See https://pre-commit.com/hooks.html for more hooks
 repos:
   - repo: local
+    # Note that this is the 2nd "local" repo group in the .pre-commit-config.yaml file. This is because
+    # we try to minimise the number of passes that must happen in order to apply some of the changes
+    # done by pre-commits. Some of the pre-commits not only check for errors but also fix them. This means
+    # that output from an earlier pre-commit becomes input to another pre-commit. Splitting the local
+    # scripts of our and adding some other non-local pre-commit in-between allows us to handle such
+    # changes quickly - especially when we want the early modifications from the first local group
+    # to be applied before the non-local pre-commits are run
+    hooks:
+      - id: validate-operators-init
+        name: Prevent templated field logic checks in operators' __init__
+        language: python
+        entry: ./scripts/validate_operators_init.py
+        pass_filenames: true
+        files: ^anyscale_provider/(operators|transfers|sensors)/.*\.py$
+        additional_dependencies: [ 'rich>=12.4.4' ]
+  - repo: local
     hooks:
       - id: check-env-file
         name: Check if .env file is empty
