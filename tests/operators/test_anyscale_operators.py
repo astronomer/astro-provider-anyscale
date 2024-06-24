@@ -169,7 +169,7 @@ class TestRolloutAnyscaleService(unittest.TestCase):
     def test_execute_complete_success(self):
         event = {"state": ServiceState.RUNNING, "service_name": "service123", "message": "Deployment succeeded"}
         self.operator.execute_complete(Context(), event)
-        self.assertEqual(self.operator.service_params["name"], "test_service")
+        self.assertEqual(self.operator.name, "test_service")
 
     @patch("anyscale_provider.operators.anyscale.RolloutAnyscaleService.hook", new_callable=PropertyMock)
     def test_check_anyscale_hook(self, mock_hook_property):

@@ -203,6 +203,32 @@ class RolloutAnyscaleService(BaseOperator):
     :param poll_interval: Optional[int]. Interval to poll the service status. Defaults to 60 seconds.
     """
 
+    template_fields = (
+        "conn_id",
+        "name",
+        "image_uri",
+        "containerfile",
+        "compute_config",
+        "working_dir",
+        "excludes",
+        "requirements",
+        "env_vars",
+        "py_modules",
+        "cloud",
+        "project",
+        "applications",
+        "query_auth_token_enabled",
+        "http_options",
+        "grpc_options",
+        "logging_config",
+        "ray_gcs_external_storage_config",
+        "in_place",
+        "canary_percent",
+        "max_surge_percent",
+        "service_rollout_timeout_seconds",
+        "poll_interval",
+    )
+
     def __init__(
         self,
         conn_id: str,
@@ -232,30 +258,25 @@ class RolloutAnyscaleService(BaseOperator):
     ) -> None:
         super().__init__(**kwargs)
         self.conn_id = conn_id
-        self.service_rollout_timeout_seconds = timedelta(seconds=service_rollout_timeout_seconds)
+        self.name = name
+        self.applications = applications
+        self.image_uri = image_uri
+        self.containerfile = containerfile
+        self.compute_config = compute_config
+        self.working_dir = working_dir
+        self.excludes = excludes
+        self.requirements = requirements
+        self.env_vars = env_vars
+        self.py_modules = py_modules
+        self.cloud = cloud
+        self.project = project
+        self.query_auth_token_enabled = query_auth_token_enabled
+        self.http_options = http_options
+        self.grpc_options = grpc_options
+        self.logging_config = logging_config
+        self.ray_gcs_external_storage_config = ray_gcs_external_storage_config
+        self.service_rollout_timeout_seconds = service_rollout_timeout_seconds
         self.poll_interval = poll_interval
-
-        # Set up explicit parameters
-        self.service_params: dict[str, Any] = {
-            "name": name,
-            "image_uri": image_uri,
-            "containerfile": containerfile,
-            "compute_config": compute_config,
-            "working_dir": working_dir,
-            "excludes": excludes,
-            "requirements": requirements,
-            "env_vars": env_vars,
-            "py_modules": py_modules,
-            "cloud": cloud,
-            "project": project,
-            "applications": applications,
-            "query_auth_token_enabled": query_auth_token_enabled,
-            "http_options": http_options,
-            "grpc_options": grpc_options,
-            "logging_config": logging_config,
-            "ray_gcs_external_storage_config": ray_gcs_external_storage_config,
-        }
-
         self.in_place = in_place
         self.canary_percent = canary_percent
         self.max_surge_percent = max_surge_percent
@@ -266,14 +287,33 @@ class RolloutAnyscaleService(BaseOperator):
         return AnyscaleHook(conn_id=self.conn_id)
 
     def on_kill(self) -> None:
-        if self.service_params["name"] is not None:
-            self.hook.terminate_service(self.service_params["name"], 5)
+        if self.name is not None:
+            self.hook.terminate_service(self.name, 5)
             self.log.info("Termination request received. Submitted request to terminate the anyscale service rollout.")
         return
 
     def execute(self, context: Context) -> str | None:
+        service_params = {
+            "name": self.name,
+            "image_uri": self.image_uri,
+            "containerfile": self.containerfile,
+            "compute_config": self.compute_config,
+            "working_dir": self.working_dir,
+            "excludes": self.excludes,
+            "requirements": self.requirements,
+            "env_vars": self.env_vars,
+            "py_modules": self.py_modules,
+            "cloud": self.cloud,
+            "project": self.project,
+            "applications": self.applications,
+            "query_auth_token_enabled": self.query_auth_token_enabled,
+            "http_options": self.http_options,
+            "grpc_options": self.grpc_options,
+            "logging_config": self.logging_config,
+            "ray_gcs_external_storage_config": self.ray_gcs_external_storage_config,
+        }
         self.log.info(f"Using Anyscale version {anyscale.__version__}")
-        svc_config = ServiceConfig(**self.service_params)
+        svc_config = ServiceConfig(**service_params)
         self.log.info(f"Service with config object: {svc_config}")
 
         # Call the SDK method with the dynamically created service model
@@ -286,13 +326,13 @@ class RolloutAnyscaleService(BaseOperator):
         self.defer(
             trigger=AnyscaleServiceTrigger(
                 conn_id=self.conn_id,
-                service_name=self.service_params["name"],
+                service_name=self.name,
                 expected_state=ServiceState.RUNNING,
                 canary_percent=self.canary_percent,
                 poll_interval=self.poll_interval,
             ),
             method_name="execute_complete",
-            timeout=(self.service_rollout_timeout_seconds),
+            timeout=timedelta(seconds=self.service_rollout_timeout_seconds),
         )
 
         self.log.info(f"Service rollout id: {service_id}")
