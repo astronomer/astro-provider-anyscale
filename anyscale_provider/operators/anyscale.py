@@ -79,8 +79,8 @@ class SubmitAnyscaleJob(BaseOperator):
         cloud: str | None = None,
         project: str | None = None,
         max_retries: int = 1,
-        job_timeout_seconds: int = 3600,
-        poll_interval: int = 60,
+        job_timeout_seconds: float = 3600,
+        poll_interval: float = 60,
         *args: Any,
         **kwargs: Any,
     ) -> None:
@@ -252,8 +252,8 @@ class RolloutAnyscaleService(BaseOperator):
         in_place: bool = False,
         canary_percent: int | None = None,
         max_surge_percent: int | None = None,
-        service_rollout_timeout_seconds: int = 600,
-        poll_interval: int = 60,
+        service_rollout_timeout_seconds: float = 600,
+        poll_interval: float = 60,
         **kwargs: Any,
     ) -> None:
         super().__init__(**kwargs)
