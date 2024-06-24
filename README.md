@@ -116,6 +116,7 @@ from datetime import datetime, timedelta
 
 from airflow import DAG
 from airflow.operators.python import PythonOperator
+from airflow.utils.trigger_rule import TriggerRule
 
 from anyscale_provider.hooks.anyscale import AnyscaleHook
 from anyscale_provider.operators.anyscale import RolloutAnyscaleService
@@ -168,6 +169,7 @@ def terminate_service():
 terminate_anyscale_service = PythonOperator(
     task_id="initialize_anyscale_hook",
     python_callable=terminate_service,
+    trigger_rule=TriggerRule.ALL_DONE,
     dag=dag,
 )
 
