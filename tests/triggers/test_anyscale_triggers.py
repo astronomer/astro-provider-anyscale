@@ -1,6 +1,5 @@
 import asyncio
 import unittest
-from datetime import datetime
 from unittest.mock import MagicMock, PropertyMock, patch
 
 from airflow.exceptions import AirflowNotFoundException
@@ -12,9 +11,7 @@ from anyscale_provider.triggers.anyscale import AnyscaleJobTrigger, AnyscaleServ
 
 class TestAnyscaleJobTrigger(unittest.TestCase):
     def setUp(self):
-        self.trigger = AnyscaleJobTrigger(
-            conn_id="anyscale_default", job_id="123", job_start_time=datetime.now().timestamp()
-        )
+        self.trigger = AnyscaleJobTrigger(conn_id="anyscale_default", job_id="123")
 
     @patch("anyscale_provider.hooks.anyscale.AnyscaleHook.get_job_status")
     def test_is_terminal_status(self, mock_get_status):
@@ -79,7 +76,7 @@ class TestAnyscaleJobTrigger(unittest.TestCase):
         self.assertEqual(events[0].payload["status"], "SUCCEEDED")
 
     async def test_run_no_job_id_provided(self):
-        trigger = AnyscaleJobTrigger(conn_id="default_conn", job_id="", job_start_time=datetime.now().timestamp())
+        trigger = AnyscaleJobTrigger(conn_id="default_conn", job_id="")
         events = []
         async for event in trigger.run():
             events.append(event)
@@ -92,7 +89,7 @@ class TestAnyscaleJobTrigger(unittest.TestCase):
         # Configure the mock to raise AirflowNotFoundException
         mock_get_connection.side_effect = AirflowNotFoundException("The conn_id `default_conn` isn't defined")
 
-        trigger = AnyscaleJobTrigger(conn_id="default_conn", job_id="123", job_start_time=datetime.now().timestamp())
+        trigger = AnyscaleJobTrigger(conn_id="default_conn", job_id="123")
 
         with self.assertRaises(AirflowNotFoundException) as context:
             trigger.hook.client
@@ -100,13 +97,12 @@ class TestAnyscaleJobTrigger(unittest.TestCase):
         self.assertIn("The conn_id `default_conn` isn't defined", str(context.exception))
 
     def test_serialize(self):
-        time = datetime.now().timestamp()
-        trigger = AnyscaleJobTrigger(conn_id="default_conn", job_id="123", job_start_time=time)
+        trigger = AnyscaleJobTrigger(conn_id="default_conn", job_id="123")
 
         result = trigger.serialize()
         expected_output = (
             "anyscale_provider.triggers.anyscale.AnyscaleJobTrigger",
-            {"conn_id": "default_conn", "job_id": "123", "job_start_time": time, "poll_interval": 60},
+            {"conn_id": "default_conn", "job_id": "123", "poll_interval": 60},
         )
 
         # Check if the result is a tuple
@@ -130,7 +126,6 @@ class TestAnyscaleJobTrigger(unittest.TestCase):
         trigger = AnyscaleJobTrigger(
             conn_id="test_conn",
             job_id="1234",
-            job_start_time=datetime.now().timestamp(),
             poll_interval=1,
         )
 
