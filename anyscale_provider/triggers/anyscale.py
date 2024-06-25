@@ -55,7 +55,7 @@ class AnyscaleJobTrigger(BaseTrigger):
         try:
             # Loop until reach the terminal state
             # TODO: Make this call async
-            while not self._is_terminal_status(self.job_id):
+            while not self._is_terminal_state(self.job_id):
                 await asyncio.sleep(self.poll_interval)
 
             # Fetch and print logs
@@ -65,28 +65,28 @@ class AnyscaleJobTrigger(BaseTrigger):
                 self.log.info(log)
 
             # Once out of the loop, the job has reached a terminal status
-            job_status = str(self.hook.get_job_status(self.job_id).state)
-            self.log.info(f"Current status of the job is {job_status}")
+            job_state = str(job_status.state)
+            self.log.info(f"Current job status for {self.job_id} is: {job_state}")
             yield TriggerEvent(
                 {
-                    "status": job_status,
-                    "message": f"Job {self.job_id} completed with status {job_status}.",
+                    "state": job_state,
+                    "message": f"Job {self.job_id} completed with state {job_state}.",
                     "job_id": self.job_id,
                 }
             )
         except Exception as e:
             yield TriggerEvent(
                 {
-                    "status": JobState.FAILED,
+                    "state": str(JobState.FAILED),
                     "message": str(e),
                     "job_id": self.job_id,
                 }
             )
 
-    def _is_terminal_status(self, job_id: str) -> bool:
-        job_status = str(self.hook.get_job_status(job_id).state)
-        self.log.info(f"Current job status for {job_id} is: {job_status}")
-        return job_status not in (JobState.STARTING, JobState.RUNNING)
+    def _is_terminal_state(self, job_id: str) -> bool:
+        job_state = self.hook.get_job_status(job_id).state
+        self.log.info(f"Current job state for {job_id} is: {job_state}")
+        return job_state not in (JobState.STARTING, JobState.RUNNING)
 
 
 class AnyscaleServiceTrigger(BaseTrigger):
@@ -144,24 +144,24 @@ class AnyscaleServiceTrigger(BaseTrigger):
             f"Monitoring service {self.service_name} every {self.poll_interval} seconds to reach {self.expected_state}"
         )
         try:
-            while self._check_current_status(self.service_name):
+            while self._check_current_state(self.service_name):
                 await asyncio.sleep(self.poll_interval)
 
-            current_state = self._get_current_status(self.service_name)
+            current_state = self._get_current_state(self.service_name)
 
             if current_state == ServiceState.RUNNING:
                 yield TriggerEvent(
                     {
-                        "status": ServiceState.RUNNING,
+                        "state": ServiceState.RUNNING,
                         "message": "Service deployment succeeded",
                         "service_name": self.service_name,
                     }
                 )
                 return
-            elif self.expected_state != current_state and not self._check_current_status(self.service_name):
+            elif self.expected_state != current_state and not self._check_current_state(self.service_name):
                 yield TriggerEvent(
                     {
-                        "status": ServiceState.SYSTEM_FAILURE,
+                        "state": ServiceState.SYSTEM_FAILURE,
                         "message": f"Service {self.service_name} entered an unexpected state: {current_state}",
                         "service_name": self.service_name,
                     }
@@ -171,10 +171,10 @@ class AnyscaleServiceTrigger(BaseTrigger):
         except Exception as e:
             self.log.error("An error occurred during monitoring:", exc_info=True)
             yield TriggerEvent(
-                {"status": ServiceState.SYSTEM_FAILURE, "message": str(e), "service_name": self.service_name}
+                {"state": ServiceState.SYSTEM_FAILURE, "message": str(e), "service_name": self.service_name}
             )
 
-    def _get_current_status(self, service_name: str) -> str:
+    def _get_current_state(self, service_name: str) -> str:
         service_status = self.hook.get_service_status(service_name)
 
         if self.canary_percent is None or self.canary_percent == 100.0:
@@ -185,10 +185,10 @@ class AnyscaleServiceTrigger(BaseTrigger):
             else:
                 return str(service_status.state)
 
-    def _check_current_status(self, service_name: str) -> bool:
-        service_status = self._get_current_status(service_name)
-        self.log.info(f"Current service status for {service_name} is: {service_status}")
-        return service_status in (
+    def _check_current_state(self, service_name: str) -> bool:
+        service_state = self._get_current_state(service_name)
+        self.log.info(f"Current service state for {service_name} is: {service_state}")
+        return service_state in (
             ServiceState.STARTING,
             ServiceState.UPDATING,
             ServiceState.ROLLING_OUT,

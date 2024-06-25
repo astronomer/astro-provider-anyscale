@@ -52,12 +52,12 @@ class TestSubmitAnyscaleJob(unittest.TestCase):
 
     @patch("anyscale_provider.operators.anyscale.SubmitAnyscaleJob.hook")
     def test_execute_complete(self, mock_hook):
-        event = {"status": JobState.SUCCEEDED, "job_id": "123", "message": "Job completed successfully"}
+        event = {"state": JobState.SUCCEEDED, "job_id": "123", "message": "Job completed successfully"}
         self.assertEqual(self.operator.execute_complete(Context(), event), None)
 
     @patch("anyscale_provider.operators.anyscale.SubmitAnyscaleJob.hook")
     def test_execute_complete_failure(self, mock_hook):
-        event = {"status": JobState.FAILED, "job_id": "123", "message": "Job failed with error"}
+        event = {"state": JobState.FAILED, "job_id": "123", "message": "Job failed with error"}
         with self.assertRaises(AirflowException) as context:
             self.operator.execute_complete(Context(), event)
         self.assertTrue("Job 123 failed with error" in str(context.exception))
@@ -161,13 +161,13 @@ class TestRolloutAnyscaleService(unittest.TestCase):
 
     @patch("anyscale_provider.operators.anyscale.RolloutAnyscaleService.hook")
     def test_execute_complete_failed(self, mock_hook):
-        event = {"status": ServiceState.SYSTEM_FAILURE, "service_name": "service123", "message": "Deployment failed"}
+        event = {"state": ServiceState.SYSTEM_FAILURE, "service_name": "service123", "message": "Deployment failed"}
         with self.assertRaises(AirflowException) as cm:
             self.operator.execute_complete(Context(), event)
         self.assertIn("Anyscale service deployment service123 failed with error", str(cm.exception))
 
     def test_execute_complete_success(self):
-        event = {"status": ServiceState.RUNNING, "service_name": "service123", "message": "Deployment succeeded"}
+        event = {"state": ServiceState.RUNNING, "service_name": "service123", "message": "Deployment succeeded"}
         self.operator.execute_complete(Context(), event)
         self.assertEqual(self.operator.service_params["name"], "test_service")
 

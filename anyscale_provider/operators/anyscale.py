@@ -118,32 +118,32 @@ class SubmitAnyscaleJob(BaseOperator):
         self.job_id = self.hook.submit_job(job_config)
         self.log.info(f"Submitted Anyscale job with ID: {self.job_id}")
 
-        current_status = str(self.hook.get_job_status(self.job_id).state)
-        self.log.info(f"Current status for {self.job_id} is: {current_status}")
+        current_state = str(self.hook.get_job_status(self.job_id).state)
+        self.log.info(f"Current job state for {self.job_id} is: {current_state}")
 
-        if current_status == JobState.SUCCEEDED:
+        if current_state == JobState.SUCCEEDED:
             self.log.info(f"Job {self.job_id} completed successfully.")
-        elif current_status == JobState.FAILED:
+        elif current_state == JobState.FAILED:
             raise AirflowException(f"Job {self.job_id} failed.")
-        elif current_status in (JobState.STARTING, JobState.RUNNING):
+        elif current_state in (JobState.STARTING, JobState.RUNNING):
             self.defer(
                 trigger=AnyscaleJobTrigger(conn_id=self.conn_id, job_id=self.job_id, poll_interval=self.poll_interval),
                 method_name="execute_complete",
                 timeout=self.job_timeout_seconds,
             )
         else:
-            raise Exception(f"Unexpected state `{current_status}` for job_id `{self.job_id}`.")
+            raise Exception(f"Unexpected state `{current_state}` for job_id `{self.job_id}`.")
 
         return self.job_id
 
     def execute_complete(self, context: Context, event: Any) -> None:
         current_job_id = event["job_id"]
 
-        if event["status"] == JobState.FAILED:
-            self.log.info(f"Anyscale job {current_job_id} ended with status: {event['status']}")
+        if event["state"] == JobState.FAILED:
+            self.log.info(f"Anyscale job {current_job_id} ended with state: {event['state']}")
             raise AirflowException(f"Job {current_job_id} failed with error {event['message']}")
         else:
-            self.log.info(f"Anyscale job {current_job_id} completed with status: {event['status']}")
+            self.log.info(f"Anyscale job {current_job_id} completed with state: {event['state']}")
         return None
 
 
@@ -281,11 +281,11 @@ class RolloutAnyscaleService(BaseOperator):
 
     def execute_complete(self, context: Context, event: Any) -> None:
         service_id = event["service_name"]
-        status = event["status"]
+        state = event["state"]
 
-        self.log.info(f"Execution completed for service {service_id} with status: {status}")
+        self.log.info(f"Execution completed for service {service_id} with state: {state}")
 
-        if status == ServiceState.SYSTEM_FAILURE:
+        if state == ServiceState.SYSTEM_FAILURE:
             error_message = event.get("message", "")
             error_msg = f"Anyscale service deployment {service_id} failed with error: {error_message}"
             self.log.error(error_msg)
