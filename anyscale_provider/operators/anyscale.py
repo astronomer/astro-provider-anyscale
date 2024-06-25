@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import time
 from datetime import timedelta
 from typing import Any
 
@@ -59,6 +60,7 @@ class SubmitAnyscaleJob(BaseOperator):
         "cloud",
         "project",
         "max_retries",
+        "fetch_logs",
         "job_timeout_seconds",
         "poll_interval",
     )
@@ -79,6 +81,7 @@ class SubmitAnyscaleJob(BaseOperator):
         cloud: str | None = None,
         project: str | None = None,
         max_retries: int = 1,
+        fetch_logs: bool = False,
         job_timeout_seconds: float = 3600,
         poll_interval: float = 60,
         *args: Any,
@@ -99,6 +102,7 @@ class SubmitAnyscaleJob(BaseOperator):
         self.cloud = cloud
         self.project = project
         self.max_retries = max_retries
+        self.fetch_logs = fetch_logs
         self.job_timeout_seconds = job_timeout_seconds
         self.poll_interval = poll_interval
 
@@ -159,12 +163,21 @@ class SubmitAnyscaleJob(BaseOperator):
     def execute_complete(self, context: Context, event: Any) -> None:
         current_job_id = event["job_id"]
 
+        if self.fetch_logs:
+            job_status = self.hook.get_job_status(current_job_id)
+
+            # Heuristic to wait for the job logs to be complete
+            time.sleep(30)
+
+            logs = self.hook.get_job_logs(current_job_id, run=job_status.runs[-1].name)
+            for log in logs.split("\n"):
+                print(log)
+
         if event["state"] == JobState.FAILED:
             self.log.info(f"Anyscale job {current_job_id} ended with state: {event['state']}")
             raise AirflowException(f"Job {current_job_id} failed with error {event['message']}")
         else:
             self.log.info(f"Anyscale job {current_job_id} completed with state: {event['state']}")
-        return None
 
 
 class RolloutAnyscaleService(BaseOperator):
@@ -355,5 +368,3 @@ class RolloutAnyscaleService(BaseOperator):
             raise AirflowException(error_msg)
         else:
             self.log.info(f"Anyscale service deployment {service_name} completed successfully")
-
-        return None

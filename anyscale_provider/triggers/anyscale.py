@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import asyncio
-from functools import partial
 from typing import Any, AsyncIterator
 
 from airflow.compat.functools import cached_property
@@ -58,16 +57,8 @@ class AnyscaleJobTrigger(BaseTrigger):
             while not self._is_terminal_state(self.job_id):
                 await asyncio.sleep(self.poll_interval)
 
-            # Fetch and print logs
-            job_status = self.hook.get_job_status(self.job_id)
-            loop = asyncio.get_running_loop()
-            logs = await loop.run_in_executor(
-                None, partial(self.hook.get_job_logs, job_id=self.job_id, run=job_status.runs[-1].name)
-            )
-            for log in logs.split("\n"):
-                self.log.info(log)
-
             # Once out of the loop, the job has reached a terminal status
+            job_status = self.hook.get_job_status(self.job_id)
             job_state = str(job_status.state)
             self.log.info(f"Current job status for {self.job_id} is: {job_state}")
             yield TriggerEvent(
