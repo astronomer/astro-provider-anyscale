@@ -94,7 +94,7 @@ class AnyscaleHook(BaseHook):
 
         :param job_id: The ID of the job.
         """
-        self.log.info(f"Fetching job status for Job name: {job_id}")
+        self.log.info(f"Fetching job status for Job ID: {job_id}")
         return self.client.job.status(id=job_id)
 
     def get_service_status(self, service_name: str) -> ServiceStatus:
@@ -103,6 +103,7 @@ class AnyscaleHook(BaseHook):
 
         :param service_name: The name of the service.
         """
+        self.log.info(f"Fetching service status for Service: {service_name}")
         return self.client.service.status(name=service_name)
 
     def terminate_job(self, job_id: str, time_delay: int) -> bool:
@@ -143,5 +144,6 @@ class AnyscaleHook(BaseHook):
 
         :param job_id: Required. The ID of the job.
         """
+        self.log.info(f"Fetching logs for Job ID: {job_id} and Run: {run}")
         logs: str = self.client.job.get_logs(id=job_id, run=run)
         return logs
