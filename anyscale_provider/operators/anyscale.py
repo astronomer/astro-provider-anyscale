@@ -115,7 +115,7 @@ class SubmitAnyscaleJob(BaseOperator):
         """Return an instance of the AnyscaleHook."""
         return AnyscaleHook(conn_id=self.conn_id)
 
-    def execute(self, context: Context) -> str | None:
+    def execute(self, context: Context) -> None:
         job_params: dict[str, Any] = {
             "entrypoint": self.entrypoint,
             "name": self.name,
@@ -135,6 +135,9 @@ class SubmitAnyscaleJob(BaseOperator):
         # Submit the job to Anyscale
         job_config = JobConfig(**job_params)
         self.job_id = self.hook.submit_job(job_config)
+        if self.do_xcom_push and context is not None:
+            context["ti"].xcom_push(key="job_id", value=self.job_id)
+
         self.log.info(f"Submitted Anyscale job with ID: {self.job_id}")
 
         current_state = str(self.hook.get_job_status(self.job_id).state)
@@ -152,8 +155,6 @@ class SubmitAnyscaleJob(BaseOperator):
             )
         else:
             raise Exception(f"Unexpected state `{current_state}` for job_id `{self.job_id}`.")
-
-        return self.job_id
 
     def execute_complete(self, context: Context, event: Any) -> None:
         current_job_id = event["job_id"]
@@ -317,12 +318,18 @@ class RolloutAnyscaleService(BaseOperator):
         self.log.info(f"Service with config object: {svc_config}")
 
         # Call the SDK method with the dynamically created service model
-        service_id = self.hook.deploy_service(
+        self.service_id = self.hook.deploy_service(
             config=svc_config,
             in_place=self.in_place,
             canary_percent=self.canary_percent,
             max_surge_percent=self.max_surge_percent,
         )
+
+        if self.do_xcom_push and context is not None:
+            context["ti"].xcom_push(key="service_id", value=self.service_id)
+
+        self.log.info(f"Service rollout id: {self.service_id}")
+
         self.defer(
             trigger=AnyscaleServiceTrigger(
                 conn_id=self.conn_id,
@@ -334,9 +341,6 @@ class RolloutAnyscaleService(BaseOperator):
             method_name="execute_complete",
             timeout=timedelta(seconds=self.service_rollout_timeout_seconds),
         )
-
-        self.log.info(f"Service rollout id: {service_id}")
-        return service_id
 
     def execute_complete(self, context: Context, event: Any) -> None:
         service_name = event["service_name"]

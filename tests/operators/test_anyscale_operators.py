@@ -29,10 +29,8 @@ class TestSubmitAnyscaleJob(unittest.TestCase):
         job_result_mock.id = "123"
         mock_hook.submit_job.return_value = "123"
 
-        job_id = self.operator.execute(Context())
-
+        self.operator.execute(Context(ti=MagicMock()))
         mock_hook.submit_job.assert_called_once()
-        self.assertEqual(job_id, "123")
 
     @patch("anyscale_provider.operators.anyscale.SubmitAnyscaleJob.hook")
     def test_execute_fail_on_status(self, mock_hook):
@@ -40,7 +38,7 @@ class TestSubmitAnyscaleJob(unittest.TestCase):
         mock_hook.get_job_status.return_value.state = JobState.FAILED
 
         with self.assertRaises(AirflowException) as context:
-            self.operator.execute(Context())
+            self.operator.execute(Context(ti=MagicMock()))
 
         self.assertTrue("Job 123 failed." in str(context.exception))
 
@@ -87,7 +85,7 @@ class TestSubmitAnyscaleJob(unittest.TestCase):
         mock_hook.submit_job.return_value = "123"
         mock_hook.get_job_status.return_value.state = JobState.FAILED
         with self.assertRaises(AirflowException) as context:
-            self.operator.execute(Context())
+            self.operator.execute(Context(ti=MagicMock()))
         self.assertTrue("Job 123 failed." in str(context.exception))
 
     @patch("airflow.models.BaseOperator.defer")
@@ -99,7 +97,7 @@ class TestSubmitAnyscaleJob(unittest.TestCase):
         mock_hook.get_job_status.return_value.state = JobState.STARTING
 
         # Call the execute method which internally calls process_job_status and defer_job_polling
-        self.operator.execute(Context())
+        self.operator.execute(Context(ti=MagicMock()))
 
         # Check that the defer method was called with the correct arguments
         mock_defer.assert_called_once()
@@ -126,14 +124,14 @@ class TestRolloutAnyscaleService(unittest.TestCase):
     def test_execute_successful(self, mock_hook):
         mock_hook.return_value.deploy_service.return_value = "service123"
         with self.assertRaises(TaskDeferred):
-            self.operator.execute(Context())
+            self.operator.execute(Context(ti=MagicMock()))
 
     @patch("anyscale_provider.operators.anyscale.RolloutAnyscaleService.defer")
     @patch("anyscale_provider.operators.anyscale.RolloutAnyscaleService.hook", new_callable=MagicMock)
     def test_defer_trigger_called(self, mock_hook, mock_defer):
         mock_hook.return_value.deploy_service.return_value = "service123"
 
-        self.operator.execute(Context())
+        self.operator.execute(Context(ti=MagicMock()))
 
         # Extract the actual call arguments
         actual_call_args = mock_defer.call_args
