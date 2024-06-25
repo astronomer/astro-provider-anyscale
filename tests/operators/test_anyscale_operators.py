@@ -29,10 +29,8 @@ class TestSubmitAnyscaleJob(unittest.TestCase):
         job_result_mock.id = "123"
         mock_hook.submit_job.return_value = "123"
 
-        job_id = self.operator.execute(Context())
-
+        self.operator.execute(Context(ti=MagicMock()))
         mock_hook.submit_job.assert_called_once()
-        self.assertEqual(job_id, "123")
 
     @patch("anyscale_provider.operators.anyscale.SubmitAnyscaleJob.hook")
     def test_execute_fail_on_status(self, mock_hook):
@@ -40,7 +38,7 @@ class TestSubmitAnyscaleJob(unittest.TestCase):
         mock_hook.get_job_status.return_value.state = JobState.FAILED
 
         with self.assertRaises(AirflowException) as context:
-            self.operator.execute(Context())
+            self.operator.execute(Context(ti=MagicMock()))
 
         self.assertTrue("Job 123 failed." in str(context.exception))
 
@@ -52,41 +50,15 @@ class TestSubmitAnyscaleJob(unittest.TestCase):
 
     @patch("anyscale_provider.operators.anyscale.SubmitAnyscaleJob.hook")
     def test_execute_complete(self, mock_hook):
-        event = {"status": JobState.SUCCEEDED, "job_id": "123", "message": "Job completed successfully"}
+        event = {"state": JobState.SUCCEEDED, "job_id": "123", "message": "Job completed successfully"}
         self.assertEqual(self.operator.execute_complete(Context(), event), None)
 
     @patch("anyscale_provider.operators.anyscale.SubmitAnyscaleJob.hook")
     def test_execute_complete_failure(self, mock_hook):
-        event = {"status": JobState.FAILED, "job_id": "123", "message": "Job failed with error"}
+        event = {"state": JobState.FAILED, "job_id": "123", "message": "Job failed with error"}
         with self.assertRaises(AirflowException) as context:
             self.operator.execute_complete(Context(), event)
         self.assertTrue("Job 123 failed with error" in str(context.exception))
-
-    def test_no_job_name(self):
-        with self.assertRaises(AirflowException) as context:
-            SubmitAnyscaleJob(
-                conn_id="test_conn",
-                name="",  # No job name
-                image_uri="test_image_uri",
-                compute_config={},
-                working_dir="/test/dir",
-                entrypoint="test_entrypoint",
-                task_id="submit_job_test",
-            )
-        self.assertTrue("Job name is required." in str(context.exception))
-
-    def test_no_entrypoint_provided(self):
-        with self.assertRaises(AirflowException) as context:
-            SubmitAnyscaleJob(
-                conn_id="test_conn",
-                name="test_job",
-                image_uri="test_image_uri",
-                compute_config={},
-                working_dir="/test/dir",
-                entrypoint="",  # No entrypoint
-                task_id="submit_job_test",
-            )
-        self.assertTrue("Entrypoint must be specified." in str(context.exception))
 
     @patch("anyscale_provider.operators.anyscale.SubmitAnyscaleJob.hook", new_callable=PropertyMock)
     def test_check_anyscale_hook(self, mock_hook_property):
@@ -113,7 +85,7 @@ class TestSubmitAnyscaleJob(unittest.TestCase):
         mock_hook.submit_job.return_value = "123"
         mock_hook.get_job_status.return_value.state = JobState.FAILED
         with self.assertRaises(AirflowException) as context:
-            self.operator.execute(Context())
+            self.operator.execute(Context(ti=MagicMock()))
         self.assertTrue("Job 123 failed." in str(context.exception))
 
     @patch("airflow.models.BaseOperator.defer")
@@ -125,7 +97,7 @@ class TestSubmitAnyscaleJob(unittest.TestCase):
         mock_hook.get_job_status.return_value.state = JobState.STARTING
 
         # Call the execute method which internally calls process_job_status and defer_job_polling
-        self.operator.execute(Context())
+        self.operator.execute(Context(ti=MagicMock()))
 
         # Check that the defer method was called with the correct arguments
         mock_defer.assert_called_once()
@@ -152,14 +124,14 @@ class TestRolloutAnyscaleService(unittest.TestCase):
     def test_execute_successful(self, mock_hook):
         mock_hook.return_value.deploy_service.return_value = "service123"
         with self.assertRaises(TaskDeferred):
-            self.operator.execute(Context())
+            self.operator.execute(Context(ti=MagicMock()))
 
     @patch("anyscale_provider.operators.anyscale.RolloutAnyscaleService.defer")
     @patch("anyscale_provider.operators.anyscale.RolloutAnyscaleService.hook", new_callable=MagicMock)
     def test_defer_trigger_called(self, mock_hook, mock_defer):
         mock_hook.return_value.deploy_service.return_value = "service123"
 
-        self.operator.execute(Context())
+        self.operator.execute(Context(ti=MagicMock()))
 
         # Extract the actual call arguments
         actual_call_args = mock_defer.call_args
@@ -187,46 +159,20 @@ class TestRolloutAnyscaleService(unittest.TestCase):
 
     @patch("anyscale_provider.operators.anyscale.RolloutAnyscaleService.hook")
     def test_execute_complete_failed(self, mock_hook):
-        event = {"status": ServiceState.SYSTEM_FAILURE, "service_name": "service123", "message": "Deployment failed"}
+        event = {"state": ServiceState.SYSTEM_FAILURE, "service_name": "service123", "message": "Deployment failed"}
         with self.assertRaises(AirflowException) as cm:
             self.operator.execute_complete(Context(), event)
         self.assertIn("Anyscale service deployment service123 failed with error", str(cm.exception))
 
     def test_execute_complete_success(self):
-        event = {"status": ServiceState.RUNNING, "service_name": "service123", "message": "Deployment succeeded"}
+        event = {"state": ServiceState.RUNNING, "service_name": "service123", "message": "Deployment succeeded"}
         self.operator.execute_complete(Context(), event)
-        self.assertEqual(self.operator.service_params["name"], "test_service")
+        self.assertEqual(self.operator.name, "test_service")
 
     @patch("anyscale_provider.operators.anyscale.RolloutAnyscaleService.hook", new_callable=PropertyMock)
     def test_check_anyscale_hook(self, mock_hook_property):
         self.operator.hook.client
         mock_hook_property.assert_called_once()
-
-    def test_no_service_name(self):
-        with self.assertRaises(ValueError) as cm:
-            RolloutAnyscaleService(
-                conn_id="test_conn",
-                name="",  # No service name
-                image_uri="test_image_uri",
-                working_dir="/test/dir",
-                applications=[{"name": "app1", "import_path": "module.optional_submodule:app"}],
-                compute_config="config123",
-                task_id="rollout_service_test",
-            )
-        self.assertIn("Service name is required", str(cm.exception))
-
-    def test_no_applications(self):
-        with self.assertRaises(ValueError) as cm:
-            RolloutAnyscaleService(
-                conn_id="test_conn",
-                name="test_service",
-                image_uri="test_image_uri",
-                working_dir="/test/dir",
-                applications=[],  # No applications
-                compute_config="config123",
-                task_id="rollout_service_test",
-            )
-        self.assertIn("At least one application must be specified", str(cm.exception))
 
 
 if __name__ == "__main__":

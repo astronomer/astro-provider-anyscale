@@ -14,7 +14,7 @@ from anyscale.service.models import ServiceConfig, ServiceStatus
 
 class AnyscaleHook(BaseHook):
     """
-    This hook handles the authentication and session management for Anyscale services.
+    This hook handles authenticating and making calls to the Anyscale SDK
 
     .. seealso::
         For more information on how to use this hook, take a look at the guide:
@@ -78,8 +78,8 @@ class AnyscaleHook(BaseHook):
         self,
         config: ServiceConfig,
         in_place: bool = False,
-        canary_percent: float | None = None,
-        max_surge_percent: float | None = None,
+        canary_percent: int | None = None,
+        max_surge_percent: int | None = None,
     ) -> str:
         """
         Deploy a service to Anyscale.
@@ -101,8 +101,8 @@ class AnyscaleHook(BaseHook):
 
         :param job_id: The ID of the job.
         """
-        self.log.info(f"Fetching job status for Job name: {job_id}")
-        return self.client.job.status(job_id=job_id)
+        self.log.info(f"Fetching job status for Job ID: {job_id}")
+        return self.client.job.status(id=job_id)
 
     def get_service_status(self, service_name: str) -> ServiceStatus:
         """
@@ -110,6 +110,7 @@ class AnyscaleHook(BaseHook):
 
         :param service_name: The name of the service.
         """
+        self.log.info(f"Fetching service status for Service: {service_name}")
         return self.client.service.status(name=service_name)
 
     def terminate_job(self, job_id: str, time_delay: int) -> bool:
@@ -121,34 +122,35 @@ class AnyscaleHook(BaseHook):
         """
         self.log.info(f"Terminating Job ID: {job_id}")
         try:
-            self.client.job.terminate(name=job_id)
+            self.client.job.terminate(id=job_id)
             # Simulated delay
             time.sleep(time_delay)
         except Exception as e:
             raise AirflowException(f"Job termination failed with error: {e}")
         return True
 
-    def terminate_service(self, service_id: str, time_delay: int) -> bool:
+    def terminate_service(self, service_name: str, time_delay: int) -> bool:
         """
         Terminate a running service.
 
-        :param service_id: The ID of the service.
+        :param service_name: The name of the service.
         :param time_delay:
         """
-        self.log.info(f"Terminating Service ID: {service_id}")
+        self.log.info(f"Terminating Service: {service_name}")
         try:
-            self.client.service.terminate(name=service_id)
+            self.client.service.terminate(name=service_name)
             # Simulated delay
             time.sleep(time_delay)
         except Exception as e:
             raise AirflowException(f"Service termination failed with error: {e}")
         return True
 
-    def get_logs(self, job_id: str) -> str:
+    def get_job_logs(self, job_id: str, run: str | None = None) -> str:
         """
          Fetch the logs for a job.
 
-        :param job_id: Required. The ID of the job or service.
+        :param job_id: Required. The ID of the job.
         """
-        logs: str = self.client.job.get_logs(job_id=job_id)
+        self.log.info(f"Fetching logs for Job ID: {job_id} and Run: {run}")
+        logs: str = self.client.job.get_logs(id=job_id, run=run)
         return logs

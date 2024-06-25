@@ -18,14 +18,14 @@ class TestAnyscaleJobTrigger(unittest.TestCase):
         mock_get_status.return_value = JobStatus(
             state=JobState.SUCCEEDED, name="test", config=JobConfig(entrypoint="122"), id="1", runs=[]
         )
-        self.assertTrue(self.trigger._is_terminal_status("123"))
+        self.assertTrue(self.trigger._is_terminal_state("123"))
 
     @patch("anyscale_provider.hooks.anyscale.AnyscaleHook.get_job_status")
     def test_is_not_terminal_status(self, mock_get_status):
         mock_get_status.return_value = JobStatus(
             state=JobState.RUNNING, name="test", config=JobConfig(entrypoint="122"), id="1", runs=[]
         )
-        self.assertFalse(self.trigger._is_terminal_status("123"))
+        self.assertFalse(self.trigger._is_terminal_state("123"))
 
     @patch("asyncio.sleep", return_value=None)
     @patch(
@@ -60,14 +60,14 @@ class TestAnyscaleJobTrigger(unittest.TestCase):
         self.assertEqual(events[0].payload["status"], JobState.FAILED)
         self.assertIn("Error occurred", events[0].payload["message"])
 
-    @patch("anyscale_provider.hooks.anyscale.AnyscaleHook.get_logs")
+    @patch("anyscale_provider.hooks.anyscale.AnyscaleHook.get_job_logs")
     @patch(
         "anyscale_provider.triggers.anyscale.AnyscaleJobTrigger.get_current_status",
         side_effect=["RUNNING", "SUCCEEDED"],
     )
     @patch("asyncio.sleep", return_value=None)
-    async def test_run_with_logs(self, mock_sleep, mock_get_status, mock_get_logs):
-        mock_get_logs.return_value = "log line 1\nlog line 2"
+    async def test_run_with_logs(self, mock_sleep, mock_get_status, mock_get_job_logs):
+        mock_get_job_logs.return_value = "log line 1\nlog line 2"
         events = []
         async for event in self.trigger.run():
             events.append(event)
@@ -116,12 +116,12 @@ class TestAnyscaleJobTrigger(unittest.TestCase):
         self.assertEqual(result, expected_output)
 
     @patch("anyscale_provider.hooks.anyscale.AnyscaleHook.get_job_status")
-    @patch("anyscale_provider.hooks.anyscale.AnyscaleHook.get_logs")
+    @patch("anyscale_provider.hooks.anyscale.AnyscaleHook.get_job_logs")
     @patch("asyncio.sleep", return_value=None)
-    async def test_anyscale_run_trigger(self, mocked_sleep, mocked_get_logs, mocked_get_job_status):
+    async def test_anyscale_run_trigger(self, mocked_sleep, mocked_get_job_logs, mocked_get_job_status):
         """Test AnyscaleJobTrigger run method with mocked details."""
         mocked_get_job_status.return_value.state = JobState.SUCCEEDED
-        mocked_get_logs.return_value = "log line 1\nlog line 2"
+        mocked_get_job_logs.return_value = "log line 1\nlog line 2"
 
         trigger = AnyscaleJobTrigger(
             conn_id="test_conn",
@@ -148,10 +148,10 @@ class TestAnyscaleServiceTrigger(unittest.TestCase):
             conn_id="default_conn", service_name="service123", expected_state="RUNNING", canary_percent=None
         )
 
-    @patch("anyscale_provider.triggers.anyscale.AnyscaleServiceTrigger._get_current_status")
-    def test_check_current_status(self, mock_get_status):
+    @patch("anyscale_provider.triggers.anyscale.AnyscaleServiceTrigger._get_current_state")
+    def test_check_current_state(self, mock_get_status):
         mock_get_status.return_value = "STARTING"
-        self.assertTrue(self.trigger._check_current_status("service123"))
+        self.assertTrue(self.trigger._check_current_state("service123"))
 
     @patch("asyncio.sleep", return_value=None)
     @patch(
@@ -248,7 +248,7 @@ class TestAnyscaleServiceTrigger(unittest.TestCase):
             mock_hook.return_value.get_service_status = mock_get_service_status
 
             # Call the method to test
-            status = trigger._get_current_status("AstroService")
+            status = trigger._get_current_state("AstroService")
 
             # Verify the result
             self.assertEqual(status, "RUNNING")
@@ -277,7 +277,7 @@ class TestAnyscaleServiceTrigger(unittest.TestCase):
             mock_hook.return_value.get_service_status = mock_get_service_status
 
             # Call the method to test
-            status = trigger._get_current_status("AstroService")
+            status = trigger._get_current_state("AstroService")
 
             # Verify the result
             self.assertEqual(status, "TERMINATED")
