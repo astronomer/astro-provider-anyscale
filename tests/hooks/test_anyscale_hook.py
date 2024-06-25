@@ -205,7 +205,7 @@ class TestAnyscaleHook:
 
         result = self.hook.get_job_logs("test_job_id")
 
-        mock_client.job.get_logs.assert_called_once_with(id="test_job_id")
+        mock_client.job.get_logs.assert_called_once_with(id="test_job_id", run=None)
         assert result == "job logs"
 
     @patch("anyscale_provider.hooks.anyscale.AnyscaleHook.client")
@@ -215,7 +215,7 @@ class TestAnyscaleHook:
 
         result = self.hook.get_job_logs("test_job_id")
 
-        mock_client.job.get_logs.assert_called_once_with(id="test_job_id")
+        mock_client.job.get_logs.assert_called_once_with(id="test_job_id", run=None)
         assert result == ""
 
     @patch("anyscale_provider.hooks.anyscale.AnyscaleHook.get_service_status")
