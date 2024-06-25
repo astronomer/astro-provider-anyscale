@@ -14,7 +14,7 @@ from anyscale.service.models import ServiceConfig, ServiceStatus
 
 class AnyscaleHook(BaseHook):
     """
-    This hook handles the authentication and session management for Anyscale services.
+    This hook handles authenticating and making calls to the Anyscale SDK
 
     .. seealso::
         For more information on how to use this hook, take a look at the guide:
