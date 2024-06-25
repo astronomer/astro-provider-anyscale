@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+from functools import partial
 from typing import Any, AsyncIterator
 
 from airflow.compat.functools import cached_property
@@ -28,11 +29,12 @@ class AnyscaleJobTrigger(BaseTrigger):
     :param poll_interval: Optional. Interval in seconds between status checks. Defaults to 60 seconds.
     """
 
-    def __init__(self, conn_id: str, job_id: str, poll_interval: float = 60):
+    def __init__(self, conn_id: str, job_id: str, poll_interval: float = 60, fetch_logs: bool = True):
         super().__init__()  # type: ignore[no-untyped-call]
         self.conn_id = conn_id
         self.job_id = job_id
         self.poll_interval = poll_interval
+        self.fetch_logs = fetch_logs
 
     @cached_property
     def hook(self) -> AnyscaleHook:
@@ -56,6 +58,16 @@ class AnyscaleJobTrigger(BaseTrigger):
             # TODO: Make this call async
             while not self._is_terminal_state(self.job_id):
                 await asyncio.sleep(self.poll_interval)
+
+            if self.fetch_logs:
+                job_status = self.hook.get_job_status(self.job_id)
+                loop = asyncio.get_event_loop()
+                logs = await loop.run_in_executor(
+                    None, partial(self.hook.get_job_logs, job_id=self.job_id, run=job_status.runs[-1].name)
+                )
+
+                for log in logs.split("\n"):
+                    print(log)
 
             # Once out of the loop, the job has reached a terminal status
             job_status = self.hook.get_job_status(self.job_id)

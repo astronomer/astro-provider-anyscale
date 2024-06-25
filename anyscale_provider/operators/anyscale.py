@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import time
 from datetime import timedelta
 from typing import Any
 
@@ -82,7 +81,7 @@ class SubmitAnyscaleJob(BaseOperator):
         cloud: str | None = None,
         project: str | None = None,
         max_retries: int = 1,
-        fetch_logs: bool = False,
+        fetch_logs: bool = True,
         wait_for_completion: bool = True,
         job_timeout_seconds: float = 3600,
         poll_interval: float = 60,
@@ -158,7 +157,10 @@ class SubmitAnyscaleJob(BaseOperator):
             elif current_state in (JobState.STARTING, JobState.RUNNING):
                 self.defer(
                     trigger=AnyscaleJobTrigger(
-                        conn_id=self.conn_id, job_id=self.job_id, poll_interval=self.poll_interval
+                        conn_id=self.conn_id,
+                        job_id=self.job_id,
+                        poll_interval=self.poll_interval,
+                        fetch_logs=self.fetch_logs,
                     ),
                     method_name="execute_complete",
                     timeout=timedelta(seconds=self.job_timeout_seconds),
@@ -168,16 +170,6 @@ class SubmitAnyscaleJob(BaseOperator):
 
     def execute_complete(self, context: Context, event: Any) -> None:
         current_job_id = event["job_id"]
-
-        if self.fetch_logs:
-            job_status = self.hook.get_job_status(current_job_id)
-
-            # Heuristic to wait for the job logs to be complete
-            time.sleep(30)
-
-            logs = self.hook.get_job_logs(current_job_id, run=job_status.runs[-1].name)
-            for log in logs.split("\n"):
-                print(log)
 
         if event["state"] == JobState.FAILED:
             self.log.info(f"Anyscale job {current_job_id} ended with state: {event['state']}")
