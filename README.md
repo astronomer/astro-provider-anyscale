@@ -162,7 +162,7 @@ deploy_anyscale_service = RolloutAnyscaleService(
 
 def terminate_service():
     hook = AnyscaleHook(conn_id=ANYSCALE_CONN_ID)
-    result = hook.terminate_service(service_id=SERVICE_NAME, time_delay=5)
+    result = hook.terminate_service(service_name=SERVICE_NAME, time_delay=5)
     print(result)
 
 

@@ -339,17 +339,17 @@ class RolloutAnyscaleService(BaseOperator):
         return service_id
 
     def execute_complete(self, context: Context, event: Any) -> None:
-        service_id = event["service_name"]
+        service_name = event["service_name"]
         state = event["state"]
 
-        self.log.info(f"Execution completed for service {service_id} with state: {state}")
+        self.log.info(f"Execution completed for service {service_name} with state: {state}")
 
         if state == ServiceState.SYSTEM_FAILURE:
             error_message = event.get("message", "")
-            error_msg = f"Anyscale service deployment {service_id} failed with error: {error_message}"
+            error_msg = f"Anyscale service deployment {service_name} failed with error: {error_message}"
             self.log.error(error_msg)
             raise AirflowException(error_msg)
         else:
-            self.log.info(f"Anyscale service deployment {service_id} completed successfully")
+            self.log.info(f"Anyscale service deployment {service_name} completed successfully")
 
         return None

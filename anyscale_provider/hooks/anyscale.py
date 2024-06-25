@@ -95,7 +95,7 @@ class AnyscaleHook(BaseHook):
         :param job_id: The ID of the job.
         """
         self.log.info(f"Fetching job status for Job name: {job_id}")
-        return self.client.job.status(job_id=job_id)
+        return self.client.job.status(id=job_id)
 
     def get_service_status(self, service_name: str) -> ServiceStatus:
         """
@@ -114,23 +114,23 @@ class AnyscaleHook(BaseHook):
         """
         self.log.info(f"Terminating Job ID: {job_id}")
         try:
-            self.client.job.terminate(name=job_id)
+            self.client.job.terminate(id=job_id)
             # Simulated delay
             time.sleep(time_delay)
         except Exception as e:
             raise AirflowException(f"Job termination failed with error: {e}")
         return True
 
-    def terminate_service(self, service_id: str, time_delay: int) -> bool:
+    def terminate_service(self, service_name: str, time_delay: int) -> bool:
         """
         Terminate a running service.
 
-        :param service_id: The ID of the service.
+        :param service_name: The name of the service.
         :param time_delay:
         """
-        self.log.info(f"Terminating Service ID: {service_id}")
+        self.log.info(f"Terminating Service: {service_name}")
         try:
-            self.client.service.terminate(name=service_id)
+            self.client.service.terminate(name=service_name)
             # Simulated delay
             time.sleep(time_delay)
         except Exception as e:
