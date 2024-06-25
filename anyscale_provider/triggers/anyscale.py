@@ -60,7 +60,7 @@ class AnyscaleJobTrigger(BaseTrigger):
 
             # Fetch and print logs
             loop = asyncio.get_running_loop()
-            logs = await loop.run_in_executor(None, partial(self.hook.get_logs, job_id=self.job_id))
+            logs = await loop.run_in_executor(None, partial(self.hook.get_job_logs, job_id=self.job_id))
             for log in logs.split("\n"):
                 self.log.info(log)
 

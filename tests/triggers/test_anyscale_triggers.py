@@ -60,14 +60,14 @@ class TestAnyscaleJobTrigger(unittest.TestCase):
         self.assertEqual(events[0].payload["status"], JobState.FAILED)
         self.assertIn("Error occurred", events[0].payload["message"])
 
-    @patch("anyscale_provider.hooks.anyscale.AnyscaleHook.get_logs")
+    @patch("anyscale_provider.hooks.anyscale.AnyscaleHook.get_job_logs")
     @patch(
         "anyscale_provider.triggers.anyscale.AnyscaleJobTrigger.get_current_status",
         side_effect=["RUNNING", "SUCCEEDED"],
     )
     @patch("asyncio.sleep", return_value=None)
-    async def test_run_with_logs(self, mock_sleep, mock_get_status, mock_get_logs):
-        mock_get_logs.return_value = "log line 1\nlog line 2"
+    async def test_run_with_logs(self, mock_sleep, mock_get_status, mock_get_job_logs):
+        mock_get_job_logs.return_value = "log line 1\nlog line 2"
         events = []
         async for event in self.trigger.run():
             events.append(event)
@@ -116,12 +116,12 @@ class TestAnyscaleJobTrigger(unittest.TestCase):
         self.assertEqual(result, expected_output)
 
     @patch("anyscale_provider.hooks.anyscale.AnyscaleHook.get_job_status")
-    @patch("anyscale_provider.hooks.anyscale.AnyscaleHook.get_logs")
+    @patch("anyscale_provider.hooks.anyscale.AnyscaleHook.get_job_logs")
     @patch("asyncio.sleep", return_value=None)
-    async def test_anyscale_run_trigger(self, mocked_sleep, mocked_get_logs, mocked_get_job_status):
+    async def test_anyscale_run_trigger(self, mocked_sleep, mocked_get_job_logs, mocked_get_job_status):
         """Test AnyscaleJobTrigger run method with mocked details."""
         mocked_get_job_status.return_value.state = JobState.SUCCEEDED
-        mocked_get_logs.return_value = "log line 1\nlog line 2"
+        mocked_get_job_logs.return_value = "log line 1\nlog line 2"
 
         trigger = AnyscaleJobTrigger(
             conn_id="test_conn",

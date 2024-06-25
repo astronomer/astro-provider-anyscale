@@ -137,11 +137,11 @@ class AnyscaleHook(BaseHook):
             raise AirflowException(f"Service termination failed with error: {e}")
         return True
 
-    def get_logs(self, job_id: str) -> str:
+    def get_job_logs(self, job_id: str) -> str:
         """
          Fetch the logs for a job.
 
-        :param job_id: Required. The ID of the job or service.
+        :param job_id: Required. The ID of the job.
         """
-        logs: str = self.client.job.get_logs(job_id=job_id)
+        logs: str = self.client.job.get_logs(id=job_id)
         return logs

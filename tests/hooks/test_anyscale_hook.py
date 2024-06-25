@@ -199,21 +199,21 @@ class TestAnyscaleHook:
             assert str(exc.value) == "Service termination failed with error: Terminate service failed"
 
     @patch("anyscale_provider.hooks.anyscale.AnyscaleHook.client")
-    def test_get_logs(self, mock_client):
+    def test_get_job_logs(self, mock_client):
         mock_client.return_value = mock_anyscale
         mock_client.job.get_logs.return_value = "job logs"
 
-        result = self.hook.get_logs("test_job_id")
+        result = self.hook.get_job_logs("test_job_id")
 
         mock_client.job.get_logs.assert_called_once_with(id="test_job_id")
         assert result == "job logs"
 
     @patch("anyscale_provider.hooks.anyscale.AnyscaleHook.client")
-    def test_get_logs_empty(self, mock_client):
+    def test_get_job_logs_empty(self, mock_client):
         mock_client.return_value = mock_anyscale
         mock_client.job.get_logs.return_value = ""
 
-        result = self.hook.get_logs("test_job_id")
+        result = self.hook.get_job_logs("test_job_id")
 
         mock_client.job.get_logs.assert_called_once_with(id="test_job_id")
         assert result == ""
