@@ -46,7 +46,14 @@ class AnyscaleHook(BaseHook):
         if not token:
             raise AirflowException(f"Missing API token for connection id {self.conn_id}")
 
-        return Anyscale(auth_token=token)
+        # Add custom headers if telemetry is enabled - by default telemetry is enabled.
+        headers = {}
+        telemetry_env = os.getenv("ANYSCALE__AIRFLOW_TELEMETRY_ENABLED", "true")
+        telemetry_enabled = telemetry_env.lower() in ["true", "1", "yes", "on"]
+        if telemetry_enabled:
+            headers["X-Anyscale-Source"] = "airflow"
+
+        return Anyscale(auth_token=token, headers=headers)
 
     @classmethod
     def get_ui_field_behaviour(cls) -> dict[str, Any]:
