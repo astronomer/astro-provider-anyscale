@@ -21,9 +21,9 @@ To integrate Airflow with Anyscale, you will need to provide several configurati
 
 - **Anyscale API Token**: Obtain your API token either by using the anyscale cli or through the [Anyscale console](https://console.anyscale.com/v2/api-keys?api-keys-tab=platform).
 
-- **Compute Config (optional)**: This ID specifies the machines that will execute your Ray script. You can either:
-  - Dynamically provide this via the `compute_config` input parameter, or
-  - Create a compute configuration in Anyscale and use the resulting ID in the `compute_config_id` parameter.
+- **Compute Config (optional)**: If you want to constrain autoscaling, you can specify the compute cluster that will execute your Ray script by either:
+  - Dynamically providing this via the `compute_config` input parameter, or
+  - Creating a compute configuration in Anyscale and using the resulting ID in the `compute_config_id` parameter.
 
 - **Image URI**: Specify the docker image you would like your operator to use. Make sure your image is accessible within your Anyscale account. Note, you can alternatively specify a containerfile that can be used to dynamically build the image
 
