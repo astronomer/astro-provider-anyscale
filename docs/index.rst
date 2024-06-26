@@ -118,8 +118,8 @@ The below script is an example of how to configure and use the ``SubmitAnyscaleJ
         task_id="submit_anyscale_job",
         conn_id=ANYSCALE_CONN_ID,
         name="AstroJob",
-        image_uri="anyscale/ray:2.23.0-py311",
-        compute_config="my-compute-config:1",
+        image_uri="anyscale/image/airflow-integration-testing:1",
+        compute_config="airflow-integration-testing:1",
         working_dir=str(FOLDER_PATH),
         entrypoint="python ray-job.py",
         requirements=["requests", "pandas", "numpy", "torch"],
@@ -128,6 +128,7 @@ The below script is an example of how to configure and use the ``SubmitAnyscaleJ
         poll_interval=30,
         dag=dag,
     )
+
 
     # Defining the task sequence
     submit_anyscale_job
@@ -172,8 +173,8 @@ The below script uses the ``RolloutAnyscaleService`` operator to deploy a servic
         task_id="rollout_anyscale_service",
         conn_id=ANYSCALE_CONN_ID,
         name=SERVICE_NAME,
-        image_uri="anyscale/ray:2.23.0-py311",
-        compute_config="my-compute-config:1",
+        image_uri="anyscale/image/airflow-integration-testing:1",
+        compute_config="airflow-integration-testing:1",
         working_dir="https://github.com/anyscale/docs_examples/archive/refs/heads/main.zip",
         applications=[{"import_path": "sentiment_analysis.app:model"}],
         requirements=["transformers", "requests", "pandas", "numpy", "torch"],
@@ -187,7 +188,7 @@ The below script uses the ``RolloutAnyscaleService`` operator to deploy a servic
 
     def terminate_service():
         hook = AnyscaleHook(conn_id=ANYSCALE_CONN_ID)
-        result = hook.terminate_service(service_id=SERVICE_NAME, time_delay=5)
+        result = hook.terminate_service(service_name=SERVICE_NAME, time_delay=5)
         print(result)
 
 
