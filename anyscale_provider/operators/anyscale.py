@@ -149,7 +149,7 @@ class SubmitAnyscaleJob(BaseOperator):
             "project": self.project,
             "max_retries": self.max_retries,
         }
-        
+
         self.log.info(f"Using Anyscale version {anyscale.__version__}")
         # Submit the job to Anyscale
         job_config = JobConfig(**job_params)
