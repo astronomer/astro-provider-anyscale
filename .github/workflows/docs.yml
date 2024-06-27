@@ -63,3 +63,4 @@ jobs:
         with:
           documentation_path: 'docs/_build/html'
           publish: 'true'
+          checkout: 'true'
