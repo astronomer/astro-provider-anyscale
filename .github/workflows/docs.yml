@@ -66,5 +66,5 @@ jobs:
         id: deployment
         uses: sphinx-notes/pages@v3
         with:
-          documentation_path: 'docs/_build/html'
+          documentation_path: '/home/runner/work/astro-provider-anyscale/astro-provider-anyscale/docs/_build/html'
           publish: 'true'
