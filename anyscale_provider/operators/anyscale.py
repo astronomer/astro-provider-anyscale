@@ -24,10 +24,6 @@ class SubmitAnyscaleJob(BaseOperator):
     with the necessary parameters to define and configure the job, and provides mechanisms
     for job submission, status tracking, and handling job outcomes.
 
-    .. seealso::
-        For more information on how to use this operator, take a look at the guide:
-        :ref:`howto/operator:SubmitAnyscaleJobOperator`
-
     :param conn_id: Required. The connection ID for Anyscale.
     :param entrypoint: Required. Command that will be run to execute the job, e.g., `python main.py`.
     :param name: Optional. Name of the job. Multiple jobs can be submitted with the same name.
@@ -111,6 +107,12 @@ class SubmitAnyscaleJob(BaseOperator):
         self.job_id: str | None = None
 
     def on_kill(self) -> None:
+        """
+        Terminate the Anyscale job if the task is killed.
+
+        This method will be called when the task is killed, and it sends a termination
+        request for the currently running job.
+        """
         if self.job_id is not None:
             self.hook.terminate_job(self.job_id, 5)
             self.log.info("Termination request received. Submitted request to terminate the anyscale job.")
@@ -122,6 +124,16 @@ class SubmitAnyscaleJob(BaseOperator):
         return AnyscaleHook(conn_id=self.conn_id)
 
     def execute(self, context: Context) -> None:
+        """
+        Execute the job submission to Anyscale.
+
+        This method submits the job to Anyscale and handles its initial status.
+        It defers the execution to a trigger if the job is still running or starting.
+
+        :param context: The Airflow context.
+        :return: The job ID if the job is successfully submitted and completed, or None if the job is deferred.
+        """
+
         job_params: dict[str, Any] = {
             "entrypoint": self.entrypoint,
             "name": self.name,
@@ -137,6 +149,7 @@ class SubmitAnyscaleJob(BaseOperator):
             "project": self.project,
             "max_retries": self.max_retries,
         }
+
         self.log.info(f"Using Anyscale version {anyscale.__version__}")
         # Submit the job to Anyscale
         job_config = JobConfig(**job_params)
@@ -169,6 +182,16 @@ class SubmitAnyscaleJob(BaseOperator):
                 raise Exception(f"Unexpected state `{current_state}` for job_id `{self.job_id}`.")
 
     def execute_complete(self, context: Context, event: Any) -> None:
+        """
+        Complete the execution of the job based on the trigger event.
+
+        This method is called when the trigger fires and provides the final status
+        of the job. It raises an exception if the job failed.
+
+        :param context: The Airflow context.
+        :param event: The event data from the trigger.
+        :return: None
+        """
         current_job_id = event["job_id"]
 
         if event["state"] == JobState.FAILED:
@@ -185,10 +208,6 @@ class RolloutAnyscaleService(BaseOperator):
     This operator handles the deployment of services on Anyscale, including the necessary
     configurations and options. It ensures the service is rolled out according to the
     specified parameters and handles the deployment lifecycle.
-
-    .. seealso::
-        For more information on how to use this operator, take a look at the guide:
-        :ref:`howto/operator:RolloutAnyscaleServiceOperator`
 
     :param conn_id: Required. The connection ID for Anyscale.
     :param name: Required. Unique name of the service.
@@ -299,12 +318,27 @@ class RolloutAnyscaleService(BaseOperator):
         return AnyscaleHook(conn_id=self.conn_id)
 
     def on_kill(self) -> None:
+        """
+        Terminate the Anyscale service rollout if the task is killed.
+
+        This method will be called when the task is killed, and it sends a termination
+        request for the currently running service rollout.
+        """
         if self.name is not None:
             self.hook.terminate_service(self.name, 5)
             self.log.info("Termination request received. Submitted request to terminate the anyscale service rollout.")
         return
 
     def execute(self, context: Context) -> str | None:
+        """
+        Execute the service rollout to Anyscale.
+
+        This method deploys the service to Anyscale with the provided configuration
+        and parameters. It defers the execution to a trigger if the service is in progress.
+
+        :param context: The Airflow context.
+        :return: The service ID if the rollout is successfully initiated, or None if the job is deferred.
+        """
         service_params = {
             "name": self.name,
             "image_uri": self.image_uri,
@@ -354,6 +388,16 @@ class RolloutAnyscaleService(BaseOperator):
         )
 
     def execute_complete(self, context: Context, event: Any) -> None:
+        """
+        Complete the execution of the service rollout based on the trigger event.
+
+        This method is called when the trigger fires and provides the final status
+        of the service rollout. It raises an exception if the rollout failed.
+
+        :param context: The Airflow context.
+        :param event: The event data from the trigger.
+        :return: None
+        """
         service_name = event["service_name"]
         state = event["state"]
 

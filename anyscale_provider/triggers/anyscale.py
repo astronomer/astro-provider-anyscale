@@ -20,10 +20,6 @@ class AnyscaleJobTrigger(BaseTrigger):
     yields events based on the job's status. It handles timeouts and errors during
     the polling process.
 
-    .. seealso::
-        For more information on how to use this trigger, take a look at the guide:
-        :ref:`howto/trigger:AnyscaleJobTrigger`
-
     :param conn_id: Required. The connection ID for Anyscale.
     :param job_id: Required. The ID of the job to monitor.
     :param poll_interval: Optional. Interval in seconds between status checks. Defaults to 60 seconds.
@@ -38,10 +34,19 @@ class AnyscaleJobTrigger(BaseTrigger):
 
     @cached_property
     def hook(self) -> AnyscaleHook:
-        """Return an instance of the AnyscaleHook."""
+        """
+        Return an instance of the AnyscaleHook.
+
+        :return: AnyscaleHook instance configured with the provided connection ID.
+        """
         return AnyscaleHook(conn_id=self.conn_id)
 
     def serialize(self) -> tuple[str, dict[str, Any]]:
+        """
+        Serialize the trigger configuration for persistence.
+
+        :return: A tuple containing the path to the trigger class and a dictionary of the trigger's parameters.
+        """
         return (
             "anyscale_provider.triggers.anyscale.AnyscaleJobTrigger",
             {
@@ -52,7 +57,11 @@ class AnyscaleJobTrigger(BaseTrigger):
         )
 
     async def run(self) -> AsyncIterator[TriggerEvent]:
+        """
+        Monitor the job status periodically until a terminal state is reached or an error occurs.
 
+        :yield: TriggerEvent indicating the current status of the job.
+        """
         try:
             # Loop until reach the terminal state
             # TODO: Make this call async
@@ -90,6 +99,12 @@ class AnyscaleJobTrigger(BaseTrigger):
             )
 
     def _is_terminal_state(self, job_id: str) -> bool:
+        """
+        Check if the job has reached a terminal state.
+
+        :param job_id: The ID of the job to check the status for.
+        :return: True if the job is in a terminal state, False otherwise.
+        """
         job_state = self.hook.get_job_status(job_id).state
         self.log.info(f"Current job state for {job_id} is: {job_state}")
         return job_state not in (JobState.STARTING, JobState.RUNNING)
@@ -102,10 +117,6 @@ class AnyscaleServiceTrigger(BaseTrigger):
     This trigger periodically checks the status of a service deployment on Anyscale
     and yields events based on the service's status. It handles timeouts and errors
     during the monitoring process.
-
-    .. seealso::
-        For more information on how to use this trigger, take a look at the guide:
-        :ref:`howto/trigger:AnyscaleServiceTrigger`
 
     :param conn_id: Required. The connection ID for Anyscale.
     :param service_name: Required. The ID of the service to monitor.
@@ -130,10 +141,19 @@ class AnyscaleServiceTrigger(BaseTrigger):
 
     @cached_property
     def hook(self) -> AnyscaleHook:
-        """Return an instance of the AnyscaleHook."""
+        """
+        Return an instance of the AnyscaleHook.
+
+        :return: AnyscaleHook instance configured with the provided connection ID.
+        """
         return AnyscaleHook(conn_id=self.conn_id)
 
     def serialize(self) -> tuple[str, dict[str, Any]]:
+        """
+        Serialize the trigger configuration for persistence.
+
+        :return: A tuple containing the path to the trigger class and a dictionary of the trigger's parameters.
+        """
         return (
             "anyscale_provider.triggers.anyscale.AnyscaleServiceTrigger",
             {
@@ -146,6 +166,11 @@ class AnyscaleServiceTrigger(BaseTrigger):
         )
 
     async def run(self) -> AsyncIterator[TriggerEvent]:
+        """
+        Monitor the service status periodically until the expected state is reached or an error occurs.
+
+        :yield: TriggerEvent indicating the current status of the service.
+        """
         self.log.info(
             f"Monitoring service {self.service_name} every {self.poll_interval} seconds to reach {self.expected_state}"
         )
@@ -181,6 +206,12 @@ class AnyscaleServiceTrigger(BaseTrigger):
             )
 
     def _get_current_state(self, service_name: str) -> str:
+        """
+        Get the current status of the specified service.
+
+        :param service_name: The name of the service to check the status for.
+        :return: The current status of the service.
+        """
         service_status = self.hook.get_service_status(service_name)
 
         if self.canary_percent is None or self.canary_percent == 100.0:
@@ -192,6 +223,12 @@ class AnyscaleServiceTrigger(BaseTrigger):
                 return str(service_status.state)
 
     def _check_current_state(self, service_name: str) -> bool:
+        """
+        Check if the service is still in a transitional state.
+
+        :param service_name: The name of the service to check the status for.
+        :return: True if the service is in a transitional state, False otherwise.
+        """
         service_state = self._get_current_state(service_name)
         self.log.info(f"Current service state for {service_name} is: {service_state}")
         return service_state in (

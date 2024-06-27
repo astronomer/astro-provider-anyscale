@@ -186,8 +186,8 @@ for the latest changes.
 
 
 ### Contributing Guide
-__________________
+______________________
 
 All contributions, bug reports, bug fixes, documentation improvements, enhancements are welcome.
 
-A detailed overview an how to contribute can be found in the [Contributing Guide](https://github.com/astronomer/astro-provider-anyscale/blob/main/CONTRIBUTING.rst)
+A detailed overview an how to contribute can be found in the [Contributing Guide](https://github.com/astronomer/astro-provider-anyscale/blob/main/docs/CONTRIBUTING.rst)
