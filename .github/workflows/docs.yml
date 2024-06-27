@@ -20,37 +20,24 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
+        with:
+          token: ${{ secrets.GH_TOKEN }}
 
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
           python-version: '3.x'
 
-      - name: Print current working directory
-        run: |
-          echo "Current working directory:"
-          pwd
-
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install sphinx pydata_sphinx_theme
-
-      - name: Build documentation
-        run: |
-          cd docs
-          make html
-
-      - name: List files for debugging
-        run: |
-          echo "Listing all files and directories after build:"
-          find "$(pwd)" -type d -print
-          find "$(pwd)" -type f -print
 
       - name: Deploy to GitHub Pages
         id: deployment
         uses: sphinx-notes/pages@v3
         with:
           repository_path: '.'
-          documentation_path: 'docs/_build/html'
+          documentation_path: 'docs'
           publish: 'true'
+          sphinx_build_options: ''
