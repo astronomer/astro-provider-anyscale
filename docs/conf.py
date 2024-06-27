@@ -8,7 +8,7 @@
 
 project = "astro-provider-anyscale"
 copyright = "2024, Astronomer"
-author = "Venkata Jagannath"
+author = "Astronomer"
 release = "1.0.0"
 
 # -- General configuration ---------------------------------------------------
@@ -30,8 +30,4 @@ exclude_patterns = ["_build", "Thumbs.db", ".DS_Store", "**/tests/*"]
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
 html_theme = "pydata_sphinx_theme"
-html_static_path = ["_static"]
-html_css_files = [
-    "css/custom.css",
-]
 html_title = "astro-provider-anyscale"
