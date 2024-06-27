@@ -1,8 +1,3 @@
-.. astro-provider-anyscale documentation master file, created by
-   sphinx-quickstart on Mon Jun 24 15:32:37 2024.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root ``toctree`` directive.
-
 Welcome to astro-provider-anyscale's documentation!
 ===================================================
 
@@ -94,7 +89,7 @@ Changelog
 ---------
 
 We follow `Semantic Versioning <https://semver.org/>`_ for releases.
-Check `CHANGELOG.rst <https://github.com/astronomer/astro-provider-anyscale/blob/main/CHANGELOG.rst>`_
+Check `CHANGELOG.rst <https://github.com/astronomer/astro-provider-anyscale/blob/main/docs/CHANGELOG.rst>`_
 for the latest changes.
 
 License
