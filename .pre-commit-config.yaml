@@ -99,6 +99,11 @@ repos:
             apache-airflow,
           ]
         files: ^anyscale_provider
+  - repo: https://github.com/tcort/markdown-link-check
+    rev: v3.12.2
+    hooks:
+      - id: markdown-link-check
+        args: [ "--config=mlc-config.json" ]
 
 ci:
   autofix_commit_msg: 🎨 [pre-commit.ci] Auto format from pre-commit.com hooks

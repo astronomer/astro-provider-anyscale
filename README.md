@@ -181,7 +181,7 @@ deploy_anyscale_service >> terminate_anyscale_service
 _________
 
 We follow [Semantic Versioning](https://semver.org/) for releases.
-Check [CHANGELOG.rst](https://github.com/astronomer/astro-provider-anyscale/blob/main/CHANGELOG.rst)
+Check [CHANGELOG.rst](https://github.com/astronomer/astro-provider-anyscale/blob/main/docs/CHANGELOG.rst)
 for the latest changes.
 
 
