@@ -9,6 +9,8 @@ By participating in this project you agree to abide by its terms.
 Overview
 --------
 
+The astro-provider-anyscale source code is available on this GitHub `page <https://github.com/astronomer/astro-provider-anyscale>`_
+
 To contribute to the **Astro Anyscale** project:
 
 #. Please create a `GitHub Issue <https://github.com/astronomer/astro-provider-anyscale/issues>`_ describing your contribution.
