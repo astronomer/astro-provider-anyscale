@@ -1,0 +1,55 @@
+name: Deploy Sphinx documentation to Pages
+
+# Runs on pushes targeting the default branch
+on:
+  push:
+    branches: [main]
+
+# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Allow one concurrent deployment
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+
+jobs:
+  pages:
+    runs-on: ubuntu-20.04
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    permissions:
+      pages: write
+      id-token: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install sphinx
+
+      - id: deployment
+        uses: sphinx-notes/pages@v3
+        with:
+          # Specify the source directory containing Sphinx conf.py (default: docs)
+          source_dir: 'docs'
+
+          # Specify the output directory for HTML files (default: _build/html)
+          build_dir: '_build/html'
+
+          # Specify the branch to deploy to (default: gh-pages)
+          target_branch: 'main'
+
+          # Enable verbose mode for more detailed output (default: false)
+          verbose: true
