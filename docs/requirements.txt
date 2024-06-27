@@ -1,0 +1,7 @@
+aenum
+apache-airflow
+pydantic
+pydata-sphinx-theme
+sphinx
+sphinx-autoapi
+sphinx-autobuild

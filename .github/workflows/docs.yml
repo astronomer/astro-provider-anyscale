@@ -37,5 +37,6 @@ jobs:
         with:
           repository_path: '.'
           documentation_path: 'docs'
+          requirements_path: 'docs/requirements.txt'
           publish: 'true'
           sphinx_build_options: ''
