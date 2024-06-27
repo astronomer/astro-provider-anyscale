@@ -96,8 +96,6 @@ static-check = "pre-commit run --all-files"
 [tool.hatch.envs.docs]
 dependencies = [
     "aenum",
-    "msgpack",
-    "openlineage-airflow",
     "pydantic>=1.10.0",
     "pydata-sphinx-theme",
     "sphinx",

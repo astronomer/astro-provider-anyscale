@@ -7,7 +7,7 @@
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = "astro-provider-anyscale"
-copyright = "2024, Venkata Jagannath Yellapragada"
+copyright = "2024, Astronomer"
 author = "Venkata Jagannath"
 release = "1.0.0"
 
