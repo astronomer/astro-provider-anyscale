@@ -37,7 +37,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install sphinx
+          pip install sphinx pydata_sphinx_theme
 
       - name: Build documentation
         run: |
@@ -54,7 +54,7 @@ jobs:
           build_dir: 'docs/_build/html'
 
           # Specify the branch to deploy to (default: gh-pages)
-          target_branch: 'gh-pages'
+          target_branch: 'ghpages'
 
           # Enable verbose mode for more detailed output (default: false)
           verbose: true
