@@ -44,17 +44,9 @@ jobs:
           cd docs
           make html
 
-      - id: deployment
+      - name: Deploy to GitHub Pages
+        id: deployment
         uses: sphinx-notes/pages@v3
         with:
-          # Specify the source directory containing Sphinx conf.py (default: docs)
-          source_dir: 'docs'
-
-          # Specify the output directory for HTML files (default: _build/html)
-          build_dir: 'docs/_build/html'
-
-          # Specify the branch to deploy to (default: gh-pages)
-          target_branch: 'ghpages'
-
-          # Enable verbose mode for more detailed output (default: false)
-          verbose: true
+          documentation_path: 'docs/_build/html'
+          publish: 'true'
