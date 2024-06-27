@@ -39,6 +39,11 @@ jobs:
           python -m pip install --upgrade pip
           pip install sphinx
 
+      - name: Build documentation
+        run: |
+          cd docs
+          make html
+
       - id: deployment
         uses: sphinx-notes/pages@v3
         with:
@@ -46,10 +51,10 @@ jobs:
           source_dir: 'docs'
 
           # Specify the output directory for HTML files (default: _build/html)
-          build_dir: '_build/html'
+          build_dir: 'docs/_build/html'
 
           # Specify the branch to deploy to (default: gh-pages)
-          target_branch: 'main'
+          target_branch: 'gh-pages'
 
           # Enable verbose mode for more detailed output (default: false)
           verbose: true
