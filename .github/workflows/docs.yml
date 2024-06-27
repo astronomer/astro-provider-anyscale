@@ -52,6 +52,11 @@ jobs:
           find "$(pwd)" -type d -print
           find "$(pwd)" -type f -print
 
+      - name: Print current directory before deploy
+        run: |
+          echo "Current directory before deploy:"
+          pwd
+
       - name: Deploy to GitHub Pages
         id: deployment
         uses: sphinx-notes/pages@v3
