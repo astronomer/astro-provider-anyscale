@@ -44,6 +44,12 @@ jobs:
           cd docs
           make html
 
+      - name: List files for debugging
+        run: |
+          echo "Listing all files and directories:"
+          find . -type d -print
+          find . -type f -print
+
       - name: Deploy to GitHub Pages
         id: deployment
         uses: sphinx-notes/pages@v3
