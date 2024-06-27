@@ -57,6 +57,11 @@ jobs:
           echo "Current directory before deploy:"
           pwd
 
+      - name: List built documentation directory
+        run: |
+          echo "Listing contents of docs/_build/html:"
+          ls -la docs/_build/html
+
       - name: Deploy to GitHub Pages
         id: deployment
         uses: sphinx-notes/pages@v3
