@@ -14,14 +14,9 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  pages:
+  build:
     runs-on: ubuntu-20.04
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    permissions:
-      pages: write
-      id-token: write
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
@@ -52,15 +47,35 @@ jobs:
           find "$(pwd)" -type d -print
           find "$(pwd)" -type f -print
 
-      - name: List built documentation directory
+      - name: Upload documentation
+        uses: actions/upload-artifact@v2
+        with:
+          name: built-docs
+          path: docs/_build/html
+
+  deploy:
+    runs-on: ubuntu-20.04
+    needs: build
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Download documentation
+        uses: actions/download-artifact@v2
+        with:
+          name: built-docs
+          path: ./built-docs
+
+      - name: List downloaded documentation
         run: |
-          echo "Listing contents of docs/_build/html:"
-          ls -la docs/_build/html
+          echo "Listing contents of downloaded built-docs:"
+          find "$(pwd)/built-docs" -type d -print
+          find "$(pwd)/built-docs" -type f -print
 
       - name: Deploy to GitHub Pages
         id: deployment
         uses: sphinx-notes/pages@v3
         with:
-          documentation_path: 'docs/_build/html'
+          documentation_path: 'built-docs'
           publish: 'true'
-          checkout: 'true'
