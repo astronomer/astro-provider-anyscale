@@ -14,7 +14,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build:
+  build-and-deploy:
     runs-on: ubuntu-20.04
 
     steps:
@@ -47,37 +47,10 @@ jobs:
           find "$(pwd)" -type d -print
           find "$(pwd)" -type f -print
 
-      - name: Upload documentation
-        uses: actions/upload-artifact@v2
-        with:
-          name: built-docs
-          path: docs/_build/html
-
-  deploy:
-    runs-on: ubuntu-20.04
-    needs: build
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
-
-      - name: Download documentation
-        uses: actions/download-artifact@v2
-        with:
-          name: built-docs
-          path: ./built-docs
-
-      - name: List downloaded documentation
-        run: |
-          echo "Listing contents of downloaded built-docs:"
-          find "$(pwd)/built-docs" -type d -print
-          find "$(pwd)/built-docs" -type f -print
-
       - name: Deploy to GitHub Pages
         id: deployment
         uses: sphinx-notes/pages@v3
         with:
-          documentation_path: 'built-docs'
-          publish: 'true'
           repository_path: '.'
-          sphinx_build_options: '-c docs'
+          documentation_path: 'docs/_build/html'
+          publish: 'true'
