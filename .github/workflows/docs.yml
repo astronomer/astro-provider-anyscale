@@ -77,5 +77,7 @@ jobs:
         id: deployment
         uses: sphinx-notes/pages@v3
         with:
-          documentation_path: 'tmp/sphinxnotes-pages'
+          documentation_path: 'built-docs'
           publish: 'true'
+          repository_path: '.'
+          sphinx_build_options: '-c docs'
