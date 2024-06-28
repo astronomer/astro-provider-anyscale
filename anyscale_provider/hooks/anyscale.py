@@ -5,8 +5,10 @@ import time
 from functools import cached_property
 from typing import Any
 
+from airflow.configuration import conf
 from airflow.exceptions import AirflowException
 from airflow.hooks.base import BaseHook
+
 from anyscale import Anyscale
 from anyscale.job.models import JobConfig, JobStatus
 from anyscale.service.models import ServiceConfig, ServiceStatus
@@ -44,8 +46,7 @@ class AnyscaleHook(BaseHook):
 
         # Add custom headers if telemetry is enabled - by default telemetry is enabled.
         headers = {}
-        telemetry_env = os.getenv("ANYSCALE__AIRFLOW_TELEMETRY_ENABLED", "true")
-        telemetry_enabled = telemetry_env.lower() in ["true", "1", "yes", "on"]
+        telemetry_enabled = conf.getboolean("anyscale", "telemetry_enabled", fallback=False)
         if telemetry_enabled:
             headers["X-Anyscale-Source"] = "airflow"
 
