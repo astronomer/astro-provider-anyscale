@@ -1,7 +1,7 @@
 CHANGELOG
 =========
 
-1.0.0 (2024-06-29)
+1.0.0 (2024-06-28)
 ------------------
 
 * Initial release, with the following hooks, operators, and triggers:
