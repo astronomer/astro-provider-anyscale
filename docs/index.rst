@@ -8,6 +8,7 @@ Welcome to astro-provider-anyscale's documentation!
    Home <self>
    API Reference <api/anyscale_provider>
    Contributing <CONTRIBUTING>
+   Changelog <CHANGELOG>
    Code of Conduct <CODE_OF_CONDUCT>
 
 This repository provides a set of tools for integrating Anyscale with Apache Airflow, enabling the orchestration of Anyscale jobs and services within Airflow workflows. It includes a custom hook, two operators, and two triggers specifically designed for managing and monitoring Anyscale jobs and services.
