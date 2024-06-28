@@ -86,8 +86,28 @@ The below script uses the ``RolloutAnyscaleService`` operator to deploy a servic
 
 .. literalinclude:: ../example_dags/anyscale_service.py
 
+
+Telemetry
+-----------------------
+
+This provider collects telemetry data by default.
+
+What data is collected?
+~~~~~~~~~~~~~~~~~~~~~~~
+More specifically, it adds a header to every request made to the Anyscale API with the following metadata: ``{"X-Anyscale-Source" = "airflow"}``. The telemetry does not and will not collect any personal data or sensitive information.
+
+How is this data used?
+~~~~~~~~~~~~~~~~~~~~~~
+This data will be used by the Anyscale engineering team to better understand how the provider is being used and help guide future development.
+
+How to opt-out of telemetry collection?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+To disable usage stats collection, set the configuration ``anyscale.telemetry_enabled`` to False in your ``airflow.cfg`` file.
+
+
 Changelog
 ---------
+
 
 We follow `Semantic Versioning <https://semver.org/>`_ for releases.
 Check `CHANGELOG.rst <https://github.com/astronomer/astro-provider-anyscale/blob/main/docs/CHANGELOG.rst>`_
