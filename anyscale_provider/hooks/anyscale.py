@@ -5,6 +5,7 @@ import time
 from functools import cached_property
 from typing import Any
 
+from airflow.configuration import conf
 from airflow.exceptions import AirflowException
 from airflow.hooks.base import BaseHook
 from anyscale import Anyscale
@@ -36,16 +37,15 @@ class AnyscaleHook(BaseHook):
 
         # If the token is not found in the connection, try to get it from the environment variable
         if not token:
-            self.log.info(f"Using token from ENV")
-            token = os.getenv("ANYSCALE_CLI_TOKEN")
+            self.log.info(f"Using token from config or ENV")
+            token = conf.get("anyscale", "cli_token", fallback=os.getenv("ANYSCALE_CLI_TOKEN"))
 
         if not token:
             raise AirflowException(f"Missing API token for connection id {self.conn_id}")
 
         # Add custom headers if telemetry is enabled - by default telemetry is enabled.
         headers = {}
-        telemetry_env = os.getenv("ANYSCALE__AIRFLOW_TELEMETRY_ENABLED", "true")
-        telemetry_enabled = telemetry_env.lower() in ["true", "1", "yes", "on"]
+        telemetry_enabled = conf.getboolean("anyscale", "telemetry_enabled", fallback=True)
         if telemetry_enabled:
             headers["X-Anyscale-Source"] = "airflow"
 
