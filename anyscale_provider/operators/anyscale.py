@@ -329,6 +329,10 @@ class RolloutAnyscaleService(BaseOperator):
             self.log.info("Termination request received. Submitted request to terminate the anyscale service rollout.")
         return
 
+    @staticmethod
+    def test_me():
+        assert 1 == 1
+
     def execute(self, context: Context) -> None:
         """
         Execute the service rollout to Anyscale.
