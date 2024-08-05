@@ -330,7 +330,7 @@ class RolloutAnyscaleService(BaseOperator):
         return
 
     @staticmethod
-    def test_me():
+    def test_me() -> None:
         assert 1 == 1
 
     def execute(self, context: Context) -> None:
