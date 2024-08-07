@@ -312,6 +312,10 @@ class RolloutAnyscaleService(BaseOperator):
         self.canary_percent = canary_percent
         self.max_surge_percent = max_surge_percent
 
+    @staticmethod
+    def test_me() -> None:
+        assert 1 == 1
+
     @cached_property
     def hook(self) -> AnyscaleHook:
         """Return an instance of the AnyscaleHook."""
