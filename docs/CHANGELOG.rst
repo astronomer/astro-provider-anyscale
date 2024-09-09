@@ -1,6 +1,11 @@
 CHANGELOG
 =========
 
+1.0.1 (2024-09-09)
+------------------
+
+* Minor update to return job_id from execute() and execute_complete() methods
+
 1.0.0 (2024-06-28)
 ------------------
 
