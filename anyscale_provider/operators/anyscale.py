@@ -123,7 +123,7 @@ class SubmitAnyscaleJob(BaseOperator):
         """Return an instance of the AnyscaleHook."""
         return AnyscaleHook(conn_id=self.conn_id)
 
-    def execute(self, context: Context) -> None:
+    def execute(self, context: Context) -> str:
         """
         Execute the job submission to Anyscale.
 
@@ -180,8 +180,9 @@ class SubmitAnyscaleJob(BaseOperator):
                 )
             else:
                 raise Exception(f"Unexpected state `{current_state}` for job_id `{self.job_id}`.")
+        return self.job_id
 
-    def execute_complete(self, context: Context, event: Any) -> None:
+    def execute_complete(self, context: Context, event: Any) -> str:
         """
         Complete the execution of the job based on the trigger event.
 
@@ -192,13 +193,15 @@ class SubmitAnyscaleJob(BaseOperator):
         :param event: The event data from the trigger.
         :return: None
         """
-        current_job_id = event["job_id"]
+        current_job_id: str = event["job_id"]
 
         if event["state"] == JobState.FAILED:
             self.log.info(f"Anyscale job {current_job_id} ended with state: {event['state']}")
             raise AirflowException(f"Job {current_job_id} failed with error {event['message']}")
         else:
             self.log.info(f"Anyscale job {current_job_id} completed with state: {event['state']}")
+
+        return current_job_id
 
 
 class RolloutAnyscaleService(BaseOperator):

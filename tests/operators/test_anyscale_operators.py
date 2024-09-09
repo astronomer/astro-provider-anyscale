@@ -51,7 +51,7 @@ class TestSubmitAnyscaleJob(unittest.TestCase):
     @patch("anyscale_provider.operators.anyscale.SubmitAnyscaleJob.hook")
     def test_execute_complete(self, mock_hook):
         event = {"state": JobState.SUCCEEDED, "job_id": "123", "message": "Job completed successfully"}
-        self.assertEqual(self.operator.execute_complete(Context(), event), None)
+        self.assertEqual(self.operator.execute_complete(Context(), event), "123")
 
     @patch("anyscale_provider.operators.anyscale.SubmitAnyscaleJob.hook")
     def test_execute_complete_failure(self, mock_hook):
