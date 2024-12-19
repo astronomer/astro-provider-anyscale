@@ -101,6 +101,8 @@ submit_anyscale_job = SubmitAnyscaleJob(
     max_retries=1,
     job_timeout_seconds=3000,
     poll_interval=30,
+    target_job_queue_name="AstroJobQueue",
+    priority=1,
     dag=dag,
 )
 
