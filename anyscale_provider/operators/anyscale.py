@@ -9,7 +9,7 @@ from airflow.exceptions import AirflowException
 from airflow.models import BaseOperator
 from airflow.utils.context import Context
 from anyscale.compute_config.models import ComputeConfig
-from anyscale.job.models import JobConfig, JobState, JobQueueConfig
+from anyscale.job.models import JobConfig, JobQueueConfig, JobState
 from anyscale.service.models import RayGCSExternalStorageConfig, ServiceConfig, ServiceState
 
 from anyscale_provider.hooks.anyscale import AnyscaleHook
