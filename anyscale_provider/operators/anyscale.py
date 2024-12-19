@@ -9,7 +9,7 @@ from airflow.exceptions import AirflowException
 from airflow.models import BaseOperator
 from airflow.utils.context import Context
 from anyscale.compute_config.models import ComputeConfig
-from anyscale.job.models import JobConfig, JobState
+from anyscale.job.models import JobConfig, JobState, JobQueueConfig
 from anyscale.service.models import RayGCSExternalStorageConfig, ServiceConfig, ServiceState
 
 from anyscale_provider.hooks.anyscale import AnyscaleHook
@@ -38,6 +38,8 @@ class SubmitAnyscaleJob(BaseOperator):
     :param cloud: Optional. The Anyscale Cloud to run this workload on. If not provided, the organization default will be used (or, if running in a workspace, the cloud of the workspace).
     :param project: Optional. The Anyscale project to run this workload in. If not provided, the organization default will be used (or, if running in a workspace, the project of the workspace).
     :param max_retries: Optional. Maximum number of times the job will be retried before being marked failed. Defaults to `1`.
+    :param target_job_queue_name: Optional. The name of the target job queue to use. Defaults to None.
+    :param priority: Optional. The priority of the job in the job queue, with 0 being highest. Only works for job queues of type PRIORTIY. Defaults to None.
     """
 
     template_fields = (
@@ -59,6 +61,8 @@ class SubmitAnyscaleJob(BaseOperator):
         "wait_for_completion",
         "job_timeout_seconds",
         "poll_interval",
+        "target_job_queue_name",
+        "priority",
     )
 
     def __init__(
@@ -81,6 +85,8 @@ class SubmitAnyscaleJob(BaseOperator):
         wait_for_completion: bool = True,
         job_timeout_seconds: float = 3600,
         poll_interval: float = 60,
+        target_job_queue_name: str | None = None,
+        priority: int | None = None,
         *args: Any,
         **kwargs: Any,
     ) -> None:
@@ -103,6 +109,8 @@ class SubmitAnyscaleJob(BaseOperator):
         self.wait_for_completion = wait_for_completion
         self.job_timeout_seconds = job_timeout_seconds
         self.poll_interval = poll_interval
+        self.target_job_queue_name = target_job_queue_name
+        self.priority = priority
 
         self.job_id: str | None = None
 
@@ -134,6 +142,13 @@ class SubmitAnyscaleJob(BaseOperator):
         :return: The job ID if the job is successfully submitted and completed, or None if the job is deferred.
         """
 
+        # Build the JobQueueConfig if target_job_queue_name is provided
+        job_queue_config = (
+            JobQueueConfig(name=self.target_job_queue_name, priority=self.priority or None)
+            if self.target_job_queue_name
+            else None
+        )
+
         job_params: dict[str, Any] = {
             "entrypoint": self.entrypoint,
             "name": self.name,
@@ -148,6 +163,7 @@ class SubmitAnyscaleJob(BaseOperator):
             "cloud": self.cloud,
             "project": self.project,
             "max_retries": self.max_retries,
+            "job_queue_config": job_queue_config,
         }
 
         self.log.info(f"Using Anyscale version {anyscale.__version__}")
