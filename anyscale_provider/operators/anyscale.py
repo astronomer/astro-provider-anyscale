@@ -144,7 +144,7 @@ class SubmitAnyscaleJob(BaseOperator):
 
         # Build the JobQueueConfig if target_job_queue_name is provided
         job_queue_config = (
-            JobQueueConfig(name=self.target_job_queue_name, priority=self.priority or None)
+            JobQueueConfig(target_job_queue_name=self.target_job_queue_name, priority=self.priority or None)
             if self.target_job_queue_name
             else None
         )
