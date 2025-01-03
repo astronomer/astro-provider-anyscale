@@ -79,6 +79,8 @@ You can run the docs locally by running the following:
 
 This will run the docs server in a virtual environment with the right dependencies. Note that it may take longer on the first run as it sets up the virtual environment, but will be quick on subsequent runs.
 
+On some machines, the 8000 port may be reserved for iRDMI. You can edit `~/etc/services` and comment out the reservation for port 8000 if that's the case. You can then clear the port with `sudo lsof -i:8080` and `kill -9 $PID`.
+
 Building
 --------
 
