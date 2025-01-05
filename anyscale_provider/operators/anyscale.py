@@ -9,7 +9,7 @@ from airflow.exceptions import AirflowException
 from airflow.models import BaseOperator
 from airflow.utils.context import Context
 from anyscale.compute_config.models import ComputeConfig
-from anyscale.job.models import JobConfig, JobState
+from anyscale.job.models import JobConfig, JobState, JobQueueConfig
 from anyscale.service.models import RayGCSExternalStorageConfig, ServiceConfig, ServiceState
 
 from anyscale_provider.hooks.anyscale import AnyscaleHook
@@ -81,6 +81,7 @@ class SubmitAnyscaleJob(BaseOperator):
         wait_for_completion: bool = True,
         job_timeout_seconds: float = 3600,
         poll_interval: float = 60,
+        job_queue_config: JobQueueConfig | None = None,
         *args: Any,
         **kwargs: Any,
     ) -> None:
@@ -103,6 +104,7 @@ class SubmitAnyscaleJob(BaseOperator):
         self.wait_for_completion = wait_for_completion
         self.job_timeout_seconds = job_timeout_seconds
         self.poll_interval = poll_interval
+        self.job_queue_config = job_queue_config
 
         self.job_id: str | None = None
 
@@ -148,6 +150,7 @@ class SubmitAnyscaleJob(BaseOperator):
             "cloud": self.cloud,
             "project": self.project,
             "max_retries": self.max_retries,
+            "job_queue_config": self.job_queue_config,
         }
 
         self.log.info(f"Using Anyscale version {anyscale.__version__}")
