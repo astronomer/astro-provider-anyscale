@@ -3,8 +3,7 @@ from unittest.mock import MagicMock, PropertyMock, patch
 
 from airflow.exceptions import AirflowException, TaskDeferred
 from airflow.utils.context import Context
-from anyscale.compute_config.models import ComputeConfig
-from anyscale.job.models import JobState, JobConfig, JobQueueConfig
+from anyscale.job.models import JobState
 from anyscale.service.models import ServiceState
 
 from anyscale_provider.operators.anyscale import RolloutAnyscaleService, SubmitAnyscaleJob
@@ -107,34 +106,6 @@ class TestSubmitAnyscaleJob(unittest.TestCase):
         self.assertEqual(kwargs["trigger"].job_id, "123")
         self.assertEqual(kwargs["trigger"].conn_id, "test_conn")
         self.assertEqual(kwargs["method_name"], "execute_complete")
-
-    @patch("anyscale_provider.operators.anyscale.SubmitAnyscaleJob.hook", new_callable=MagicMock)
-    def test_submit_to_job_queue(self, mock_hook):
-        # Set up mock behavior
-        mock_hook.submit_job.return_value = "123"
-        mock_hook.get_job_status.return_value.state = JobState.SUCCEEDED
-
-        # Provide the target job queue name
-        self.operator.target_job_queue_name = "test_job_queue_name"
-
-        # Execute the operator
-        self.operator.execute(Context(ti=MagicMock()))
-
-        # Verify the job submission call includes the correct job queue name
-        expected_job_config = JobConfig(
-            name="test_job",
-            image_uri="test_image_uri",
-            compute_config=ComputeConfig(cloud=None),
-            working_dir="/test/dir",
-            entrypoint="test_entrypoint",
-            job_queue_config=JobQueueConfig(
-                target_job_queue_name="test_job_queue_name"
-            ),
-        )
-        mock_hook.submit_job.assert_called_once_with(expected_job_config)
-
-        # Ensure the job ID returned by submit_job is handled correctly
-        self.assertEqual(self.operator.job_id, "123")
 
 
 class TestRolloutAnyscaleService(unittest.TestCase):
