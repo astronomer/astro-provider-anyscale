@@ -38,8 +38,6 @@ class SubmitAnyscaleJob(BaseOperator):
     :param cloud: Optional. The Anyscale Cloud to run this workload on. If not provided, the organization default will be used (or, if running in a workspace, the cloud of the workspace).
     :param project: Optional. The Anyscale project to run this workload in. If not provided, the organization default will be used (or, if running in a workspace, the project of the workspace).
     :param max_retries: Optional. Maximum number of times the job will be retried before being marked failed. Defaults to `1`.
-    :param target_job_queue_name: Optional. The name of the target job queue to use. Defaults to None.
-    :param priority: Optional. The priority of the job in the job queue, with 0 being highest. Only works for job queues of type PRIORTIY. Defaults to None.
     """
 
     template_fields = (
@@ -61,8 +59,6 @@ class SubmitAnyscaleJob(BaseOperator):
         "wait_for_completion",
         "job_timeout_seconds",
         "poll_interval",
-        "target_job_queue_name",
-        "priority",
     )
 
     def __init__(
