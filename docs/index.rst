@@ -22,7 +22,7 @@ Hook
 
 Operators
 ~~~~~~~~~
-- **SubmitAnyscaleJob**: This operator submits a job to Anyscale. It takes configuration parameters for the job, such as the entrypoint, image URI, compute configuration, and job queue. The operator uses ``AnyscaleHook`` to handle the submission process. When you submit jobs to a job queue, the job queue must already exist.
+- **SubmitAnyscaleJob**: This operator submits a job to Anyscale. It takes configuration parameters for the job, such as the entrypoint, image URI, compute configuration, and job queue configuration. The operator uses ``AnyscaleHook`` to handle the submission process.
 - **RolloutAnyscaleService**: Similar to the job submission operator, this operator is designed to manage services on Anyscale. It can be used to deploy new services or update existing ones, leveraging ``AnyscaleHook`` for all interactions with the Anyscale API.
 
 Triggers

@@ -85,8 +85,7 @@ class SubmitAnyscaleJob(BaseOperator):
         wait_for_completion: bool = True,
         job_timeout_seconds: float = 3600,
         poll_interval: float = 60,
-        target_job_queue_name: str | None = None,
-        priority: int | None = None,
+        job_queue_config: JobQueueConfig | None = None,
         *args: Any,
         **kwargs: Any,
     ) -> None:
@@ -109,8 +108,7 @@ class SubmitAnyscaleJob(BaseOperator):
         self.wait_for_completion = wait_for_completion
         self.job_timeout_seconds = job_timeout_seconds
         self.poll_interval = poll_interval
-        self.target_job_queue_name = target_job_queue_name
-        self.priority = priority
+        self.job_queue_config = job_queue_config
 
         self.job_id: str | None = None
 
@@ -142,13 +140,6 @@ class SubmitAnyscaleJob(BaseOperator):
         :return: The job ID if the job is successfully submitted and completed, or None if the job is deferred.
         """
 
-        # Build the JobQueueConfig if target_job_queue_name is provided
-        job_queue_config = (
-            JobQueueConfig(target_job_queue_name=self.target_job_queue_name, priority=self.priority or None)
-            if self.target_job_queue_name
-            else None
-        )
-
         job_params: dict[str, Any] = {
             "entrypoint": self.entrypoint,
             "name": self.name,
@@ -163,7 +154,7 @@ class SubmitAnyscaleJob(BaseOperator):
             "cloud": self.cloud,
             "project": self.project,
             "max_retries": self.max_retries,
-            "job_queue_config": job_queue_config,
+            "job_queue_config": self.job_queue_config,
         }
 
         self.log.info(f"Using Anyscale version {anyscale.__version__}")
