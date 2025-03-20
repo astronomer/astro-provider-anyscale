@@ -1,3 +1,4 @@
+import os
 import uuid
 from datetime import datetime, timedelta
 
@@ -20,7 +21,8 @@ default_args = {
 
 # Define the Anyscale connection
 ANYSCALE_CONN_ID = "anyscale_conn"
-SERVICE_NAME = f"AstroService-CICD-{uuid.uuid4()}"
+service_id = os.getenv("ASTRO_ANYSCALE_PROVIDER_SERVICE_ID", {uuid.uuid4()})
+SERVICE_NAME = f"AstroService-CICD-{service_id}"
 
 dag = DAG(
     "sample_anyscale_service_workflow",
