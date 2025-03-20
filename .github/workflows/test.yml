@@ -2,9 +2,9 @@ name: test
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main", "fix-example-dag" ]
   pull_request:
-    branches: [ "main" ]
+    branches: [ "main", "fix-example-dag" ]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
@@ -113,6 +113,8 @@ jobs:
           name: coverage-integration-test-${{ matrix.python-version }}-${{ matrix.airflow-version }}
           path: .coverage
           include-hidden-files: true
+    env:
+      ASTRO_ANYSCALE_PROVIDER_SERVICE_ID: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
 
   Code-Coverage:
     if: github.event.action != 'labeled'
