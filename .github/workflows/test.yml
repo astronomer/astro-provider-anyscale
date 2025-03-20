@@ -114,7 +114,7 @@ jobs:
           path: .coverage
           include-hidden-files: true
     env:
-      ASTRO_ANYSCALE_PROVIDER_SERVICE_ID: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+      ASTRO_ANYSCALE_PROVIDER_SERVICE_ID: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}-${{ matrix.python-version }}-${{ matrix.airflow-version }}
 
   Code-Coverage:
     if: github.event.action != 'labeled'
