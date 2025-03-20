@@ -1,4 +1,5 @@
 import json
+import os
 from unittest import mock
 from unittest.mock import patch
 
@@ -33,6 +34,7 @@ class TestAnyscaleHook:
                 )
                 self.hook = AnyscaleHook()
 
+    @patch.dict(os.environ, {}, clear=True)
     @patch("anyscale_provider.hooks.anyscale.AnyscaleHook.get_connection")
     def test_api_key_required(self, mock_get_connection):
         mock_get_connection.return_value = Connection(
