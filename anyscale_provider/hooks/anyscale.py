@@ -5,6 +5,7 @@ import time
 from functools import cached_property
 from typing import Any
 
+import click
 from airflow.configuration import conf
 from airflow.exceptions import AirflowException
 from airflow.hooks.base import BaseHook
@@ -49,7 +50,11 @@ class AnyscaleHook(BaseHook):
         if telemetry_enabled:
             headers["X-Anyscale-Source"] = "airflow"
 
-        return Anyscale(auth_token=token, headers=headers)
+        try:
+            anyscale_client = Anyscale(auth_token=token, headers=headers)
+        except click.exceptions.ClickException:
+            raise AirflowException(f"Unable to access Anyscale using the connection <{self.conn_id}>")
+        return anyscale_client
 
     @classmethod
     def get_ui_field_behaviour(cls) -> dict[str, Any]:
