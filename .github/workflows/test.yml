@@ -104,6 +104,9 @@ jobs:
 
       - name: Test Anyscale against Airflow ${{ matrix.airflow-version }} and Python ${{ matrix.python-version }}
         run: |
+          ID="${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}-${{ matrix.python-version }}-${{ matrix.airflow-version }}"
+          ID_CLEANED=$(echo $ID | tr '.' '-')  # Replace dots with hyphens
+          echo "ASTRO_ANYSCALE_PROVIDER_SERVICE_ID=$ID_CLEANED" >> $GITHUB_ENV
           hatch run tests.py${{ matrix.python-version }}-${{ matrix.airflow-version }}:test-integration
         env:
           ANYSCALE_CLI_TOKEN: ${{ secrets.ANYSCALE_CLI_TOKEN }}
@@ -113,8 +116,6 @@ jobs:
           name: coverage-integration-test-${{ matrix.python-version }}-${{ matrix.airflow-version }}
           path: .coverage
           include-hidden-files: true
-    env:
-      ASTRO_ANYSCALE_PROVIDER_SERVICE_ID: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}-${{ matrix.python-version }}-${{ matrix.airflow-version }}
 
   Code-Coverage:
     if: github.event.action != 'labeled'
