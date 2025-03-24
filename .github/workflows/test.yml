@@ -105,9 +105,10 @@ jobs:
       - name: Test Anyscale against Airflow ${{ matrix.airflow-version }} and Python ${{ matrix.python-version }}
         run: |
           ID="${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}-${{ matrix.python-version }}-${{ matrix.airflow-version }}"
-          ID_CLEANED=$(echo $ID | tr '.' '-')  # Replace dots with hyphens
-          echo "ASTRO_ANYSCALE_PROVIDER_SERVICE_ID=$ID_CLEANED" >> $GITHUB_ENV
-          hatch run tests.py${{ matrix.python-version }}-${{ matrix.airflow-version }}:test-integration
+          # Service names must be no longer than 57 characters and can only contain alphanumeric characters, dashes, and underscores
+          ID_CLEANED=$(echo $ID | tr '.' '-')  # Replace dots with hyphens so it is a valid Service name
+          echo ASTRO_ANYSCALE_PROVIDER_SERVICE_ID
+          ASTRO_ANYSCALE_PROVIDER_SERVICE_ID=$ID_CLEANED hatch run tests.py${{ matrix.python-version }}-${{ matrix.airflow-version }}:test-integration
         env:
           ANYSCALE_CLI_TOKEN: ${{ secrets.ANYSCALE_CLI_TOKEN }}
       - name: Upload coverage to Github
