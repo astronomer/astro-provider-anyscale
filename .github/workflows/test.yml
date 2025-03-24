@@ -2,7 +2,7 @@ name: test
 
 on:
   push:
-    branches: [ "main", "fix-example-dag" ]
+    branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
 
