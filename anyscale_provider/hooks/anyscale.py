@@ -53,7 +53,7 @@ class AnyscaleHook(BaseHook):
         try:
             anyscale_client = Anyscale(auth_token=token, headers=headers)
         except click.exceptions.ClickException:
-            raise AirflowException(f"Unable to access Anyscale using the connection {self.conn_id}")
+            raise AirflowException(f"Unable to access Anyscale using the connection <{self.conn_id}>")
         return anyscale_client
 
     @classmethod

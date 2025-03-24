@@ -34,22 +34,23 @@ class TestAnyscaleHook:
                 self.hook = AnyscaleHook()
 
     @patch("anyscale_provider.hooks.anyscale.AnyscaleHook.get_connection")
-    def test_api_key_required(self, mock_get_connection):
-        mock_get_connection.return_value = Connection(
-            conn_id="anyscale_default", conn_type="http", host="localhost", password=None, extra=json.dumps({})
-        )
-
-        with pytest.raises(AirflowException) as ctx:
-            AnyscaleHook().client
-        assert str(ctx.value) == "Missing API token for connection id anyscale_default"
-
-    @patch("anyscale_provider.hooks.anyscale.AnyscaleHook.get_connection")
     def test_successful_initialization(self, mock_get_connection):
         mock_get_connection.return_value = Connection(
             conn_id="anyscale_default", conn_type="http", host="localhost", password=API_KEY, extra=json.dumps({})
         )
         hook = AnyscaleHook()
         assert hook.get_connection("anyscale_default").password == API_KEY
+
+    @patch.dict("os.environ", {"ANYSCALE_CLI_TOKEN": "INVALID-TOKEN"})
+    @patch("anyscale_provider.hooks.anyscale.AnyscaleHook.get_connection")
+    def test_invalid_token(self, mock_get_connection):
+        mock_get_connection.return_value = Connection(
+            conn_id="anyscale_default", conn_type="http", host="localhost", password=None, extra=json.dumps({})
+        )
+
+        with pytest.raises(AirflowException) as ctx:
+            AnyscaleHook().client
+        assert str(ctx.value) == "Unable to access Anyscale using the connection <anyscale_default>"
 
     @patch("anyscale_provider.hooks.anyscale.AnyscaleHook.get_connection")
     @patch("anyscale_provider.hooks.anyscale.AnyscaleHook.client")
