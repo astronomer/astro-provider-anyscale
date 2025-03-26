@@ -2,10 +2,9 @@ from datetime import datetime, timedelta
 from pathlib import Path
 
 from airflow import DAG
+from anyscale.job.models import JobQueueConfig, JobQueueExecutionMode, JobQueueSpec
 
 from anyscale_provider.operators.anyscale import SubmitAnyscaleJob
-from anyscale.job.models import JobQueueConfig, JobQueueSpec, JobQueueExecutionMode
-
 
 default_args = {
     "owner": "airflow",
@@ -34,7 +33,7 @@ dag = DAG(
 submit_anyscale_job = SubmitAnyscaleJob(
     task_id="submit_anyscale_job",
     conn_id=ANYSCALE_CONN_ID,
-    name="AstroJob",
+    name="AstroJobBasic",
     image_uri="anyscale/image/airflow-integration-testing:1",
     compute_config="airflow-integration-testing:1",
     working_dir=str(FOLDER_PATH),
@@ -74,7 +73,7 @@ submit_anyscale_job_with_new_job_queue = SubmitAnyscaleJob(
 submit_anyscale_job_with_existing_job_queue = SubmitAnyscaleJob(
     task_id="submit_anyscale_job_with_existing_job_queue",
     conn_id=ANYSCALE_CONN_ID,
-    name="AstroJobWithJobQueue",
+    name="AstroJobWithExistingJobQueue1",
     image_uri="anyscale/image/airflow-integration-testing:1",
     compute_config="airflow-integration-testing:1",
     working_dir=str(FOLDER_PATH),
@@ -98,7 +97,7 @@ submit_anyscale_job_with_existing_job_queue = SubmitAnyscaleJob(
 submit_another_anyscale_job_with_existing_job_queue = SubmitAnyscaleJob(
     task_id="submit_another_anyscale_job_with_existing_job_queue",
     conn_id=ANYSCALE_CONN_ID,
-    name="AstroJobWithJobQueue",
+    name="AstroJobWithExistingJobQueue2",
     image_uri="anyscale/image/airflow-integration-testing:1",
     compute_config="airflow-integration-testing:1",
     working_dir=str(FOLDER_PATH),
