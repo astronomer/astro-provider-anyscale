@@ -17,14 +17,19 @@ class TestAnyscaleJobTrigger(unittest.TestCase):
     @patch("anyscale_provider.hooks.anyscale.AnyscaleHook.get_job_status")
     def test_is_terminal_status(self, mock_get_status):
         mock_get_status.return_value = JobStatus(
-            state=JobState.SUCCEEDED, name="test", config=JobConfig(entrypoint="122"), id="1", runs=[]
+            creator_id="Astro",
+            state=JobState.SUCCEEDED,
+            name="test",
+            config=JobConfig(entrypoint="122"),
+            id="1",
+            runs=[],
         )
         self.assertTrue(self.trigger._is_terminal_state("123"))
 
     @patch("anyscale_provider.hooks.anyscale.AnyscaleHook.get_job_status")
     def test_is_not_terminal_status(self, mock_get_status):
         mock_get_status.return_value = JobStatus(
-            state=JobState.RUNNING, name="test", config=JobConfig(entrypoint="122"), id="1", runs=[]
+            creator_id="Astro", state=JobState.RUNNING, name="test", config=JobConfig(entrypoint="122"), id="1", runs=[]
         )
         self.assertFalse(self.trigger._is_terminal_state("123"))
 
@@ -148,7 +153,12 @@ class TestAnyscaleJobTrigger(unittest.TestCase):
         trigger = AnyscaleJobTrigger(conn_id="test_conn", job_id="test_job", poll_interval=1, fetch_logs=False)
         mock_terminal_state.return_value = True
         mock_hook.return_value = JobStatus(
-            id="test_job", state=JobState.SUCCEEDED, name="", config=JobConfig(entrypoint="122"), runs=[]
+            creator_id="Astro",
+            id="test_job",
+            state=JobState.SUCCEEDED,
+            name="",
+            config=JobConfig(entrypoint="122"),
+            runs=[],
         )
 
         async def run_test():
@@ -169,6 +179,7 @@ class TestAnyscaleJobTrigger(unittest.TestCase):
         trigger = AnyscaleJobTrigger(conn_id="test_conn", job_id="test_job", poll_interval=1, fetch_logs=True)
         mock_terminal_state.return_value = True
         mock_hook.return_value = JobStatus(
+            creator_id="Astro",
             id="test_job",
             state=JobState.SUCCEEDED,
             name="",
@@ -199,7 +210,12 @@ class TestAnyscaleJobTrigger(unittest.TestCase):
         trigger = AnyscaleJobTrigger(conn_id="test_conn", job_id="test_job", poll_interval=1, fetch_logs=False)
         mock_terminal_state.return_value = True
         mock_hook.return_value = JobStatus(
-            id="test_job", state=JobState.FAILED, name="", config=JobConfig(entrypoint="122"), runs=[]
+            creator_id="Astro",
+            id="test_job",
+            state=JobState.FAILED,
+            name="",
+            config=JobConfig(entrypoint="122"),
+            runs=[],
         )
 
         async def run_test():
