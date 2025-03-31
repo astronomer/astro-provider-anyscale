@@ -26,6 +26,7 @@ class SubmitAnyscaleJob(BaseOperator):
 
     :param conn_id: Required. The connection ID for Anyscale.
     :param entrypoint: Required. Command that will be run to execute the job, e.g., `python main.py`.
+    :param job_queue_config: Optional. Allow users to specify JobQueueConfig (more information: https://docs.anyscale.com/platform/jobs/job-queues/ and https://docs.anyscale.com/reference/job-api/).
     :param name: Optional. Name of the job. Multiple jobs can be submitted with the same name.
     :param image_uri: Optional. URI of an existing image. Exclusive with `containerfile`.
     :param containerfile: Optional. The file path to a containerfile that will be built into an image before running the workload. Exclusive with `image_uri`.
