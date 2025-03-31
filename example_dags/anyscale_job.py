@@ -5,6 +5,8 @@ from airflow import DAG
 from anyscale.job.models import JobQueueConfig, JobQueueExecutionMode, JobQueueSpec
 
 from anyscale_provider.operators.anyscale import SubmitAnyscaleJob
+from anyscale.job.models import JobQueueConfig, JobQueueSpec, JobQueueExecutionMode
+
 
 default_args = {
     "owner": "airflow",
