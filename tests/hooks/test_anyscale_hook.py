@@ -136,6 +136,7 @@ class TestAnyscaleHook:
 
         # Create a mock SDK instance with a mock job status method
         mock_client.job.status.return_value = JobStatus(
+            creator_id="Astro",
             id="test_job_id",
             name="test_job",
             config=job_config,
