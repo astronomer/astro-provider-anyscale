@@ -303,6 +303,8 @@ class TestAnyscaleServiceTrigger(unittest.TestCase):
                 "conn_id": "default_conn",
                 "service_name": "AstroService",
                 "expected_state": ServiceState.RUNNING,
+                "cloud": None,
+                "project": None,
                 "canary_percent": 0.0,
                 "poll_interval": 60,
             },
@@ -342,7 +344,7 @@ class TestAnyscaleServiceTrigger(unittest.TestCase):
             self.assertEqual(status, "RUNNING")
 
             # Ensure the mock was called correctly
-            mock_get_service_status.assert_called_once_with("AstroService")
+            mock_get_service_status.assert_called_once_with("AstroService", cloud=None, project=None)
 
     @patch("anyscale_provider.hooks.anyscale.AnyscaleHook.get_service_status")
     def test_get_current_status_canary_100_percent(self, mock_get_service_status):
@@ -371,7 +373,67 @@ class TestAnyscaleServiceTrigger(unittest.TestCase):
             self.assertEqual(status, "TERMINATED")
 
             # Ensure the mock was called correctly
-            mock_get_service_status.assert_called_once_with("AstroService")
+            mock_get_service_status.assert_called_once_with("AstroService", cloud=None, project=None)
+
+    @patch("anyscale_provider.hooks.anyscale.AnyscaleHook.get_service_status")
+    def test_get_current_status_cloud(self, mock_get_service_status):
+        # Mock the return value of get_service_status
+        mock_service_status = MagicMock()
+        mock_service_status.state = ServiceState.TERMINATED
+        mock_service_status.canary_version.state = ServiceState.RUNNING
+        mock_get_service_status.return_value = mock_service_status
+
+        # Initialize the trigger with canary_percent set to 100.0
+        trigger = AnyscaleServiceTrigger(
+            conn_id="default_conn",
+            service_name="AstroService",
+            expected_state=ServiceState.RUNNING,
+            canary_percent=100.0,
+            cloud="AstroCloud",
+        )
+
+        # Mock the hook property to return our mocked hook
+        with patch.object(AnyscaleServiceTrigger, "hook", new_callable=PropertyMock) as mock_hook:
+            mock_hook.return_value.get_service_status = mock_get_service_status
+
+            # Call the method to test
+            status = trigger._get_current_state("AstroService")
+
+            # Verify the result
+            self.assertEqual(status, "TERMINATED")
+
+            # Ensure the mock was called correctly
+            mock_get_service_status.assert_called_once_with("AstroService", cloud="AstroCloud", project=None)
+
+    @patch("anyscale_provider.hooks.anyscale.AnyscaleHook.get_service_status")
+    def test_get_current_status_project(self, mock_get_service_status):
+        # Mock the return value of get_service_status
+        mock_service_status = MagicMock()
+        mock_service_status.state = ServiceState.TERMINATED
+        mock_service_status.canary_version.state = ServiceState.RUNNING
+        mock_get_service_status.return_value = mock_service_status
+
+        # Initialize the trigger with canary_percent set to 100.0
+        trigger = AnyscaleServiceTrigger(
+            conn_id="default_conn",
+            service_name="AstroService",
+            expected_state=ServiceState.RUNNING,
+            canary_percent=100.0,
+            project="AstroProject",
+        )
+
+        # Mock the hook property to return our mocked hook
+        with patch.object(AnyscaleServiceTrigger, "hook", new_callable=PropertyMock) as mock_hook:
+            mock_hook.return_value.get_service_status = mock_get_service_status
+
+            # Call the method to test
+            status = trigger._get_current_state("AstroService")
+
+            # Verify the result
+            self.assertEqual(status, "TERMINATED")
+
+            # Ensure the mock was called correctly
+            mock_get_service_status.assert_called_once_with("AstroService", cloud=None, project="AstroProject")
 
     @patch("anyscale_provider.triggers.anyscale.AnyscaleServiceTrigger._get_current_state")
     @patch("anyscale_provider.triggers.anyscale.AnyscaleServiceTrigger._check_current_state")
