@@ -96,14 +96,21 @@ class AnyscaleHook(BaseHook):
         )
         return service_id
 
-    def get_job_status(self, job_id: str) -> JobStatus:
+    def get_job_status(
+        self,
+        job_id: str,
+        cloud: str | None = None,
+        project: str | None = None,
+    ) -> JobStatus:
         """
         Fetch the status of a job.
 
         :param job_id: The ID of the job.
+        :param cloud: Optional. The cloud name for the job.
+        :param project: Optional. The project name for the job.
         """
         self.log.info(f"Fetching job status for Job ID: {job_id}")
-        return self.client.job.status(id=job_id)
+        return self.client.job.status(id=job_id, cloud=cloud, project=project)
 
     def get_service_status(self, service_name: str) -> ServiceStatus:
         """
@@ -114,16 +121,24 @@ class AnyscaleHook(BaseHook):
         self.log.info(f"Fetching service status for Service: {service_name}")
         return self.client.service.status(name=service_name)
 
-    def terminate_job(self, job_id: str, time_delay: int) -> bool:
+    def terminate_job(
+        self,
+        job_id: str,
+        time_delay: int,
+        cloud: str | None = None,
+        project: str | None = None,
+    ) -> bool:
         """
         Terminate a running job.
 
         :param job_id: The ID of the job.
         :param time_delay:
+        :param cloud: Optional. The cloud name for the job.
+        :param project: Optional. The project name for the job.
         """
         self.log.info(f"Terminating Job ID: {job_id}")
         try:
-            self.client.job.terminate(id=job_id)
+            self.client.job.terminate(id=job_id, cloud=cloud, project=project)
             # Simulated delay
             time.sleep(time_delay)
         except Exception as e:
@@ -146,12 +161,21 @@ class AnyscaleHook(BaseHook):
             raise AirflowException(f"Service termination failed with error: {e}")
         return True
 
-    def get_job_logs(self, job_id: str, run: str | None = None) -> str:
+    def get_job_logs(
+        self,
+        job_id: str,
+        cloud: str | None = None,
+        project: str | None = None,
+        run: str | None = None,
+    ) -> str:
         """
          Fetch the logs for a job.
 
         :param job_id: Required. The ID of the job.
+        :param cloud: Optional. The cloud name for the job.
+        :param project: Optional. The project name for the job.
         """
         self.log.info(f"Fetching logs for Job ID: {job_id} and Run: {run}")
-        logs: str = self.client.job.get_logs(id=job_id, run=run)
+        logs: str = self.client.job.get_logs(
+            id=job_id, cloud=cloud, project=project, run=run)
         return logs

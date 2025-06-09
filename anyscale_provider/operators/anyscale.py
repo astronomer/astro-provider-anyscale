@@ -117,7 +117,7 @@ class SubmitAnyscaleJob(BaseOperator):
         request for the currently running job.
         """
         if self.job_id is not None:
-            self.hook.terminate_job(self.job_id, 5)
+            self.hook.terminate_job(self.job_id, 5, cloud=self.cloud, project=self.project)
             self.log.info("Termination request received. Submitted request to terminate the anyscale job.")
         return
 
@@ -164,7 +164,8 @@ class SubmitAnyscaleJob(BaseOperator):
         self.log.info(f"Submitted Anyscale job with ID: {self.job_id}")
 
         if self.wait_for_completion:
-            current_state = str(self.hook.get_job_status(self.job_id).state)
+            current_state = str(self.hook.get_job_status(
+                self.job_id, cloud=self.cloud, project=self.project).state)
             self.log.info(f"Current job state for {self.job_id} is: {current_state}")
 
             if current_state == JobState.SUCCEEDED:

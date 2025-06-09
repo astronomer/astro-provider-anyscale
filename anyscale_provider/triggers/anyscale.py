@@ -22,13 +22,24 @@ class AnyscaleJobTrigger(BaseTrigger):
 
     :param conn_id: Required. The connection ID for Anyscale.
     :param job_id: Required. The ID of the job to monitor.
+    :param cloud: Optional. The cloud name for the job.
+    :param project: Optional. The project name for the job.
     :param poll_interval: Optional. Interval in seconds between status checks. Defaults to 60 seconds.
     """
 
-    def __init__(self, conn_id: str, job_id: str, poll_interval: float = 60, fetch_logs: bool = True):
+    def __init__(
+        self, conn_id: str,
+        job_id: str,
+        cloud: str | None = None,
+        project: str | None = None,
+        poll_interval: float = 60,
+        fetch_logs: bool = True,
+    ):
         super().__init__()  # type: ignore[no-untyped-call]
         self.conn_id = conn_id
         self.job_id = job_id
+        self.cloud = cloud
+        self.project = project
         self.poll_interval = poll_interval
         self.fetch_logs = fetch_logs
 
@@ -52,6 +63,8 @@ class AnyscaleJobTrigger(BaseTrigger):
             {
                 "conn_id": self.conn_id,
                 "job_id": self.job_id,
+                "cloud": self.cloud,
+                "project": self.project,
                 "poll_interval": self.poll_interval,
             },
         )
@@ -69,17 +82,21 @@ class AnyscaleJobTrigger(BaseTrigger):
                 await asyncio.sleep(self.poll_interval)
 
             if self.fetch_logs:
-                job_status = self.hook.get_job_status(self.job_id)
+                job_status = self.hook.get_job_status(
+                    self.job_id, cloud=self.cloud, project=self.project)
                 loop = asyncio.get_event_loop()
                 logs = await loop.run_in_executor(
-                    None, partial(self.hook.get_job_logs, job_id=self.job_id, run=job_status.runs[-1].name)
+                    None, partial(self.hook.get_job_logs,
+                        job_id=self.job_id, cloud=self.cloud, project=self.project,
+                        run=job_status.runs[-1].name)
                 )
 
                 for log in logs.split("\n"):
                     print(log)
 
             # Once out of the loop, the job has reached a terminal status
-            job_status = self.hook.get_job_status(self.job_id)
+            job_status = self.hook.get_job_status(
+                self.job_id, cloud=self.cloud, project=self.project)
             job_state = str(job_status.state)
             self.log.info(f"Current job status for {self.job_id} is: {job_state}")
             yield TriggerEvent(
@@ -105,7 +122,8 @@ class AnyscaleJobTrigger(BaseTrigger):
         :param job_id: The ID of the job to check the status for.
         :return: True if the job is in a terminal state, False otherwise.
         """
-        job_state = self.hook.get_job_status(job_id).state
+        job_state = self.hook.get_job_status(
+            job_id, cloud=self.cloud, project=self.project).state
         self.log.info(f"Current job state for {job_id} is: {job_state}")
         return job_state not in (JobState.STARTING, JobState.RUNNING)
 

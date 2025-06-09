@@ -146,7 +146,8 @@ class TestAnyscaleHook:
 
         result = self.hook.get_job_status("test_job_id")
 
-        mock_client.job.status.assert_called_once_with(id="test_job_id")
+        mock_client.job.status.assert_called_once_with(
+            id="test_job_id", cloud=None, project=None)
         assert result.id == "test_job_id"
         assert result.state == JobState.SUCCEEDED
 
@@ -158,7 +159,8 @@ class TestAnyscaleHook:
         with pytest.raises(AirflowException) as exc:
             self.hook.get_job_status("test_job_id")
 
-        mock_client.job.status.assert_called_once_with(id="test_job_id")
+        mock_client.job.status.assert_called_once_with(
+            id="test_job_id", cloud=None, project=None)
         assert str(exc.value) == "Get job status failed"
 
     @patch("anyscale_provider.hooks.anyscale.AnyscaleHook.client")
@@ -168,7 +170,8 @@ class TestAnyscaleHook:
 
         result = self.hook.terminate_job("test_job_id", time_delay=1)
 
-        mock_client.job.terminate.assert_called_once_with(id="test_job_id")
+        mock_client.job.terminate.assert_called_once_with(
+            id="test_job_id", cloud=None, project=None)
         assert result is True
 
     @patch("anyscale_provider.hooks.anyscale.AnyscaleHook.client")
@@ -179,7 +182,8 @@ class TestAnyscaleHook:
         with pytest.raises(AirflowException) as exc:
             self.hook.terminate_job("test_job_id", time_delay=1)
 
-        mock_client.job.terminate.assert_called_once_with(id="test_job_id")
+        mock_client.job.terminate.assert_called_once_with(
+            id="test_job_id", cloud=None, project=None)
         assert str(exc.value) == "Job termination failed with error: Terminate job failed"
 
     @patch("anyscale_provider.hooks.anyscale.AnyscaleHook.client")
@@ -209,7 +213,8 @@ class TestAnyscaleHook:
 
         result = self.hook.get_job_logs("test_job_id")
 
-        mock_client.job.get_logs.assert_called_once_with(id="test_job_id", run=None)
+        mock_client.job.get_logs.assert_called_once_with(
+            id="test_job_id", cloud=None, project=None, run=None)
         assert result == "job logs"
 
     @patch("anyscale_provider.hooks.anyscale.AnyscaleHook.client")
@@ -219,7 +224,8 @@ class TestAnyscaleHook:
 
         result = self.hook.get_job_logs("test_job_id")
 
-        mock_client.job.get_logs.assert_called_once_with(id="test_job_id", run=None)
+        mock_client.job.get_logs.assert_called_once_with(
+            id="test_job_id", cloud=None, project=None, run=None)
         assert result == ""
 
     @patch("anyscale_provider.hooks.anyscale.AnyscaleHook.get_service_status")

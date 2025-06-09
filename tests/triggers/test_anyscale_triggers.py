@@ -108,7 +108,13 @@ class TestAnyscaleJobTrigger(unittest.TestCase):
         result = trigger.serialize()
         expected_output = (
             "anyscale_provider.triggers.anyscale.AnyscaleJobTrigger",
-            {"conn_id": "default_conn", "job_id": "123", "poll_interval": 60},
+            {
+                "conn_id": "default_conn",
+                "job_id": "123",
+                "cloud": None,
+                "project": None,
+                "poll_interval": 60,
+            },
         )
 
         # Check if the result is a tuple
@@ -151,6 +157,68 @@ class TestAnyscaleJobTrigger(unittest.TestCase):
     @patch("anyscale_provider.triggers.anyscale.AnyscaleJobTrigger._is_terminal_state")
     def test_run_success(self, mock_terminal_state, mock_hook):
         trigger = AnyscaleJobTrigger(conn_id="test_conn", job_id="test_job", poll_interval=1, fetch_logs=False)
+        mock_terminal_state.return_value = True
+        mock_hook.return_value = JobStatus(
+            creator_id="Astro",
+            id="test_job",
+            state=JobState.SUCCEEDED,
+            name="",
+            config=JobConfig(entrypoint="122"),
+            runs=[],
+        )
+
+        async def run_test():
+            generator = trigger.run()
+            result = await generator.asend(None)
+            assert result == TriggerEvent(
+                {"state": "SUCCEEDED", "message": "Job test_job completed with state SUCCEEDED.", "job_id": "test_job"}
+            )
+
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        loop.run_until_complete(run_test())
+
+    @patch("anyscale_provider.triggers.anyscale.AnyscaleHook.get_job_status")
+    @patch("anyscale_provider.triggers.anyscale.AnyscaleJobTrigger._is_terminal_state")
+    def test_run_success_cloud(self, mock_terminal_state, mock_hook):
+        trigger = AnyscaleJobTrigger(
+            conn_id="test_conn",
+            job_id="test_job",
+            cloud="AstroCloud",
+            poll_interval=1,
+            fetch_logs=False,
+        )
+        mock_terminal_state.return_value = True
+        mock_hook.return_value = JobStatus(
+            creator_id="Astro",
+            id="test_job",
+            state=JobState.SUCCEEDED,
+            name="",
+            config=JobConfig(entrypoint="122"),
+            runs=[],
+        )
+
+        async def run_test():
+            generator = trigger.run()
+            result = await generator.asend(None)
+            assert result == TriggerEvent(
+                {"state": "SUCCEEDED", "message": "Job test_job completed with state SUCCEEDED.", "job_id": "test_job"}
+            )
+
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        loop.run_until_complete(run_test())
+
+    @patch("anyscale_provider.triggers.anyscale.AnyscaleHook.get_job_status")
+    @patch("anyscale_provider.triggers.anyscale.AnyscaleJobTrigger._is_terminal_state")
+    def test_run_success_project(self, mock_terminal_state, mock_hook):
+        trigger = AnyscaleJobTrigger(
+            conn_id="test_conn",
+            job_id="test_job",
+            project="AstroProject",
+            poll_interval=1,
+            fetch_logs=False,
+        )
         mock_terminal_state.return_value = True
         mock_hook.return_value = JobStatus(
             creator_id="Astro",

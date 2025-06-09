@@ -20,6 +20,8 @@ class TestSubmitAnyscaleJob(unittest.TestCase):
             working_dir="/test/dir",
             entrypoint="test_entrypoint",
             task_id="submit_job_test",
+            cloud="test_cloud",
+            project="test_project",
         )
 
     @patch("anyscale_provider.operators.anyscale.SubmitAnyscaleJob.hook", new_callable=MagicMock)
@@ -46,7 +48,8 @@ class TestSubmitAnyscaleJob(unittest.TestCase):
     def test_on_kill(self, mock_hook):
         self.operator.job_id = "123"
         self.operator.on_kill()
-        mock_hook.terminate_job.assert_called_once_with("123", 5)
+        mock_hook.terminate_job.assert_called_once_with(
+            "123", 5, cloud="test_cloud", project="test_project")
 
     @patch("anyscale_provider.operators.anyscale.SubmitAnyscaleJob.hook")
     def test_execute_complete(self, mock_hook):
@@ -105,6 +108,8 @@ class TestSubmitAnyscaleJob(unittest.TestCase):
         self.assertIsInstance(kwargs["trigger"], AnyscaleJobTrigger)
         self.assertEqual(kwargs["trigger"].job_id, "123")
         self.assertEqual(kwargs["trigger"].conn_id, "test_conn")
+        self.assertEqual(kwargs["trigger"].cloud, "test_cloud")
+        self.assertEqual(kwargs["trigger"].project, "test_project")
         self.assertEqual(kwargs["method_name"], "execute_complete")
 
 
