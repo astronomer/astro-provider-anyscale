@@ -156,7 +156,7 @@ class SubmitAnyscaleJob(BaseOperator):
             "max_retries": self.max_retries,
             "job_queue_config": self.job_queue_config,
         }
-        
+
         # Add extra job parameters if provided
         if self.extra_job_params:
             job_params.update(self.extra_job_params)
