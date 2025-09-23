@@ -4,16 +4,21 @@ from datetime import timedelta
 from typing import Any
 
 import anyscale
-from airflow.compat.functools import cached_property
 from airflow.exceptions import AirflowException
 from airflow.models import BaseOperator
-from airflow.utils.context import Context
+from airflow.utils.context import Context  # type: ignore[attr-defined]
 from anyscale.compute_config.models import ComputeConfig
 from anyscale.job.models import JobConfig, JobQueueConfig, JobState
 from anyscale.service.models import RayGCSExternalStorageConfig, ServiceConfig, ServiceState
 
+from anyscale_provider import _IS_AIRFLOW_3
 from anyscale_provider.hooks.anyscale import AnyscaleHook
 from anyscale_provider.triggers.anyscale import AnyscaleJobTrigger, AnyscaleServiceTrigger
+
+if _IS_AIRFLOW_3:
+    from functools import cached_property
+else:
+    from airflow.compat.functools import cached_property  # type: ignore[no-redef]
 
 
 class SubmitAnyscaleJob(BaseOperator):

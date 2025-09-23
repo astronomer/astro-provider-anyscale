@@ -4,12 +4,17 @@ import asyncio
 from functools import partial
 from typing import Any, AsyncIterator
 
-from airflow.compat.functools import cached_property
 from airflow.triggers.base import BaseTrigger, TriggerEvent
 from anyscale.job.models import JobState
 from anyscale.service.models import ServiceState
 
+from anyscale_provider import _IS_AIRFLOW_3
 from anyscale_provider.hooks.anyscale import AnyscaleHook
+
+if _IS_AIRFLOW_3:
+    from functools import cached_property
+else:
+    from airflow.compat.functools import cached_property  # type: ignore[no-redef]
 
 
 class AnyscaleJobTrigger(BaseTrigger):
