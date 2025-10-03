@@ -44,6 +44,7 @@ class SubmitAnyscaleJob(BaseOperator):
     :param cloud: Optional. The Anyscale Cloud to run this workload on. If not provided, the organization default will be used (or, if running in a workspace, the cloud of the workspace).
     :param project: Optional. The Anyscale project to run this workload in. If not provided, the organization default will be used (or, if running in a workspace, the project of the workspace).
     :param max_retries: Optional. Maximum number of times the job will be retried before being marked failed. Defaults to `1`.
+    :param extra_job_params: Optional. A dictionary of job parameters that allows you to pass in any additional parameters that are not supported above by the operator. Will be passed to the Anyscale JobConfig object.
     """
 
     template_fields = (
@@ -88,6 +89,7 @@ class SubmitAnyscaleJob(BaseOperator):
         job_timeout_seconds: float = 3600,
         poll_interval: float = 60,
         job_queue_config: JobQueueConfig | None = None,
+        extra_job_params: dict[str, Any] | None = None,
         *args: Any,
         **kwargs: Any,
     ) -> None:
@@ -111,6 +113,7 @@ class SubmitAnyscaleJob(BaseOperator):
         self.job_timeout_seconds = job_timeout_seconds
         self.poll_interval = poll_interval
         self.job_queue_config = job_queue_config
+        self.extra_job_params = extra_job_params
 
         self.job_id: str | None = None
 
@@ -158,6 +161,10 @@ class SubmitAnyscaleJob(BaseOperator):
             "max_retries": self.max_retries,
             "job_queue_config": self.job_queue_config,
         }
+
+        # Add extra job parameters if provided
+        if self.extra_job_params:
+            job_params.update(self.extra_job_params)
 
         self.log.info(f"Using Anyscale version {anyscale.__version__}")
         # Submit the job to Anyscale
