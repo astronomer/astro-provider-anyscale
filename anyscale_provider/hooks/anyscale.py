@@ -16,12 +16,11 @@ from anyscale.job.models import JobConfig, JobStatus
 from anyscale.service.models import ServiceConfig, ServiceStatus
 
 from anyscale_provider import _IS_AIRFLOW_3
-from airflow.sdk import BaseHook, Connection
-# if _IS_AIRFLOW_3:
-#     from airflow.sdk import BaseHook, Connection
-# else:
-#     from airflow.hooks.base import BaseHook
-#     from airflow.models.connection import Connection
+if _IS_AIRFLOW_3:
+    from airflow.sdk import BaseHook, Connection
+else:
+    from airflow.hooks.base import BaseHook
+    from airflow.models.connection import Connection
 
 
 class AnyscaleHook(BaseHook):
