@@ -1,17 +1,27 @@
 from __future__ import annotations
 
+import asyncio
 import os
 import time
+import threading
 from functools import cached_property
 from typing import Any
 
 import click
 from airflow.configuration import conf
 from airflow.exceptions import AirflowException
-from airflow.hooks.base import BaseHook
+
 from anyscale import Anyscale
 from anyscale.job.models import JobConfig, JobStatus
 from anyscale.service.models import ServiceConfig, ServiceStatus
+
+from anyscale_provider import _IS_AIRFLOW_3
+from airflow.sdk import BaseHook, Connection
+# if _IS_AIRFLOW_3:
+#     from airflow.sdk import BaseHook, Connection
+# else:
+#     from airflow.hooks.base import BaseHook
+#     from airflow.models.connection import Connection
 
 
 class AnyscaleHook(BaseHook):
@@ -30,9 +40,32 @@ class AnyscaleHook(BaseHook):
         super().__init__()
         self.conn_id = conn_id
 
+    def _get_connection_in_different_thread(self) -> Connection:
+        conn: Connection
+        exc: BaseException | None = None
+
+        def target() -> None:
+            nonlocal conn, exc
+            try:
+                conn = asyncio.run(self.aget_connection(self.conn_id))
+            except BaseException as be:
+                exc = be
+
+        thread = threading.Thread(target=target)
+        thread.start()
+        thread.join()
+        if exc:
+            raise exc
+        return conn
+
     @cached_property
     def client(self) -> Anyscale:
-        conn = self.get_connection(self.conn_id)
+        try:
+            asyncio.get_running_loop()
+        except RuntimeError:
+            conn = self.get_connection(self.conn_id)
+        else:
+            conn = self._get_connection_in_different_thread()
         token = conn.password
         self.log.info(f"Using Anyscale connection_id: {self.conn_id}")
 
