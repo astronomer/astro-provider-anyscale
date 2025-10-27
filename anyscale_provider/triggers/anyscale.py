@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import asyncio
-import traceback
 from functools import partial
 from typing import Any, AsyncIterator
 
@@ -99,7 +98,7 @@ class AnyscaleJobTrigger(BaseTrigger):
             yield TriggerEvent(
                 {
                     "state": str(JobState.FAILED),
-                    "message": str(traceback.format_exception(e)),
+                    "message": str(e),
                     "job_id": self.job_id,
                 }
             )
