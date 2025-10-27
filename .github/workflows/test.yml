@@ -44,9 +44,9 @@ jobs:
           - python-version: "3.12"
             airflow-version: "2.8"
           - python-version: "3.8"
-            airflow-version: "3.1"
+            airflow-version: "3.1.1"
           - python-version: "3.9"
-            airflow-version: "3.1"
+            airflow-version: "3.1.1"
     steps:
       - uses: actions/checkout@v4
         with:
