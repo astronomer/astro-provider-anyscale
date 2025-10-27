@@ -34,7 +34,7 @@ Homepage = "https://astronomer.io"
 Source = "https://github.com/astronomer/astro-provider-anyscale/"
 
 [project.optional-dependencies]
-airflow3 = ["apache-airflow>=3", "apache-airflow-task-sdk>=1.1.0"]
+airflow3 = ["apache-airflow>=3.1", "apache-airflow-task-sdk>=1.1.0"]
 
 [project.readme]
 file = "README.md"
