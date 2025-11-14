@@ -96,7 +96,7 @@ repos:
             attrs,
             types-requests,
             types-python-dateutil,
-            apache-airflow,
+            apache-airflow~=2.9,
           ]
         files: ^anyscale_provider
 
