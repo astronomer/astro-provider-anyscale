@@ -8,10 +8,16 @@ from typing import Any
 import click
 from airflow.configuration import conf
 from airflow.exceptions import AirflowException
-from airflow.hooks.base import BaseHook
 from anyscale import Anyscale
 from anyscale.job.models import JobConfig, JobStatus
 from anyscale.service.models import ServiceConfig, ServiceStatus
+
+from anyscale_provider import _IS_AIRFLOW_3
+
+if _IS_AIRFLOW_3:
+    from airflow.sdk import BaseHook
+else:
+    from airflow.hooks.base import BaseHook  # type: ignore[attr-defined,no-redef]
 
 
 class AnyscaleHook(BaseHook):

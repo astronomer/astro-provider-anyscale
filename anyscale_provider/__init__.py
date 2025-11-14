@@ -4,6 +4,11 @@ __version__ = "1.1.0"
 
 from typing import Any
 
+import airflow
+from packaging import version as pkg_version
+
+_IS_AIRFLOW_3 = pkg_version.parse(airflow.__version__).major == 3
+
 
 def get_provider_info() -> dict[str, Any]:
     return {
