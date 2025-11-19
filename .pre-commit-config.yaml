@@ -96,7 +96,8 @@ repos:
             attrs,
             types-requests,
             types-python-dateutil,
-            apache-airflow,
+            # TODO: Revert this line once Airflow 3 is supported
+            apache-airflow~=2.9,
           ]
         files: ^anyscale_provider
 
