@@ -126,6 +126,8 @@ class AnyscaleServiceTrigger(BaseTrigger):
     :param conn_id: Required. The connection ID for Anyscale.
     :param service_name: Required. The ID of the service to monitor.
     :param expected_state: Required. The expected final state of the service.
+    :param cloud: Optional. The cloud name for the service.
+    :param project: Optional. The project name for the service.
     :param poll_interval: Optional. Interval in seconds between status checks. Defaults to 60 seconds.
     """
 
@@ -135,12 +137,16 @@ class AnyscaleServiceTrigger(BaseTrigger):
         service_name: str,
         expected_state: str,
         canary_percent: float | None,
+        cloud: str | None = None,
+        project: str | None = None,
         poll_interval: float = 60,
     ):
         super().__init__()  # type: ignore[no-untyped-call]
         self.conn_id = conn_id
         self.service_name = service_name
         self.expected_state = expected_state
+        self.cloud = cloud
+        self.project = project
         self.canary_percent = canary_percent
         self.poll_interval = poll_interval
 
@@ -165,6 +171,8 @@ class AnyscaleServiceTrigger(BaseTrigger):
                 "conn_id": self.conn_id,
                 "service_name": self.service_name,
                 "expected_state": self.expected_state,
+                "cloud": self.cloud,
+                "project": self.project,
                 "canary_percent": self.canary_percent,
                 "poll_interval": self.poll_interval,
             },
@@ -217,7 +225,11 @@ class AnyscaleServiceTrigger(BaseTrigger):
         :param service_name: The name of the service to check the status for.
         :return: The current status of the service.
         """
-        service_status = self.hook.get_service_status(service_name)
+        service_status = self.hook.get_service_status(
+            service_name,
+            cloud=self.cloud,
+            project=self.project,
+        )
 
         if self.canary_percent is None or self.canary_percent == 100.0:
             return str(service_status.state)
