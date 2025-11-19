@@ -238,6 +238,36 @@ class TestAnyscaleHook:
         assert result.state == ServiceState.RUNNING
 
     @patch("anyscale_provider.hooks.anyscale.AnyscaleHook.get_service_status")
+    def test_get_service_status_cloud(self, mock_get_service_status):
+        mock_service_status = ServiceStatus(
+            id="test_service_id", name="test_service", query_url="http://example.com", state=ServiceState.RUNNING
+        )
+        mock_get_service_status.return_value = mock_service_status
+
+        result = self.hook.get_service_status("test_service_name", cloud="test_cloud")
+
+        mock_get_service_status.assert_called_once_with("test_service_name", cloud="test_cloud")
+        assert result.id == "test_service_id"
+        assert result.name == "test_service"
+        assert result.query_url == "http://example.com"
+        assert result.state == ServiceState.RUNNING
+
+    @patch("anyscale_provider.hooks.anyscale.AnyscaleHook.get_service_status")
+    def test_get_service_status_project(self, mock_get_service_status):
+        mock_service_status = ServiceStatus(
+            id="test_service_id", name="test_service", query_url="http://example.com", state=ServiceState.RUNNING
+        )
+        mock_get_service_status.return_value = mock_service_status
+
+        result = self.hook.get_service_status("test_service_name", project="test_project")
+
+        mock_get_service_status.assert_called_once_with("test_service_name", project="test_project")
+        assert result.id == "test_service_id"
+        assert result.name == "test_service"
+        assert result.query_url == "http://example.com"
+        assert result.state == ServiceState.RUNNING
+
+    @patch("anyscale_provider.hooks.anyscale.AnyscaleHook.get_service_status")
     def test_get_service_status_error(self, mock_get_service_status):
         mock_get_service_status.side_effect = AirflowException("Get service status failed")
 
