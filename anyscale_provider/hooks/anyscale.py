@@ -8,13 +8,18 @@ from typing import Any
 import click
 from airflow.configuration import conf
 from airflow.exceptions import AirflowException
+
+try:
+    from airflow.sdk import BaseHook
+except ImportError:
+    from airflow.hooks.base import BaseHook
 from airflow.hooks.base import BaseHook
 from anyscale import Anyscale
 from anyscale.job.models import JobConfig, JobStatus
 from anyscale.service.models import ServiceConfig, ServiceStatus
 
 
-class AnyscaleHook(BaseHook):
+class AnyscaleHook(BaseHook):  # type: ignore[misc]
     """
     This hook handles authenticating and making calls to the Anyscale SDK
 
