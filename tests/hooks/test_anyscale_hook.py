@@ -46,23 +46,15 @@ class TestAnyscaleHook:
 
         mock_service = mock_client.service = MagicMock()
         mock_service.status.return_value = ServiceStatus(
-            id=service_id,
-            name=service_name,
-            query_url=expected_query_url,
-            state=expected_state
+            id=service_id, name=service_name, query_url=expected_query_url, state=expected_state
         )
 
-        service_status = AnyscaleHook().get_service_status(
-            service_name=service_name,
-            cloud=cloud,
-            project=project
-        )
+        service_status = AnyscaleHook().get_service_status(service_name=service_name, cloud=cloud, project=project)
         assert service_status.id == service_id
         assert service_status.name == service_name
         assert service_status.query_url == expected_query_url
         assert service_status.state == expected_state
         mock_service.status.assert_called_once_with(name=service_name, cloud=cloud, project=project)
-        
 
     @patch.dict(os.environ, {}, clear=True)
     @patch("anyscale_provider.hooks.anyscale.AnyscaleHook.get_connection")
