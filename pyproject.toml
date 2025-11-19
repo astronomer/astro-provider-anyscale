@@ -65,7 +65,6 @@ dependencies = [
     "types-attrs",
     "types-requests",
     "types-python-dateutil",
-    "apache-airflow=={matrix:airflow}.0",
     "pytest>=6.0",
     "pytest-cov",
     "pre-commit"
