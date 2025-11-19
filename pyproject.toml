@@ -15,14 +15,12 @@ classifiers = [
     "Operating System :: OS Independent",
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.8",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
 ]
 dynamic = ["version"]
-requires-python = ">=3.8, <3.13"
+requires-python = ">=3.10, <3.13"
 dependencies = [
     "apache-airflow>=2.7",
     "pyyaml",
@@ -74,7 +72,7 @@ dependencies = [
 pre-install-commands = ["sh scripts/test/pre-install-airflow.sh {matrix:airflow} {matrix:python}"]
 
 [[tool.hatch.envs.tests.matrix]]
-python = ["3.8", "3.9", "3.10", "3.11", "3.12"]
+python = ["3.10", "3.11", "3.12"]
 airflow = ["2.7", "2.8", "2.9"]
 
 [tool.hatch.envs.tests.overrides]
