@@ -107,6 +107,34 @@ class TestSubmitAnyscaleJob(unittest.TestCase):
         self.assertEqual(kwargs["trigger"].conn_id, "test_conn")
         self.assertEqual(kwargs["method_name"], "execute_complete")
 
+    @patch("anyscale_provider.operators.anyscale.JobConfig")
+    @patch("anyscale_provider.operators.anyscale.SubmitAnyscaleJob.hook", new_callable=MagicMock)
+    def test_extra_job_params(self, mock_hook, mock_job_config):
+        # Set up the operator with extra_job_params
+        operator = SubmitAnyscaleJob(
+            conn_id="test_conn",
+            name="test_job",
+            entrypoint="test_entrypoint",
+            extra_job_params={"ray_version": "2.47.1", "timeout_s": 42},
+            task_id="test_extra_params",
+        )
+
+        mock_hook.submit_job.return_value = "123"
+        mock_hook.get_job_status.return_value.state = JobState.SUCCEEDED
+
+        # Execute the operator
+        operator.execute(Context(ti=MagicMock()))
+
+        # Verify that JobConfig was called with the extra parameters
+        mock_job_config.assert_called_once()
+        call_args = mock_job_config.call_args[1]  # Get keyword arguments
+
+        # Check that the extra_job_params were merged into the job_params
+        self.assertEqual(call_args["ray_version"], "2.47.1")
+        self.assertEqual(call_args["timeout_s"], 42)
+        self.assertEqual(call_args["entrypoint"], "test_entrypoint")
+        self.assertEqual(call_args["name"], "test_job")
+
 
 class TestRolloutAnyscaleService(unittest.TestCase):
     def setUp(self):
