@@ -26,6 +26,7 @@ dependencies = [
     "apache-airflow>=2.7",
     "pyyaml",
     "anyscale>=0.24.54",
+    "structlog<24.0"  #
 ]
 
 [project.urls]
