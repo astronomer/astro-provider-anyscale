@@ -21,5 +21,4 @@ else
   pip install apache-airflow~=$AIRFLOW_VERSION.0 --upgrade --constraint /tmp/constraint.txt
 fi;
 
-pip install pydantic --constraint /tmp/constraint.txt
 rm /tmp/constraint.txt
