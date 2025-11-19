@@ -22,3 +22,10 @@ else
 fi;
 
 rm /tmp/constraint.txt
+
+AIRFLOW_MAJOR_VERSION=$(echo "$AIRFLOW_VERSION" | cut -d. -f1)
+if [ "$AIRFLOW_MAJOR_VERSION" -ge 3 ]; then
+    airflow db migrate
+else
+    airflow db init
+fi
