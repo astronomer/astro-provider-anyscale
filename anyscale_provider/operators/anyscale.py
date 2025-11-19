@@ -395,6 +395,8 @@ class RolloutAnyscaleService(BaseOperator):
                 service_name=self.name,
                 expected_state=ServiceState.RUNNING,
                 canary_percent=self.canary_percent,
+                cloud=self.cloud,
+                project=self.project,
                 poll_interval=self.poll_interval,
             ),
             method_name="execute_complete",

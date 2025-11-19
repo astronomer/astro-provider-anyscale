@@ -146,6 +146,8 @@ class TestRolloutAnyscaleService(unittest.TestCase):
             applications=[{"name": "app1", "import_path": "module.optional_submodule:app"}],
             compute_config="config123",
             task_id="rollout_service_test",
+            cloud="test_cloud",
+            project="test_project",
         )
 
     @patch("anyscale_provider.operators.anyscale.RolloutAnyscaleService.hook")
@@ -170,6 +172,8 @@ class TestRolloutAnyscaleService(unittest.TestCase):
             service_name="test_service",
             expected_state=ServiceState.RUNNING,
             canary_percent=None,
+            cloud="test_cloud",
+            project="test_project",
             poll_interval=60,
         )
 
@@ -182,6 +186,8 @@ class TestRolloutAnyscaleService(unittest.TestCase):
         self.assertEqual(actual_trigger.conn_id, expected_trigger.conn_id)
         self.assertEqual(actual_trigger.service_name, expected_trigger.service_name)
         self.assertEqual(actual_trigger.expected_state, expected_trigger.expected_state)
+        self.assertEqual(actual_trigger.cloud, expected_trigger.cloud)
+        self.assertEqual(actual_trigger.project, expected_trigger.project)
         self.assertEqual(actual_trigger.poll_interval, expected_trigger.poll_interval)
         self.assertEqual(actual_method_name, expected_method_name)
 
