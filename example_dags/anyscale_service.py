@@ -63,4 +63,3 @@ terminate_anyscale_service = PythonOperator(
 
 # Defining the task sequence
 deploy_anyscale_service >> terminate_anyscale_service
-
