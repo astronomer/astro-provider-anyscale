@@ -78,7 +78,7 @@ class AnyscaleHook(BaseHook):
     def deploy_service(
         self,
         config: ServiceConfig | None = None,
-        configs: list[ServiceConfig] | None = None,
+        configs: list[ServiceConfig] | ServiceConfig | None = None,
         in_place: bool = False,
         canary_percent: int | None = None,
         max_surge_percent: int | None = None,
@@ -86,8 +86,8 @@ class AnyscaleHook(BaseHook):
         """
         Deploy a service to Anyscale.
 
-        :param config: (deprecated in 1.2.0) Use configs instead. Configuration dictionary for the service.
-        :param configs: Required (introduced in 1.2.0). List of configuration dictionaries for the service.
+        :param config: (deprecated in 1.2.0) Use configs instead. Configuration object for the service.
+        :param configs: Required (introduced in 1.2.0). Maybe a list of configuration objects for the service, or a single configuration object.
         :param in_place: Optional. Whether to perform an in-place update. Defaults to False.
         :param canary_percent: Optional. Canary percentage for deployment.
         :param max_surge_percent: Optional. Maximum surge percentage for deployment.
@@ -103,18 +103,18 @@ class AnyscaleHook(BaseHook):
             self.log.warning(
                 "Specifying the config in the `config` argument is deprecated. Please use the `configs` argument instead."
             )
-            configs = [config]
+            configs = config
 
         self.log.info(f"Deploying a service with configuration: {configs}")
 
         try:
             # We assume this is the compatible with Anyscale SDK. It is with 0.26.75.
+            # self.client.service.deploy( configs=configs, in_place=in_place, canary_percent=canary_percent, max_surge_percent=max_surge_percent)
             service_id: str = self.client.service.deploy(
                 configs=configs,
                 in_place=in_place,
                 canary_percent=canary_percent,
                 max_surge_percent=max_surge_percent,
-                versions=None,
             )
         except TypeError:
             # The following used to work at some point when the provider used to be "anyscale>=0.24.54" and Anyscale SDK 0.26.75 hadn't been released yet,

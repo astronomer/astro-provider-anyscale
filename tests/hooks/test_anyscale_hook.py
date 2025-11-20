@@ -132,7 +132,7 @@ class TestAnyscaleHook:
         )
 
         mock_client.service.deploy.assert_called_once_with(
-            configs=[service_config], in_place=False, canary_percent=10, max_surge_percent=20, versions=None
+            configs=service_config, in_place=False, canary_percent=10, max_surge_percent=20
         )
         assert result == "test_service_id"
 
@@ -146,10 +146,10 @@ class TestAnyscaleHook:
         mock_client.service.deploy.side_effect = AirflowException("Deploy service failed")
 
         with pytest.raises(AirflowException) as exc:
-            self.hook.deploy_service(configs=[service_config], in_place=False, canary_percent=10, max_surge_percent=20)
+            self.hook.deploy_service(configs=service_config, in_place=False, canary_percent=10, max_surge_percent=20)
 
         mock_client.service.deploy.assert_called_once_with(
-            configs=[service_config], in_place=False, canary_percent=10, max_surge_percent=20, versions=None
+            configs=service_config, in_place=False, canary_percent=10, max_surge_percent=20
         )
         assert str(exc.value) == "Deploy service failed"
 
@@ -366,7 +366,7 @@ class TestAnyscaleHook:
         # First call should use 'configs' (new SDK style)
         first_call_kwargs = mock_client.service.deploy.call_args_list[0][1]
         assert "configs" in first_call_kwargs
-        assert first_call_kwargs["configs"] == [service_config]
+        assert first_call_kwargs["configs"] == service_config
         assert first_call_kwargs["in_place"] is True
         assert first_call_kwargs["canary_percent"] == 5
         assert first_call_kwargs["max_surge_percent"] == 10
