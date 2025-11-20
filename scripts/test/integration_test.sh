@@ -1,2 +1,8 @@
 pytest -vv \
-    tests/dags/test_dag_example.py::test_dag_runs[example_dags/anyscale_service.py]
+    --cov=anyscale_provider \
+    --cov-report=term-missing \
+    --cov-report=xml \
+    --durations=0 \
+    -m integration \
+    -s \
+    --log-cli-level=DEBUG
