@@ -127,10 +127,10 @@ class TestAnyscaleHook:
 
         mock_client.service.deploy.return_value = "test_service_id"
 
-        result = self.hook.deploy_service(service_config, in_place=False, canary_percent=10, max_surge_percent=20)
+        result = self.hook.deploy_service([service_config], in_place=False, canary_percent=10, max_surge_percent=20)
 
         mock_client.service.deploy.assert_called_once_with(
-            config=service_config, in_place=False, canary_percent=10, max_surge_percent=20
+            configs=[service_config], in_place=False, canary_percent=10, max_surge_percent=20
         )
         assert result == "test_service_id"
 
@@ -144,10 +144,10 @@ class TestAnyscaleHook:
         mock_client.service.deploy.side_effect = AirflowException("Deploy service failed")
 
         with pytest.raises(AirflowException) as exc:
-            self.hook.deploy_service(service_config, in_place=False, canary_percent=10, max_surge_percent=20)
+            self.hook.deploy_service([service_config], in_place=False, canary_percent=10, max_surge_percent=20)
 
         mock_client.service.deploy.assert_called_once_with(
-            config=service_config, in_place=False, canary_percent=10, max_surge_percent=20
+            configs=[service_config], in_place=False, canary_percent=10, max_surge_percent=20
         )
         assert str(exc.value) == "Deploy service failed"
 
