@@ -77,7 +77,8 @@ class AnyscaleHook(BaseHook):
 
     def deploy_service(
         self,
-        configs: list[ServiceConfig],
+        config: ServiceConfig | None = None,
+        configs: list[ServiceConfig] | None = None,
         in_place: bool = False,
         canary_percent: int | None = None,
         max_surge_percent: int | None = None,
@@ -85,15 +86,44 @@ class AnyscaleHook(BaseHook):
         """
         Deploy a service to Anyscale.
 
-        :param config: Required. Configuration dictionary for the service.
+        :param config: (deprecated in 1.2.0) Use configs instead. Configuration dictionary for the service.
+        :param configs: Required (introduced in 1.2.0). List of configuration dictionaries for the service.
         :param in_place: Optional. Whether to perform an in-place update. Defaults to False.
         :param canary_percent: Optional. Canary percentage for deployment.
         :param max_surge_percent: Optional. Maximum surge percentage for deployment.
         """
+        # Takle Anyscale SDK breaking change
+        if config is not None and configs is not None:
+            raise AirflowException("Only one of the arguments `config` or `configs` can be provided")
+        if config is None and configs is None:
+            raise AirflowException("Either `config` or `configs`argument must be provided")
+
+        # Normalise the configuration:
+        if config is not None:
+            self.log.warning(
+                "Specifying the config in the `config` argument is deprecated. Please use the `configs` argument instead."
+            )
+            configs = [config]
+
         self.log.info(f"Deploying a service with configuration: {configs}")
-        service_id: str = self.client.service.deploy(
-            configs=configs, in_place=in_place, canary_percent=canary_percent, max_surge_percent=max_surge_percent
-        )
+
+        try:
+            # We assume this is the compatible with Anyscale SDK. It is with 0.26.75.
+            service_id: str = self.client.service.deploy(
+                configs=configs, in_place=in_place, canary_percent=canary_percent, max_surge_percent=max_surge_percent
+            )
+        except TypeError:
+            # The following used to work at some point when the provider used to be "anyscale>=0.24.54" and Anyscale SDK 0.26.75 hadn't been released yet,
+            # We noticed that `client.service.deploy` no longer accepts the `config` argument, but instead accepts the `configs` argument. It now raises the following error:
+            #     TypeError: ServiceSDK.deploy() got an unexpected keyword argument 'config'.
+            # This is a breaking change in the Anyscale SDK. Unfortunately, we can't track when this change happened, since:
+            # - Their PyPI package does not list changelog: https://pypi.org/project/anyscale
+            # - Their Python SDK is not currently available in their GitHub repository: https://github.com/anyscale
+            # To avoid a breaking change in the Astro Anyscale Provider, we need to support both versions.
+            service_id = self.client.service.deploy(
+                config=config, in_place=in_place, canary_percent=canary_percent, max_surge_percent=max_surge_percent
+            )
+
         return service_id
 
     def get_job_status(self, job_id: str) -> JobStatus:
