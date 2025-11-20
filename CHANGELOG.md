@@ -1,5 +1,34 @@
 # Changelog
 
+## 1.2.0a1 (2025-11-20)
+
+Breaking changes
+
+* Python 2.8 and 2.9 reached end-of-life and are no longer supported from this release onwards.
+
+Features
+
+* Support setting any job parameters via the `SubmitAnyscaleJob` operator by @nxlouie in https://github.com/astronomer/astro-provider-anyscale/pull/69
+* Support `RolloutAnyscaleService` non-default cloud and project by @p1c2u in https://github.com/astronomer/astro-provider-anyscale/pull/67
+* Add support to Airflow 2.10, 2.11, 3.0 and 3.1 by @tatiana in https://github.com/astronomer/astro-provider-anyscale/pull/92
+
+Others
+
+* Fix MyPy checks by @tatiana in https://github.com/astronomer/astro-provider-anyscale/pull/78
+* Remove support to Python versions that reached end-of-life by @tatiana in
+ https://github.com/astronomer/astro-provider-anyscale/pull/88
+* Change GH Actions workflow trigger type to run tests from external contributors by @tatiana in https://github.com/astronomer/astro-provider-anyscale/pull/90
+* Add missing unit test for PR #67 by @tatiana in https://github.com/astronomer/astro-provider-anyscale/pull/91
+* Fix CODEOWNERS by @schnie in https://github.com/astronomer/astro-provider-anyscale/pull/83
+* Update `test.yml`: Use pull_request for authorize as we don't have pull_request_target event configured by @pankajkoti in https://github.com/astronomer/astro-provider-anyscale/pull/72
+* Update `release.yml`: Remove unnecessary Authorize step by @pankajkoti in https://github.com/astronomer/astro-provider-anyscale/pull/73
+* Update `docs.yml`: Remove unneeded Authorize step by @pankajkoti in https://github.com/astronomer/astro-provider-anyscale/pull/74
+* Add Authorize Job in CI by @pankajastro in https://github.com/astronomer/astro-provider-anyscale/pull/71
+* Bump GitHub Actions versions in https://github.com/astronomer/astro-provider-anyscale/pull/77, https://github.com/astronomer/astro-provider-anyscale/pull/79, https://github.com/astronomer/astro-provider-anyscale/pull/80, https://github.com/astronomer/astro-provider-anyscale/pull/84, https://github.com/astronomer/astro-provider-anyscale/pull/85
+
+
+
+
 ## 1.1.0 (2025-03-31)
 
 Features
