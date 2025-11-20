@@ -127,10 +127,12 @@ class TestAnyscaleHook:
 
         mock_client.service.deploy.return_value = "test_service_id"
 
-        result = self.hook.deploy_service(service_config, in_place=False, canary_percent=10, max_surge_percent=20)
+        result = self.hook.deploy_service(
+            config=service_config, in_place=False, canary_percent=10, max_surge_percent=20
+        )
 
         mock_client.service.deploy.assert_called_once_with(
-            config=service_config, in_place=False, canary_percent=10, max_surge_percent=20
+            configs=service_config, in_place=False, canary_percent=10, max_surge_percent=20
         )
         assert result == "test_service_id"
 
@@ -144,10 +146,10 @@ class TestAnyscaleHook:
         mock_client.service.deploy.side_effect = AirflowException("Deploy service failed")
 
         with pytest.raises(AirflowException) as exc:
-            self.hook.deploy_service(service_config, in_place=False, canary_percent=10, max_surge_percent=20)
+            self.hook.deploy_service(configs=service_config, in_place=False, canary_percent=10, max_surge_percent=20)
 
         mock_client.service.deploy.assert_called_once_with(
-            config=service_config, in_place=False, canary_percent=10, max_surge_percent=20
+            configs=service_config, in_place=False, canary_percent=10, max_surge_percent=20
         )
         assert str(exc.value) == "Deploy service failed"
 
@@ -317,3 +319,64 @@ class TestAnyscaleHook:
             mock_terminate.assert_called_once_with(name="test_service")
             mock_sleep.assert_called_once_with(1)
             assert result is True
+
+    @patch("anyscale_provider.hooks.anyscale.AnyscaleHook.client")
+    def test_deploy_service_both_config_and_configs_provided(self, mock_client):
+        """Test that exception is raised when both config and configs are provided (line 97)"""
+        mock_client.return_value = mock_anyscale
+        service_config = ServiceConfig(
+            name="test_service", applications=[{"name": "app1", "import_path": "module.optional_submodule:app"}]
+        )
+
+        with pytest.raises(AirflowException) as exc:
+            self.hook.deploy_service(config=service_config, configs=[service_config])
+
+        assert str(exc.value) == "Only one of the arguments `config` or `configs` can be provided"
+
+    @patch("anyscale_provider.hooks.anyscale.AnyscaleHook.client")
+    def test_deploy_service_neither_config_nor_configs_provided(self, mock_client):
+        """Test that exception is raised when neither config nor configs are provided (line 99)"""
+        mock_client.return_value = mock_anyscale
+
+        with pytest.raises(AirflowException) as exc:
+            self.hook.deploy_service()
+
+        assert str(exc.value) == "Either `config` or `configs`argument must be provided"
+
+    @patch("anyscale_provider.hooks.anyscale.AnyscaleHook.client")
+    def test_deploy_service_fallback_to_old_sdk(self, mock_client):
+        """Test fallback to old SDK API when TypeError is raised (line 121-124)"""
+        mock_client.return_value = mock_anyscale
+        service_config = ServiceConfig(
+            name="test_service", applications=[{"name": "app1", "import_path": "module.optional_submodule:app"}]
+        )
+
+        # Make the first call raise TypeError (new SDK doesn't support 'configs')
+        # Then make the second call succeed with the old 'config' parameter
+        mock_client.service.deploy.side_effect = [
+            TypeError("ServiceSDK.deploy() got an unexpected keyword argument 'configs'"),
+            "test_service_id",
+        ]
+
+        result = self.hook.deploy_service(config=service_config, in_place=True, canary_percent=5, max_surge_percent=10)
+
+        # Check that deploy was called twice: first with configs, then with config
+        assert mock_client.service.deploy.call_count == 2
+
+        # First call should use 'configs' (new SDK style)
+        first_call_kwargs = mock_client.service.deploy.call_args_list[0][1]
+        assert "configs" in first_call_kwargs
+        assert first_call_kwargs["configs"] == service_config
+        assert first_call_kwargs["in_place"] is True
+        assert first_call_kwargs["canary_percent"] == 5
+        assert first_call_kwargs["max_surge_percent"] == 10
+
+        # Second call should use 'config' (old SDK style)
+        second_call_kwargs = mock_client.service.deploy.call_args_list[1][1]
+        assert "config" in second_call_kwargs
+        assert second_call_kwargs["config"] == service_config
+        assert second_call_kwargs["in_place"] is True
+        assert second_call_kwargs["canary_percent"] == 5
+        assert second_call_kwargs["max_surge_percent"] == 10
+
+        assert result == "test_service_id"
