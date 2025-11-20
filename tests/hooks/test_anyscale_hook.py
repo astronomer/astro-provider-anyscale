@@ -132,7 +132,7 @@ class TestAnyscaleHook:
         )
 
         mock_client.service.deploy.assert_called_once_with(
-            configs=[service_config], in_place=False, canary_percent=10, max_surge_percent=20
+            configs=[service_config], in_place=False, canary_percent=10, max_surge_percent=20, versions=None
         )
         assert result == "test_service_id"
 
@@ -149,7 +149,7 @@ class TestAnyscaleHook:
             self.hook.deploy_service(configs=[service_config], in_place=False, canary_percent=10, max_surge_percent=20)
 
         mock_client.service.deploy.assert_called_once_with(
-            configs=[service_config], in_place=False, canary_percent=10, max_surge_percent=20
+            configs=[service_config], in_place=False, canary_percent=10, max_surge_percent=20, versions=None
         )
         assert str(exc.value) == "Deploy service failed"
 

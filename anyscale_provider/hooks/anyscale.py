@@ -110,7 +110,11 @@ class AnyscaleHook(BaseHook):
         try:
             # We assume this is the compatible with Anyscale SDK. It is with 0.26.75.
             service_id: str = self.client.service.deploy(
-                configs=configs, in_place=in_place, canary_percent=canary_percent, max_surge_percent=max_surge_percent
+                configs=configs,
+                in_place=in_place,
+                canary_percent=canary_percent,
+                max_surge_percent=max_surge_percent,
+                versions=None,
             )
         except TypeError:
             # The following used to work at some point when the provider used to be "anyscale>=0.24.54" and Anyscale SDK 0.26.75 hadn't been released yet,
