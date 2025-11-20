@@ -2,7 +2,7 @@ name: Deploy Sphinx documentation to Pages
 
 on:
   push:
-    branches: [main, fix-sphinx-build]
+    branches: [main]
 
 permissions:
   contents: read
