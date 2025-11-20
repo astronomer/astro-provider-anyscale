@@ -1,12 +1,13 @@
 from airflow import __version__ as airflow_version
-from airflow.models.dag import DAG, DAGRun
+from airflow.models.dag import DAG
+from airflow.models.dagrun import DagRun
 from airflow.utils import timezone
 from packaging import version
 
 AIRFLOW_VERSION = version.parse(airflow_version)
 
 
-def test_dag(dag: DAG) -> DAGRun:
+def test_dag(dag: DAG) -> DagRun:
     """Test a DAG run."""
     if AIRFLOW_VERSION >= version.Version("3.1"):
         # Airflow 3.1+ requires DAG to be serialized to database before calling dag.test()

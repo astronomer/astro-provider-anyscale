@@ -2,7 +2,8 @@ import os
 from pathlib import Path
 
 import pytest
-from airflow.models import Connection, DagBag
+from airflow.models import Connection
+from airflow.models.dagbag import DagBag
 from airflow.utils.db import create_default_connections
 from airflow.utils.session import create_session
 from airflow.utils.state import State
