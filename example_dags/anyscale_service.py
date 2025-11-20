@@ -1,17 +1,3 @@
-# This DAG is currently not working as expected.
-# It fails with:
-#  File "/Users/tatiana.alchueyr/Library/Application Support/hatch/env/virtual/astro-provider-anyscale/MZnqhpLD/tests.py3.11-2.11/lib/python3.11/site-packages/airflow/models/baseoperator.py", line 424, in wrapper
-#    return func(self, *args, **kwargs)
-#           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-#  File "/Users/tatiana.alchueyr/Code/astro-provider-anyscale/anyscale_provider/operators/anyscale.py", line 385, in execute
-#    self.service_id = self.hook.deploy_service(
-#                      ^^^^^^^^^^^^^^^^^^^^^^^^^
-#  File "/Users/tatiana.alchueyr/Code/astro-provider-anyscale/anyscale_provider/hooks/anyscale.py", line 99, in deploy_service
-#    service_id: str = self.client.service.deploy(
-#                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-# This is unrelated to the Airflow 3 support. It relates to a breaking change in the Anyscale SDK and I'm addressing it in a separate PR.
-
-"""
 import os
 import uuid
 from datetime import datetime
