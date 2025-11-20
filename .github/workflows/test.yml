@@ -111,7 +111,7 @@ jobs:
           ID="${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}-${{ matrix.python-version }}-${{ matrix.airflow-version }}"
           # Service names must be no longer than 57 characters and can only contain alphanumeric characters, dashes, and underscores
           ID_CLEANED=$(echo $ID | tr '.' '-' | tr '/' '-')  # Replace dots and forward slashes with hyphens so it is a valid Service name
-          echo ASTRO_ANYSCALE_PROVIDER_SERVICE_ID
+          echo $ID_CLEANED
           ASTRO_ANYSCALE_PROVIDER_SERVICE_ID=$ID_CLEANED hatch run tests.py${{ matrix.python-version }}-${{ matrix.airflow-version }}:test-integration
         env:
           ANYSCALE_CLI_TOKEN: ${{ secrets.ANYSCALE_CLI_TOKEN }}

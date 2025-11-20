@@ -2,6 +2,7 @@ from airflow import __version__ as airflow_version
 from airflow.models.dag import DAG
 from airflow.models.dagrun import DagRun
 from airflow.utils import timezone
+from airflow.utils.state import State
 from packaging import version
 
 AIRFLOW_VERSION = version.parse(airflow_version)
@@ -33,4 +34,6 @@ def test_dag(dag: DAG) -> DagRun:
         dag_run = dag.test(logical_date=timezone.utcnow())
     else:
         dag_run = dag.test()
+    assert dag_run is not None, f"DAG run for DAG {dag.dag_id} not found!"
+    assert dag_run.state == State.SUCCESS, f"DAG run for DAG {dag.dag_id} failed!"
     return dag_run
