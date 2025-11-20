@@ -77,7 +77,7 @@ class AnyscaleHook(BaseHook):
 
     def deploy_service(
         self,
-        config: ServiceConfig,
+        configs: list[ServiceConfig],
         in_place: bool = False,
         canary_percent: int | None = None,
         max_surge_percent: int | None = None,
@@ -90,9 +90,9 @@ class AnyscaleHook(BaseHook):
         :param canary_percent: Optional. Canary percentage for deployment.
         :param max_surge_percent: Optional. Maximum surge percentage for deployment.
         """
-        self.log.info(f"Deploying a service with configuration: {config}")
+        self.log.info(f"Deploying a service with configuration: {configs}")
         service_id: str = self.client.service.deploy(
-            config=config, in_place=in_place, canary_percent=canary_percent, max_surge_percent=max_surge_percent
+            configs=configs, in_place=in_place, canary_percent=canary_percent, max_surge_percent=max_surge_percent
         )
         return service_id
 
