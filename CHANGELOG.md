@@ -12,8 +12,13 @@ Features
 * Support `RolloutAnyscaleService` non-default cloud and project by @p1c2u in https://github.com/astronomer/astro-provider-anyscale/pull/67
 * Add support to Airflow 2.10, 2.11, 3.0 and 3.1 by @tatiana in https://github.com/astronomer/astro-provider-anyscale/pull/92
 
+Bug fixes
+
+* Fix ``RolloutAnyscaleService`` after Anyscale SDK breaking change by @tatiana in https://github.com/astronomer/astro-provider-anyscale/pull/94
+
 Others
 
+* Fix Sphinx docs generation by @tatiana in https://github.com/astronomer/astro-provider-anyscale/pull/95
 * Fix MyPy checks by @tatiana in https://github.com/astronomer/astro-provider-anyscale/pull/78
 * Remove support to Python versions that reached end-of-life by @tatiana in
  https://github.com/astronomer/astro-provider-anyscale/pull/88
