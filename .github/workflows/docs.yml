@@ -15,23 +15,13 @@ concurrency:
 
 jobs:
   build-and-deploy:
-    runs-on: ubuntu-20.04
-
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    permissions:
+      pages: write
+      id-token: write
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v5
-
-      - name: Set up Python
-        uses: actions/setup-python@v6
-        with:
-          python-version: '3.x'
-
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: sphinx-notes/pages@v3
-        with:
-          repository_path: '.'
-          documentation_path: 'docs'
-          requirements_path: 'docs/requirements.txt'
-          publish: 'true'
-          sphinx_build_options: ''
+      - id: deployment
+        uses: sphinx-notes/pages@e9c8f79f285fb41a150ba6e08a3c2a29635e7ee1  # v3.5
