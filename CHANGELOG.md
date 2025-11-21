@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.2.0a1 (2025-11-20)
+## 1.2.0a1 (2025-11-21)
 
 Breaking changes
 
@@ -18,6 +18,7 @@ Bug fixes
 
 Others
 
+* Fix CI Anyscale Service id name by @tatiana in https://github.com/astronomer/astro-provider-anyscale/pull/97
 * Fix Sphinx docs generation by @tatiana in https://github.com/astronomer/astro-provider-anyscale/pull/95
 * Fix MyPy checks by @tatiana in https://github.com/astronomer/astro-provider-anyscale/pull/78
 * Remove support to Python versions that reached end-of-life by @tatiana in
@@ -28,8 +29,9 @@ Others
 * Update `test.yml`: Use pull_request for authorize as we don't have pull_request_target event configured by @pankajkoti in https://github.com/astronomer/astro-provider-anyscale/pull/72
 * Update `release.yml`: Remove unnecessary Authorize step by @pankajkoti in https://github.com/astronomer/astro-provider-anyscale/pull/73
 * Update `docs.yml`: Remove unneeded Authorize step by @pankajkoti in https://github.com/astronomer/astro-provider-anyscale/pull/74
+* Improve type-checking implementation by @tatiana in https://github.com/astronomer/astro-provider-anyscale/pull/98
 * Add Authorize Job in CI by @pankajastro in https://github.com/astronomer/astro-provider-anyscale/pull/71
-* Bump GitHub Actions versions in https://github.com/astronomer/astro-provider-anyscale/pull/77, https://github.com/astronomer/astro-provider-anyscale/pull/79, https://github.com/astronomer/astro-provider-anyscale/pull/80, https://github.com/astronomer/astro-provider-anyscale/pull/84, https://github.com/astronomer/astro-provider-anyscale/pull/85
+* Bump GitHub Actions versions in https://github.com/astronomer/astro-provider-anyscale/pull/96, https://github.com/astronomer/astro-provider-anyscale/pull/77, https://github.com/astronomer/astro-provider-anyscale/pull/79, https://github.com/astronomer/astro-provider-anyscale/pull/80, https://github.com/astronomer/astro-provider-anyscale/pull/84, https://github.com/astronomer/astro-provider-anyscale/pull/85
 
 
 
