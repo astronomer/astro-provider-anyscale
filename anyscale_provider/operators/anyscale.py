@@ -189,9 +189,6 @@ class SubmitAnyscaleJob(BaseOperator):
                     method_name="execute_complete",
                     timeout=timedelta(seconds=self.job_timeout_seconds),
                 )
-                # Note: defer() raises TaskDeferred exception and doesn't return
-                # This line is unreachable but needed for type checking
-                return self.job_id
             else:
                 raise Exception(f"Unexpected state `{current_state}` for job_id `{self.job_id}`.")
         return self.job_id
