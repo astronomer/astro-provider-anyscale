@@ -2,7 +2,7 @@ name: test
 
 on:
   push:
-    branches: [ "main", "airflow3-support" ]
+    branches: [ "main" ]
   pull_request_target:
     branches: [ "main" ]
 
