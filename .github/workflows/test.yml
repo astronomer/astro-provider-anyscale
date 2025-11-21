@@ -2,7 +2,7 @@ name: test
 
 on:
   push:
-    branches: [ "main"]
+    branches: [ "main" ]
   pull_request_target:
     branches: [ "main" ]
 
@@ -35,9 +35,10 @@ jobs:
     needs: Authorize
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         python-version: ["3.10", "3.11", "3.12"]
-        airflow-version: ["2.7", "2.8", "2.9"]
+        airflow-version: ["2.7", "2.8", "2.9", "2.10", "2.11", "3.0", "3.1"]
         exclude:
           - python-version: "3.12"
             airflow-version: "2.7"
@@ -80,9 +81,10 @@ jobs:
     needs: Authorize
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         python-version: ["3.11"]
-        airflow-version: ["2.9"]
+        airflow-version: ["2.11", "3.1"]
     steps:
       - uses: actions/checkout@v6
         with:
@@ -109,7 +111,7 @@ jobs:
           ID="${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}-${{ matrix.airflow-version }}"
           # Service names must be no longer than 57 characters and can only contain alphanumeric characters, dashes, and underscores
           ID_CLEANED=$(echo $ID | tr '.' '-' | tr '/' '-')  # Replace dots and forward slashes with hyphens so it is a valid Service name
-          echo ASTRO_ANYSCALE_PROVIDER_SERVICE_ID
+          echo $ID_CLEANED
           ASTRO_ANYSCALE_PROVIDER_SERVICE_ID=$ID_CLEANED hatch run tests.py${{ matrix.python-version }}-${{ matrix.airflow-version }}:test-integration
         env:
           ANYSCALE_CLI_TOKEN: ${{ secrets.ANYSCALE_CLI_TOKEN }}

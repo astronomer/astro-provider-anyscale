@@ -2,9 +2,12 @@ import os
 from pathlib import Path
 
 import pytest
-from airflow.models import Connection, DagBag
+from airflow.models import Connection
+from airflow.models.dagbag import DagBag
 from airflow.utils.db import create_default_connections
 from airflow.utils.session import create_session
+
+from tests.utils import test_dag
 
 # Correctly construct the example DAGs directory path
 EXAMPLE_DAGS_DIR = Path(__file__).parent.parent.parent / "example_dags"
@@ -56,8 +59,4 @@ def test_dag_runs(setup_airflow_db, dag_id, dag, fileloc):
     if not os.getenv("ANYSCALE_CLI_TOKEN"):
         pytest.fail("ANYSCALE_CLI_TOKEN environment variable is not set. Failing early.")
 
-    try:
-        dag.test()
-    except Exception as e:
-        print(f"Error running DAG {dag_id}: {e}")
-        raise e
+    test_dag(dag)

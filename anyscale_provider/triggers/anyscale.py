@@ -1,10 +1,9 @@
 from __future__ import annotations
 
 import asyncio
-from functools import partial
+from functools import cached_property, partial
 from typing import Any, AsyncIterator
 
-from airflow.compat.functools import cached_property
 from airflow.triggers.base import BaseTrigger, TriggerEvent
 from anyscale.job.models import JobState
 from anyscale.service.models import ServiceState

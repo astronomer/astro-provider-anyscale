@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 from datetime import timedelta
+from functools import cached_property
 from typing import Any
 
 import anyscale
-from airflow.compat.functools import cached_property
 from airflow.exceptions import AirflowException
 from airflow.models import BaseOperator
 from airflow.utils.context import Context
@@ -189,6 +189,9 @@ class SubmitAnyscaleJob(BaseOperator):
                     method_name="execute_complete",
                     timeout=timedelta(seconds=self.job_timeout_seconds),
                 )
+                # Note: defer() raises TaskDeferred exception and doesn't return
+                # This line is unreachable but needed for type checking
+                return self.job_id
             else:
                 raise Exception(f"Unexpected state `{current_state}` for job_id `{self.job_id}`.")
         return self.job_id
