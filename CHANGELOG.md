@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.2.0a1 (2025-11-21)
+## 1.2.0 (2025-11-24)
 
 Breaking changes
 
