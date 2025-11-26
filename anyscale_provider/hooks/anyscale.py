@@ -141,7 +141,7 @@ class AnyscaleHook(BaseHook):  # type: ignore[misc]
 
         :param job_id: The ID of the job.
         """
-        self.log.info(f"Fetching job status for Job ID: {job_id}")
+        self.log.debug(f"Fetching job status for Job ID: {job_id}")
         return self.client.job.status(id=job_id)
 
     def get_service_status(
@@ -157,7 +157,7 @@ class AnyscaleHook(BaseHook):  # type: ignore[misc]
         :param cloud: Optional. The cloud name for the service.
         :param project: Optional. The project name for the service.
         """
-        self.log.info(f"Fetching service status for Service: {service_name}")
+        self.log.debug(f"Fetching service status for Service: {service_name}")
         return self.client.service.status(name=service_name, cloud=cloud, project=project)
 
     def terminate_job(self, job_id: str, time_delay: int) -> bool:

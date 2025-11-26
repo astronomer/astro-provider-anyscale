@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import timedelta
+import time
 from functools import cached_property
 from typing import Any
 
@@ -10,10 +10,9 @@ from airflow.models import BaseOperator
 from airflow.utils.context import Context
 from anyscale.compute_config.models import ComputeConfig
 from anyscale.job.models import JobConfig, JobQueueConfig, JobState
-from anyscale.service.models import RayGCSExternalStorageConfig, ServiceConfig, ServiceState
+from anyscale.service.models import RayGCSExternalStorageConfig, ServiceConfig
 
 from anyscale_provider.hooks.anyscale import AnyscaleHook
-from anyscale_provider.triggers.anyscale import AnyscaleJobTrigger, AnyscaleServiceTrigger
 
 
 class SubmitAnyscaleJob(BaseOperator):
@@ -40,6 +39,9 @@ class SubmitAnyscaleJob(BaseOperator):
     :param project: Optional. The Anyscale project to run this workload in. If not provided, the organization default will be used (or, if running in a workspace, the project of the workspace).
     :param max_retries: Optional. Maximum number of times the job will be retried before being marked failed. Defaults to `1`.
     :param extra_job_params: Optional. A dictionary of job parameters that allows you to pass in any additional parameters that are not supported above by the operator. Will be passed to the Anyscale JobConfig object.
+    :param wait_for_completion: Optional. Whether to wait for the job to complete before returning. Defaults to `True`.
+    :param job_timeout_seconds: Optional. The timeout in seconds for the Anyscalejob to complete. Defaults to `3600` seconds.
+    :param poll_interval: Optional. The interval in seconds to poll the job status. Defaults to `60` seconds.
     """
 
     template_fields = (
@@ -134,10 +136,9 @@ class SubmitAnyscaleJob(BaseOperator):
         Execute the job submission to Anyscale.
 
         This method submits the job to Anyscale and handles its initial status.
-        It defers the execution to a trigger if the job is still running or starting.
 
         :param context: The Airflow context.
-        :return: The job ID if the job is successfully submitted and completed, or None if the job is deferred.
+        :return: The job ID if the job is successfully submitted and completed.
         """
 
         job_params: dict[str, Any] = {
@@ -170,49 +171,33 @@ class SubmitAnyscaleJob(BaseOperator):
 
         self.log.info(f"Submitted Anyscale job with ID: {self.job_id}")
 
+        # TODO: Leverage the Airflow triggerer mechanism to poll the job status.
+        # This can only happen once we can check asynchronously the Anyscale job status,
+        # something that is currently not possible with the latest Anyscale SDK version (0.26.75).
+        # A possible path forward is to use the Anyscale API directly to enable this capability.
         if self.wait_for_completion:
+            has_succeeded = False
+            for _ in range(int(self.job_timeout_seconds // self.poll_interval)):
+                job_status = self.hook.get_job_status(self.job_id)
+                current_state = str(job_status.state)
+                self.log.info(f"Current job state for {self.job_id} is: {current_state}")
+                if current_state == JobState.SUCCEEDED:
+                    self.log.info(f"Job {self.job_id} completed successfully.")
+                    has_succeeded = True
+                    break
+                elif current_state == JobState.FAILED:
+                    raise AirflowException(f"Job {self.job_id} failed.")
+                time.sleep(self.poll_interval)
+
+            if not has_succeeded:
+                raise AirflowException(
+                    f"Job {self.job_id} in {current_state} after {self.job_timeout_seconds} seconds."
+                )
+
             current_state = str(self.hook.get_job_status(self.job_id).state)
             self.log.info(f"Current job state for {self.job_id} is: {current_state}")
 
-            if current_state == JobState.SUCCEEDED:
-                self.log.info(f"Job {self.job_id} completed successfully.")
-            elif current_state == JobState.FAILED:
-                raise AirflowException(f"Job {self.job_id} failed.")
-            elif current_state in (JobState.STARTING, JobState.RUNNING):
-                self.defer(
-                    trigger=AnyscaleJobTrigger(
-                        conn_id=self.conn_id,
-                        job_id=self.job_id,
-                        poll_interval=self.poll_interval,
-                        fetch_logs=self.fetch_logs,
-                    ),
-                    method_name="execute_complete",
-                    timeout=timedelta(seconds=self.job_timeout_seconds),
-                )
-            else:
-                raise Exception(f"Unexpected state `{current_state}` for job_id `{self.job_id}`.")
         return self.job_id
-
-    def execute_complete(self, context: Context, event: Any) -> str:
-        """
-        Complete the execution of the job based on the trigger event.
-
-        This method is called when the trigger fires and provides the final status
-        of the job. It raises an exception if the job failed.
-
-        :param context: The Airflow context.
-        :param event: The event data from the trigger.
-        :return: None
-        """
-        current_job_id: str = event["job_id"]
-
-        if event["state"] == JobState.FAILED:
-            self.log.info(f"Anyscale job {current_job_id} ended with state: {event['state']}")
-            raise AirflowException(f"Job {current_job_id} failed with error {event['message']}")
-        else:
-            self.log.info(f"Anyscale job {current_job_id} completed with state: {event['state']}")
-
-        return current_job_id
 
 
 class RolloutAnyscaleService(BaseOperator):
@@ -246,6 +231,8 @@ class RolloutAnyscaleService(BaseOperator):
     :param max_surge_percent: Optional[float]. Maximum percentage of surge during deployment. Defaults to None.
     :param service_rollout_timeout_seconds: Optional[int]. Duration after which the trigger tracking the model deployment times out. Defaults to 600 seconds.
     :param poll_interval: Optional[int]. Interval to poll the service status. Defaults to 60 seconds.
+    :param wait_for_completion: Optional. Whether to wait for the service to complete before returning. Defaults to `True`.
+    :param service_rollout_timeout_seconds: Optional. The timeout in seconds for the Anyscale service rollout to complete. Defaults to `600` seconds.
     """
 
     template_fields = (
@@ -272,6 +259,7 @@ class RolloutAnyscaleService(BaseOperator):
         "max_surge_percent",
         "service_rollout_timeout_seconds",
         "poll_interval",
+        "wait_for_completion",
     )
 
     def __init__(
@@ -299,6 +287,7 @@ class RolloutAnyscaleService(BaseOperator):
         max_surge_percent: int | None = None,
         service_rollout_timeout_seconds: float = 600,
         poll_interval: float = 60,
+        wait_for_completion: bool = True,
         **kwargs: Any,
     ) -> None:
         super().__init__(**kwargs)
@@ -325,6 +314,7 @@ class RolloutAnyscaleService(BaseOperator):
         self.in_place = in_place
         self.canary_percent = canary_percent
         self.max_surge_percent = max_surge_percent
+        self.wait_for_completion = wait_for_completion
 
     @cached_property
     def hook(self) -> AnyscaleHook:
@@ -343,15 +333,15 @@ class RolloutAnyscaleService(BaseOperator):
             self.log.info("Termination request received. Submitted request to terminate the anyscale service rollout.")
         return
 
-    def execute(self, context: Context) -> None:
+    def execute(self, context: Context) -> str:
         """
         Execute the service rollout to Anyscale.
 
         This method deploys the service to Anyscale with the provided configuration
-        and parameters. It defers the execution to a trigger if the service is in progress.
+        and parameters.
 
         :param context: The Airflow context.
-        :return: The service ID if the rollout is successfully initiated, or None if the job is deferred.
+        :return: The service ID if the rollout is successfully initiated.
         """
         service_params = {
             "name": self.name,
@@ -389,40 +379,30 @@ class RolloutAnyscaleService(BaseOperator):
 
         self.log.info(f"Service rollout id: {self.service_id}")
 
-        self.defer(
-            trigger=AnyscaleServiceTrigger(
-                conn_id=self.conn_id,
-                service_name=self.name,
-                expected_state=ServiceState.RUNNING,
-                canary_percent=self.canary_percent,
-                cloud=self.cloud,
-                project=self.project,
-                poll_interval=self.poll_interval,
-            ),
-            method_name="execute_complete",
-            timeout=timedelta(seconds=self.service_rollout_timeout_seconds),
-        )
+        # TODO: Leverage the Airflow triggerer mechanism to poll the job status.
+        # This can only happen once we can check asynchronously the Anyscale job status,
+        # something that is currently not possible with the latest Anyscale SDK version (0.26.75).
+        # A possible path forward is to use the Anyscale API directly to enable this capability.
+        if self.wait_for_completion:
+            has_succeeded = False
+            for _ in range(int(self.service_rollout_timeout_seconds // self.poll_interval)):
+                job_status = self.hook.get_job_status(self.service_id)
+                current_state = str(job_status.state)
+                self.log.info(f"Current job state for {self.service_id} is: {current_state}")
+                if current_state == JobState.SUCCEEDED:
+                    self.log.info(f"Job {self.service_id} completed successfully.")
+                    has_succeeded = True
+                    break
+                elif current_state == JobState.FAILED:
+                    raise AirflowException(f"Job {self.service_id} failed.")
+                time.sleep(self.poll_interval)
 
-    def execute_complete(self, context: Context, event: Any) -> None:
-        """
-        Complete the execution of the service rollout based on the trigger event.
+            if not has_succeeded:
+                raise AirflowException(
+                    f"Job {self.service_id} in {current_state} after {self.service_rollout_timeout_seconds} seconds."
+                )
 
-        This method is called when the trigger fires and provides the final status
-        of the service rollout. It raises an exception if the rollout failed.
+            current_state = str(self.hook.get_job_status(self.service_id).state)
+            self.log.info(f"Current job state for {self.service_id} is: {current_state}")
 
-        :param context: The Airflow context.
-        :param event: The event data from the trigger.
-        :return: None
-        """
-        service_name = event["service_name"]
-        state = event["state"]
-
-        self.log.info(f"Execution completed for service {service_name} with state: {state}")
-
-        if state == ServiceState.SYSTEM_FAILURE:
-            error_message = event.get("message", "")
-            error_msg = f"Anyscale service deployment {service_name} failed with error: {error_message}"
-            self.log.error(error_msg)
-            raise AirflowException(error_msg)
-        else:
-            self.log.info(f"Anyscale service deployment {service_name} completed successfully")
+        return self.service_id
