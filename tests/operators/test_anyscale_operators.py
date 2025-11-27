@@ -49,10 +49,11 @@ class TestSubmitAnyscaleJob(unittest.TestCase):
 
     @patch("anyscale_provider.operators.anyscale.SubmitAnyscaleJob.hook")
     def test_execute_failure(self, mock_hook):
+        assert False
         # event = {"state": JobState.FAILED, "job_id": "123", "message": "Job failed with error"}
-        with self.assertRaises(AirflowException) as context:
-            self.operator.execute(Context())
-        self.assertTrue("Job 123 failed with error" in str(context.exception))
+        # with self.assertRaises(AirflowException) as context:
+        #    self.operator.execute(Context())
+        # self.assertTrue("Job 123 failed with error" in str(context.exception))
 
     @patch("anyscale_provider.operators.anyscale.SubmitAnyscaleJob.hook", new_callable=PropertyMock)
     def test_check_anyscale_hook(self, mock_hook_property):
@@ -123,6 +124,7 @@ class TestRolloutAnyscaleService(unittest.TestCase):
             task_id="rollout_service_test",
             cloud="test_cloud",
             project="test_project",
+            do_xcom_push=False,
         )
 
     @patch("anyscale_provider.operators.anyscale.RolloutAnyscaleService.hook")
@@ -135,10 +137,11 @@ class TestRolloutAnyscaleService(unittest.TestCase):
 
     @patch("anyscale_provider.operators.anyscale.RolloutAnyscaleService.hook")
     def test_execute_failed(self, mock_hook):
+        assert False
         # event = {"state": ServiceState.SYSTEM_FAILURE, "service_name": "service123", "message": "Deployment failed"}
-        with self.assertRaises(AirflowException) as cm:
-            self.operator.execute(Context())
-        self.assertIn("Anyscale service deployment service123 failed with error", str(cm.exception))
+        # with self.assertRaises(AirflowException) as cm:
+        #    self.operator.execute(Context())
+        # self.assertIn("Anyscale service deployment service123 failed with error", str(cm.exception))
 
     @patch("anyscale_provider.operators.anyscale.RolloutAnyscaleService.hook", new_callable=PropertyMock)
     def test_check_anyscale_hook(self, mock_hook_property):
