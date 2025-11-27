@@ -4,7 +4,7 @@
 
 Breaking changes
 
-* `SubmitAnyscaleJob` and `RolloutAnyscaleService` are no longer Airflow deferrable operators. For more information check https://github.com/astronomer/astro-provider-anyscale/pull/99.
+* `SubmitAnyscaleJob` and `RolloutAnyscaleService` are no longer Airflow deferrable operators. For more information, check https://github.com/astronomer/astro-provider-anyscale/pull/99.
 
 Bug fixes
 
