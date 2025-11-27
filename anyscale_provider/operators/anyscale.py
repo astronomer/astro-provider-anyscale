@@ -398,7 +398,7 @@ class RolloutAnyscaleService(BaseOperator):
         if self.wait_for_completion:
             has_succeeded = False
             for _ in range(int(self.service_rollout_timeout_seconds // self.poll_interval)):
-                service_status = self.hook.get_service_status(name=self.name)
+                service_status = self.hook.get_service_status(service_name=self.name)
                 current_state = str(service_status.state)
                 self.log.info(f"Current service state for {self.name} is: {current_state}")
                 if current_state == ServiceState.RUNNING:
