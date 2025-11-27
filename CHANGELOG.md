@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.3.0 (2025-12-02)
+
+Breaking changes
+
+* `SubmitAnyscaleJob` and `RolloutAnyscaleService` are no longer Airflow deferrable operators. For more information check https://github.com/astronomer/astro-provider-anyscale/pull/99.
+
+Bug fixes
+
+* Fix Triggerer's async thread was blocked from being blocked by @tatiana in https://github.com/astronomer/astro-provider-anyscale/pull/99
+
+
 ## 1.2.0 (2025-11-24)
 
 Breaking changes
