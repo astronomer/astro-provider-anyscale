@@ -187,7 +187,6 @@ class SubmitAnyscaleJob(BaseOperator):
                 current_state = str(job_status.state)
                 self.log.info(f"Current job state for {self.job_id} is: {current_state}")
                 if current_state == JobState.SUCCEEDED:
-                    self.log.info(f"Job {self.job_id} completed successfully.")
                     has_succeeded = True
                     break
                 elif current_state in failure_states:
