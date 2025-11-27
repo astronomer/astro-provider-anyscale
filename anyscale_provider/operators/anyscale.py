@@ -411,7 +411,7 @@ class RolloutAnyscaleService(BaseOperator):
                 time.sleep(self.poll_interval)
             if not has_succeeded:
                 raise AirflowException(
-                    f"Service {self.name} timed out after {self.service_rollout_timeout_seconds} seconds. The service was not complete within the desired service_rollout_timeout_seconds: {self.service_rollout_timeout_seconds}."
+                    f"Service {self.name} was not completed after {self.service_rollout_timeout_seconds} seconds."
                 )
         else:
             service_status = self.hook.get_service_status(name=self.name)
