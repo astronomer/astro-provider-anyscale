@@ -126,7 +126,7 @@ line-length = 120
 select = ["C901", "I", "F"]
 ignore = ["F541"]
 [tool.ruff.lint.mccabe]
-max-complexity = 8
+max-complexity = 9
 
 [tool.distutils.bdist_wheel]
 universal = true

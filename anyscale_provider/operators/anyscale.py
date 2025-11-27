@@ -10,7 +10,7 @@ from airflow.models import BaseOperator
 from airflow.utils.context import Context
 from anyscale.compute_config.models import ComputeConfig
 from anyscale.job.models import JobConfig, JobQueueConfig, JobState
-from anyscale.service.models import RayGCSExternalStorageConfig, ServiceConfig
+from anyscale.service.models import RayGCSExternalStorageConfig, ServiceConfig, ServiceState
 
 from anyscale_provider.hooks.anyscale import AnyscaleHook
 
@@ -171,12 +171,17 @@ class SubmitAnyscaleJob(BaseOperator):
 
         self.log.info(f"Submitted Anyscale job with ID: {self.job_id}")
 
+        # Failure states based in https://docs.anyscale.com/reference/job-api#jobstate
+        failure_states = [JobState.FAILED, JobState.UNKNOWN]
+
         # TODO: Leverage the Airflow triggerer mechanism to poll the job status.
         # This can only happen once we can check asynchronously the Anyscale job status,
         # something that is currently not possible with the latest Anyscale SDK version (0.26.75).
         # A possible path forward is to use the Anyscale API directly to enable this capability.
+
         if self.wait_for_completion:
             has_succeeded = False
+            # This loop will complete running in one out of two scenarios:
             for _ in range(int(self.job_timeout_seconds // self.poll_interval)):
                 job_status = self.hook.get_job_status(self.job_id)
                 current_state = str(job_status.state)
@@ -185,17 +190,20 @@ class SubmitAnyscaleJob(BaseOperator):
                     self.log.info(f"Job {self.job_id} completed successfully.")
                     has_succeeded = True
                     break
-                elif current_state == JobState.FAILED:
+                elif current_state in failure_states:
                     raise AirflowException(f"Job {self.job_id} failed.")
                 time.sleep(self.poll_interval)
-
+                job_status = self.hook.get_job_status(self.job_id)
             if not has_succeeded:
                 raise AirflowException(
-                    f"Job {self.job_id} in {current_state} after {self.job_timeout_seconds} seconds."
+                    f"Job {self.job_id} timed out after {self.job_timeout_seconds} seconds. The job was not complete within the desired job_timeout_seconds: {self.job_timeout_seconds}."
                 )
-
-            current_state = str(self.hook.get_job_status(self.job_id).state)
+        else:
+            job_status = self.hook.get_job_status(self.job_id)
+            current_state = str(job_status.state)
             self.log.info(f"Current job state for {self.job_id} is: {current_state}")
+            if current_state in failure_states:
+                raise AirflowException(f"Job {self.job_id} failed.")
 
         return self.job_id
 
@@ -232,7 +240,6 @@ class RolloutAnyscaleService(BaseOperator):
     :param service_rollout_timeout_seconds: Optional[int]. Duration after which the trigger tracking the model deployment times out. Defaults to 600 seconds.
     :param poll_interval: Optional[int]. Interval to poll the service status. Defaults to 60 seconds.
     :param wait_for_completion: Optional. Whether to wait for the service to complete before returning. Defaults to `True`.
-    :param service_rollout_timeout_seconds: Optional. The timeout in seconds for the Anyscale service rollout to complete. Defaults to `600` seconds.
     """
 
     template_fields = (
@@ -379,30 +386,38 @@ class RolloutAnyscaleService(BaseOperator):
 
         self.log.info(f"Service rollout id: {self.service_id}")
 
+        # Failure states based on https://docs.anyscale.com/reference/service-api#servicestate
+        # Keeping in mind that TERMINATED is expected, temporarily, since this is a rollout operation.
+        # Once the service is being rolled out, it is also expected it may be temporarily UNHEALTHY.
+        failure_states = [ServiceState.SYSTEM_FAILURE, ServiceState.UNKNOWN]
+
         # TODO: Leverage the Airflow triggerer mechanism to poll the job status.
         # This can only happen once we can check asynchronously the Anyscale job status,
         # something that is currently not possible with the latest Anyscale SDK version (0.26.75).
         # A possible path forward is to use the Anyscale API directly to enable this capability.
+
         if self.wait_for_completion:
             has_succeeded = False
             for _ in range(int(self.service_rollout_timeout_seconds // self.poll_interval)):
-                job_status = self.hook.get_job_status(self.service_id)
-                current_state = str(job_status.state)
-                self.log.info(f"Current job state for {self.service_id} is: {current_state}")
-                if current_state == JobState.SUCCEEDED:
-                    self.log.info(f"Job {self.service_id} completed successfully.")
+                service_status = self.hook.get_service_status(name=self.name)
+                current_state = str(service_status.state)
+                self.log.info(f"Current service state for {self.name} is: {current_state}")
+                if current_state == ServiceState.RUNNING:
+                    self.log.info(f"Service {self.name} is healthy and running.")
                     has_succeeded = True
                     break
-                elif current_state == JobState.FAILED:
-                    raise AirflowException(f"Job {self.service_id} failed.")
+                elif current_state in failure_states:
+                    raise AirflowException(f"Service {self.name} failed.")
                 time.sleep(self.poll_interval)
-
             if not has_succeeded:
                 raise AirflowException(
-                    f"Job {self.service_id} in {current_state} after {self.service_rollout_timeout_seconds} seconds."
+                    f"Service {self.name} timed out after {self.service_rollout_timeout_seconds} seconds. The service was not complete within the desired service_rollout_timeout_seconds: {self.service_rollout_timeout_seconds}."
                 )
-
-            current_state = str(self.hook.get_job_status(self.service_id).state)
-            self.log.info(f"Current job state for {self.service_id} is: {current_state}")
+        else:
+            service_status = self.hook.get_service_status(name=self.name)
+            current_state = str(service_status.state)
+            self.log.info(f"Current service state for {self.name} is: {current_state}")
+            if current_state in failure_states:
+                raise AirflowException(f"Service {self.name} failed.")
 
         return self.service_id
