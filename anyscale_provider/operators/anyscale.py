@@ -399,7 +399,7 @@ class RolloutAnyscaleService(BaseOperator):
             has_succeeded = False
             for _ in range(int(self.service_rollout_timeout_seconds // self.poll_interval)):
                 service_status = self.hook.get_service_status(service_name=self.name)
-                current_state = str(service_status.state)
+                current_state = service_status.state
                 self.log.info(f"Current service state for {self.name} is: {current_state}")
                 if current_state == ServiceState.RUNNING:
                     self.log.info(f"Service {self.name} is healthy and running.")
@@ -413,7 +413,7 @@ class RolloutAnyscaleService(BaseOperator):
                     f"Service {self.name} was not completed after {self.service_rollout_timeout_seconds} seconds."
                 )
         else:
-            service_status = self.hook.get_service_status(name=self.name)
+            service_status = self.hook.get_service_status(service_name=self.name)
             current_state = str(service_status.state)
             self.log.info(f"Current service state for {self.name} is: {current_state}")
             if current_state in failure_states:
