@@ -401,8 +401,6 @@ class RolloutAnyscaleService(BaseOperator):
                 service_status = self.hook.get_service_status(service_name=self.name)
                 current_state = service_status.state
                 self.log.info(f"Current service state for {self.name} is: {current_state}")
-                if current_state == ServiceState.RUNNING:
-                    self.log.info(f"Service {self.name} is healthy and running.")
                     has_succeeded = True
                     break
                 elif current_state in failure_states:
