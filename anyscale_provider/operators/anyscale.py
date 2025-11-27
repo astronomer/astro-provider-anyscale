@@ -195,7 +195,7 @@ class SubmitAnyscaleJob(BaseOperator):
                 job_status = self.hook.get_job_status(self.job_id)
             if not has_succeeded:
                 raise AirflowException(
-                    f"Job {self.job_id} timed out after {self.job_timeout_seconds} seconds. The job was not complete within the desired job_timeout_seconds: {self.job_timeout_seconds}."
+                    f"Job {self.job_id} was not completed after {self.job_timeout_seconds} seconds. 
                 )
         else:
             job_status = self.hook.get_job_status(self.job_id)
