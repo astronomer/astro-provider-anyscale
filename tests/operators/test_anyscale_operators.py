@@ -4,6 +4,7 @@ from unittest.mock import MagicMock, PropertyMock, patch
 from airflow.exceptions import AirflowException
 from airflow.utils.context import Context
 from anyscale.job.models import JobState
+from anyscale.service.models import ServiceState
 
 from anyscale_provider.operators.anyscale import RolloutAnyscaleService, SubmitAnyscaleJob
 
@@ -49,11 +50,14 @@ class TestSubmitAnyscaleJob(unittest.TestCase):
 
     @patch("anyscale_provider.operators.anyscale.SubmitAnyscaleJob.hook")
     def test_execute_failure(self, mock_hook):
-        assert False
-        # event = {"state": JobState.FAILED, "job_id": "123", "message": "Job failed with error"}
-        # with self.assertRaises(AirflowException) as context:
-        #    self.operator.execute(Context())
-        # self.assertTrue("Job 123 failed with error" in str(context.exception))
+        # This test ensures that when a job submission returns an UNKNOWN state, it raises an exception
+        mock_hook.submit_job.return_value = "123"
+        mock_hook.get_job_status.return_value.state = JobState.UNKNOWN
+
+        with self.assertRaises(AirflowException) as context:
+            self.operator.execute(Context(ti=MagicMock()))
+
+        self.assertTrue("Job 123 failed." in str(context.exception))
 
     @patch("anyscale_provider.operators.anyscale.SubmitAnyscaleJob.hook", new_callable=PropertyMock)
     def test_check_anyscale_hook(self, mock_hook_property):
@@ -129,19 +133,27 @@ class TestRolloutAnyscaleService(unittest.TestCase):
 
     @patch("anyscale_provider.operators.anyscale.RolloutAnyscaleService.hook")
     def test_execute_successful(self, mock_hook):
-        assert False
+        # Mock successful service deployment
+        mock_hook.deploy_service.return_value = "service123"
+        mock_hook.get_service_status.return_value.state = ServiceState.RUNNING
 
-    #    mock_hook.return_value.deploy_service.return_value = "service123"
-    #    with self.assertRaises(TaskDeferred):
-    #        self.operator.execute(Context(ti=MagicMock()))
+        result = self.operator.execute(Context(ti=MagicMock()))
+
+        # Verify deploy_service was called
+        mock_hook.deploy_service.assert_called_once()
+        # Verify the service_id was returned
+        self.assertEqual(result, "service123")
 
     @patch("anyscale_provider.operators.anyscale.RolloutAnyscaleService.hook")
     def test_execute_failed(self, mock_hook):
-        assert False
-        # event = {"state": ServiceState.SYSTEM_FAILURE, "service_name": "service123", "message": "Deployment failed"}
-        # with self.assertRaises(AirflowException) as cm:
-        #    self.operator.execute(Context())
-        # self.assertIn("Anyscale service deployment service123 failed with error", str(cm.exception))
+        # Mock service deployment that results in a failure state
+        mock_hook.deploy_service.return_value = "service123"
+        mock_hook.get_service_status.return_value.state = ServiceState.SYSTEM_FAILURE
+
+        with self.assertRaises(AirflowException) as context:
+            self.operator.execute(Context(ti=MagicMock()))
+
+        self.assertTrue("Service test_service failed." in str(context.exception))
 
     @patch("anyscale_provider.operators.anyscale.RolloutAnyscaleService.hook", new_callable=PropertyMock)
     def test_check_anyscale_hook(self, mock_hook_property):
