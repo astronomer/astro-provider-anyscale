@@ -291,7 +291,7 @@ class RolloutAnyscaleService(BaseOperator):
         in_place: bool = False,
         canary_percent: int | None = None,
         max_surge_percent: int | None = None,
-        service_rollout_timeout_seconds: float = 600,
+        service_rollout_timeout_seconds: float = 900,
         poll_interval: float = 60,
         wait_for_completion: bool = True,
         **kwargs: Any,
