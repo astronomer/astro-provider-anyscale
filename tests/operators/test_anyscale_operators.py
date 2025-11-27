@@ -127,8 +127,7 @@ class TestSubmitAnyscaleJob(unittest.TestCase):
         with self.assertRaises(AirflowException) as context:
             operator.execute(Context(ti=MagicMock()))
 
-        self.assertTrue("Job 123 timed out after 120" in str(context.exception))
-        self.assertTrue("job_timeout_seconds: 120" in str(context.exception))
+        self.assertTrue("Job 123 was not completed after 120" in str(context.exception))
 
     @patch("anyscale_provider.operators.anyscale.SubmitAnyscaleJob.hook")
     def test_execute_without_wait_for_completion_success(self, mock_hook):

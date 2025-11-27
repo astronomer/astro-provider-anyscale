@@ -194,9 +194,7 @@ class SubmitAnyscaleJob(BaseOperator):
                 time.sleep(self.poll_interval)
                 job_status = self.hook.get_job_status(self.job_id)
             if not has_succeeded:
-                raise AirflowException(
-                    f"Job {self.job_id} was not completed after {self.job_timeout_seconds} seconds. 
-                )
+                raise AirflowException(f"Job {self.job_id} was not completed after {self.job_timeout_seconds} seconds.")
         else:
             job_status = self.hook.get_job_status(self.job_id)
             current_state = str(job_status.state)
@@ -401,6 +399,7 @@ class RolloutAnyscaleService(BaseOperator):
                 service_status = self.hook.get_service_status(service_name=self.name)
                 current_state = service_status.state
                 self.log.info(f"Current service state for {self.name} is: {current_state}")
+                if current_state == ServiceState.RUNNING:
                     has_succeeded = True
                     break
                 elif current_state in failure_states:
