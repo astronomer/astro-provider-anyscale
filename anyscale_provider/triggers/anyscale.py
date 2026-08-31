@@ -22,6 +22,8 @@ class AnyscaleJobTrigger(BaseTrigger):
     :param conn_id: Required. The connection ID for Anyscale.
     :param job_id: Required. The ID of the job to monitor.
     :param poll_interval: Optional. Interval in seconds between status checks. Defaults to 60 seconds.
+    :param fetch_logs: Optional. Whether to fetch and emit the job logs once the job reaches a
+        terminal state. Defaults to ``True``.
     """
 
     def __init__(self, conn_id: str, job_id: str, poll_interval: float = 60, fetch_logs: bool = True):
@@ -52,6 +54,7 @@ class AnyscaleJobTrigger(BaseTrigger):
                 "conn_id": self.conn_id,
                 "job_id": self.job_id,
                 "poll_interval": self.poll_interval,
+                "fetch_logs": self.fetch_logs,
             },
         )
 
