@@ -1,4 +1,5 @@
 import asyncio
+import inspect
 import unittest
 from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
@@ -108,7 +109,7 @@ class TestAnyscaleJobTrigger(unittest.TestCase):
         result = trigger.serialize()
         expected_output = (
             "anyscale_provider.triggers.anyscale.AnyscaleJobTrigger",
-            {"conn_id": "default_conn", "job_id": "123", "poll_interval": 60},
+            {"conn_id": "default_conn", "job_id": "123", "poll_interval": 60, "fetch_logs": True},
         )
 
         # Check if the result is a tuple
@@ -120,6 +121,22 @@ class TestAnyscaleJobTrigger(unittest.TestCase):
 
         # Check if the result matches the expected output
         self.assertEqual(result, expected_output)
+
+    def test_serialize_round_trip_preserves_every_argument(self):
+        """The triggerer rebuilds a trigger with ``trigger_class(**kwargs)``.
+
+        Any ``__init__`` argument missing from ``serialize()`` silently reverts to its
+        default once the task is deferred, so assert the whole signature round-trips.
+        """
+        trigger = AnyscaleJobTrigger(conn_id="default_conn", job_id="123", poll_interval=30, fetch_logs=False)
+
+        _, kwargs = trigger.serialize()
+        arguments = set(inspect.signature(AnyscaleJobTrigger.__init__).parameters) - {"self"}
+        self.assertEqual(set(kwargs), arguments)
+
+        restored = AnyscaleJobTrigger(**kwargs)
+        for argument in sorted(arguments):
+            self.assertEqual(getattr(restored, argument), getattr(trigger, argument), argument)
 
     @patch("anyscale_provider.hooks.anyscale.AnyscaleHook.get_job_status")
     @patch("anyscale_provider.hooks.anyscale.AnyscaleHook.get_job_logs")
@@ -319,6 +336,26 @@ class TestAnyscaleServiceTrigger(unittest.TestCase):
 
         # Check if the result matches the expected output
         self.assertEqual(result, expected_output)
+
+    def test_serialize_round_trip_preserves_every_argument(self):
+        """Guard the service trigger against the omission fixed in AnyscaleJobTrigger."""
+        trigger = AnyscaleServiceTrigger(
+            conn_id="default_conn",
+            service_name="AstroService",
+            expected_state=ServiceState.RUNNING,
+            canary_percent=25.0,
+            cloud="anyscale_cloud",
+            project="anyscale_project",
+            poll_interval=30,
+        )
+
+        _, kwargs = trigger.serialize()
+        arguments = set(inspect.signature(AnyscaleServiceTrigger.__init__).parameters) - {"self"}
+        self.assertEqual(set(kwargs), arguments)
+
+        restored = AnyscaleServiceTrigger(**kwargs)
+        for argument in sorted(arguments):
+            self.assertEqual(getattr(restored, argument), getattr(trigger, argument), argument)
 
     @patch("anyscale_provider.hooks.anyscale.AnyscaleHook.get_service_status")
     def test_get_current_status_canary_0_percent(self, mock_get_service_status):
